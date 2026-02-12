@@ -7,8 +7,8 @@ name = "nrel.routee.powertrain"
 dynamic = ["version"]
 description = "RouteE-Powertrain is a tool for predicting energy usage over a set of road links."
 readme = "README.md"
-authors = [{ name = "National Renewable Energy Laboratory" }]
-license = { text = "BSD 3-Clause License Copyright (c) 2023, Alliance for Sustainable Energy, LLC" }
+authors = [{ name = "National Laboratory of the Rockies" }]
+license = { text = "BSD 3-Clause License Copyright (c) 2023, Alliance for Energy Innovation, LLC" }
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",

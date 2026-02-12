@@ -6276,7 +6276,7 @@ packages:
 - pypi: ./
   name: nrel-routee-powertrain
   version: 1.4.0
-  sha256: b1da485d9ccadbce294ac63d1ef78c2474a13c860429a2b87e4f078d64456853
+  sha256: 45eeeeaa4e5f6c03cd4290e14f84b733c5a5ee5516c0ba9d9c1b843c044d52b5
   requires_dist:
   - numpy>=2.0,<3.0
   - onnx>=1.17,<2.0
