@@ -6360,7 +6360,7 @@ packages:
 - pypi: ./
   name: nrel-routee-powertrain
   version: 1.4.0
-  sha256: 45eeeeaa4e5f6c03cd4290e14f84b733c5a5ee5516c0ba9d9c1b843c044d52b5
+  sha256: bb4d063479ce9de92c6b84c45c3a09de35005733a1a9c1b2d72f9b29c59c1c66
   requires_dist:
   - numpy>=2.0,<3.0
   - onnx>=1.17,<2.0
@@ -6371,7 +6371,7 @@ packages:
   - jupyter-book ; extra == 'dev'
   - matplotlib ; extra == 'dev'
   - maturin ; extra == 'dev'
-  - mypy ; extra == 'dev'
+  - mypy>=1.19.1,<1.20 ; extra == 'dev'
   - ngboost==0.5.2 ; extra == 'dev'
   - pandas-stubs ; extra == 'dev'
   - pytest ; extra == 'dev'

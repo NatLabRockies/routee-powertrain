@@ -35,7 +35,7 @@ dev = [
     "nrel.routee.powertrain[ngboost]",
     "tqdm",
     "pytest",
-    "mypy",
+    "mypy>=1.19.1,<1.20",
     "maturin",
     "ruff",
     "hatch",
