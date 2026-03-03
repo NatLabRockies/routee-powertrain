@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from ngboost import NGBRegressor
@@ -42,7 +43,7 @@ class NGBoostTrainer(Trainer):
             learning_rate=self.learning_rate,
         )
         X = features.values
-        y = target.values
+        y: np.ndarray = target.values
 
         if y.shape[1] == 1:
             y = y.ravel()

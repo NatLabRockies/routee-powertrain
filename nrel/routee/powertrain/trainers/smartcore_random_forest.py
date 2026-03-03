@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from nrel.routee.powertrain.core.model_config import ModelConfig
@@ -22,7 +23,7 @@ class SmartcoreRandomForestTrainer(Trainer):
             )
 
         x = features.values.tolist()
-        y = target.values
+        y: np.ndarray = target.values
 
         if y.shape[1] != 1:
             raise ValueError(
