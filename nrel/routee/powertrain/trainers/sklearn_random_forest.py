@@ -1,4 +1,6 @@
 from enum import Enum
+
+import numpy as np
 import pandas as pd
 from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import FloatTensorType
@@ -45,7 +47,7 @@ class SklearnRandomForestTrainer(Trainer):
             random_state=self.random_state,
         )
         X = features.values
-        y = target.values
+        y: np.ndarray = target.values
 
         if y.shape[1] == 1:
             y = y.ravel()
