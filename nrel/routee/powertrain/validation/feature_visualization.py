@@ -54,11 +54,7 @@ def visualize_features(
     energy_units = model.metadata.config.target.targets[0].units
     model_name = model.metadata.config.vehicle_description
 
-    feature_set = model.metadata.config.get_feature_set(list(feature_ranges.keys()))
-    if feature_set is None:
-        raise KeyError(
-            f"Model does not have a feature set with the features: {feature_ranges.keys()}"
-        )
+    feature_set = model.metadata.config.feature_set
 
     feature_units_dict: Dict[str, str] = {}
     for feature in feature_set.features:
@@ -190,11 +186,7 @@ def contour_plot(
             "models with a single energy target"
         )
 
-    feature_set = model.metadata.config.get_feature_set(list(feature_ranges.keys()))
-    if feature_set is None:
-        raise KeyError(
-            f"Model does not have a feature set with the features: {feature_ranges.keys()}"
-        )
+    feature_set = model.metadata.config.feature_set
 
     # get the necessary information from the metadata
     distance_name = model.metadata.config.distance.name

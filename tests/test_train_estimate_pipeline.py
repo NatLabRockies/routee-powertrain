@@ -55,14 +55,14 @@ class TestTrainEstimatePipeline(TestCase):
         self.rate_config = pt.ModelConfig(
             vehicle_description="Test Model",
             powertrain_type=pt.PowertrainType.ICE,
-            feature_sets=[feature_set],
+            feature_set=feature_set,
             distance=distance,
             target=targets,
         )
         self.raw_config = pt.ModelConfig(
             vehicle_description="Test Model",
             powertrain_type=pt.PowertrainType.ICE,
-            feature_sets=[feature_set],
+            feature_set=feature_set,
             distance=distance,
             target=targets,
             predict_method=PredictMethod.RAW,
@@ -88,8 +88,7 @@ class TestTrainEstimatePipeline(TestCase):
 
         # test writing inner estimator to file
         outfile = self.out_path / "estimator_rate.onnx"
-        estimator = list(vehicle_model.estimators.values())[0]
-        estimator.to_file(outfile)
+        vehicle_model.estimator.to_file(outfile)
         _ = ONNXEstimator.from_file(outfile)
         outfile.unlink()
 
@@ -114,8 +113,7 @@ class TestTrainEstimatePipeline(TestCase):
 
         # test writing inner estimator to file
         outfile = self.out_path / "estimator_raw.onnx"
-        estimator = list(vehicle_model.estimators.values())[0]
-        estimator.to_file(outfile)
+        vehicle_model.estimator.to_file(outfile)
         _ = ONNXEstimator.from_file(outfile)
         outfile.unlink()
 
@@ -141,14 +139,12 @@ class TestTrainEstimatePipeline(TestCase):
 
         # test writing inner estimator to file
         outfile = self.out_path / "estimator.json"
-        estimator = list(vehicle_model.estimators.values())[0]
-        estimator.to_file(outfile)
+        vehicle_model.estimator.to_file(outfile)
         _ = SmartCoreEstimator.from_file(outfile)
         outfile.unlink()
 
         outfile = self.out_path / "estimator.bin"
-        estimator = list(vehicle_model.estimators.values())[0]
-        estimator.to_file(outfile)
+        vehicle_model.estimator.to_file(outfile)
         _ = SmartCoreEstimator.from_file(outfile)
         outfile.unlink()
 
@@ -173,8 +169,7 @@ class TestTrainEstimatePipeline(TestCase):
 
         # test writing inner estimator to file
         outfile = self.out_path / "estimator_rate.json"
-        estimator = list(vehicle_model.estimators.values())[0]
-        estimator.to_file(outfile)
+        vehicle_model.estimator.to_file(outfile)
         _ = NGBoostEstimator.from_file(outfile)
         outfile.unlink()
 
@@ -199,8 +194,7 @@ class TestTrainEstimatePipeline(TestCase):
 
         # test writing inner estimator to file
         outfile = self.out_path / "estimator_raw.json"
-        estimator = list(vehicle_model.estimators.values())[0]
-        estimator.to_file(outfile)
+        vehicle_model.estimator.to_file(outfile)
         _ = NGBoostEstimator.from_file(outfile)
         outfile.unlink()
 

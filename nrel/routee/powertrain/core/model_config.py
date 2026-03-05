@@ -2,15 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional
-
+from typing import List
 
 from nrel.routee.powertrain.core.features import (
     DataColumn,
     FeatureSet,
-    FeatureSetId,
     TargetSet,
-    feature_names_to_id,
 )
 from nrel.routee.powertrain.core.powertrain_type import PowertrainType
 
@@ -38,12 +35,7 @@ class ModelConfig:
     powertrain_type: PowertrainType
 
     ## estimator information
-
-    # the model allows for multiple feature sets which will correspond to
-    # different estimators. For example, you might have a feature set for
-    # [speed, grade] which uses a specific estimator and another feature set
-    # for [speed, grade, acceleration] which uses a different estimator.
-    feature_sets: List[FeatureSet]
+    feature_set: FeatureSet
     distance: DataColumn
     target: TargetSet
 
@@ -57,25 +49,11 @@ class ModelConfig:
     apply_real_world_adjustment: bool = True
 
     def __post_init__(self):
-        # convert to the correct types
-        if isinstance(self.feature_sets, dict):
-            self.feature_sets = [FeatureSet.from_dict(self.feature_sets)]
-        elif isinstance(self.feature_sets, list):
-            feature_sets = []
-            for f in self.feature_sets:
-                if isinstance(f, FeatureSet):
-                    feature_sets.append(f)
-                elif isinstance(f, list):
-                    feature_sets.append(FeatureSet(features=f))
-                elif isinstance(f, dict):
-                    feature_sets.append(FeatureSet.from_dict(f))
-                else:
-                    raise ValueError(
-                        "Feature sets must be a list of FeatureSets, lists, or dicts"
-                    )
-            self.feature_sets = feature_sets
-        elif isinstance(self.feature_sets, FeatureSet):
-            self.feature_sets = [self.feature_sets]
+        # convert feature_set to the correct type
+        if isinstance(self.feature_set, dict):
+            self.feature_set = FeatureSet.from_dict(self.feature_set)
+        elif isinstance(self.feature_set, list):
+            self.feature_set = FeatureSet(features=self.feature_set)
 
         if isinstance(self.distance, dict):
             self.distance = DataColumn.from_dict(self.distance)
@@ -93,25 +71,13 @@ class ModelConfig:
         if isinstance(self.predict_method, str):
             self.predict_method = PredictMethod.from_string(self.predict_method)
 
-        # check to make sure the feature sets are unique
-        feature_set_ids = [f.features_id for f in self.feature_sets]
-        if len(feature_set_ids) != len(set(feature_set_ids)):
-            raise ValueError(
-                "Feature sets must have unique ids. Found duplicate ids: {}".format(
-                    feature_set_ids
-                )
-            )
-
         # now check all the types
+        if not isinstance(self.feature_set, FeatureSet):
+            raise ValueError("feature_set must be a FeatureSet")
         if not isinstance(self.distance, DataColumn):
             raise ValueError("Distance must be a DataColumn")
         if not isinstance(self.target, TargetSet):
             raise ValueError("Target set must be a TargetSet")
-        if not isinstance(self.feature_sets, list):
-            raise ValueError("Feature sets must be a list")
-        for feature_set in self.feature_sets:
-            if not isinstance(feature_set, FeatureSet):
-                raise ValueError("Feature sets must be a list of FeatureSets")
         if not isinstance(self.powertrain_type, PowertrainType):
             raise ValueError("Powertrain type must be a PowertrainType")
         if not isinstance(self.predict_method, PredictMethod):
@@ -124,7 +90,7 @@ class ModelConfig:
     def to_dict(self) -> dict:
         d = self.__dict__.copy()
         d["powertrain_type"] = self.powertrain_type.name
-        d["feature_sets"] = [f.to_dict() for f in self.feature_sets]
+        d["feature_set"] = self.feature_set.to_dict()
         d["distance"] = self.distance.to_dict()
         d["target"] = self.target.to_dict()
         d["predict_method"] = self.predict_method.value
@@ -132,36 +98,28 @@ class ModelConfig:
         return d
 
     @property
-    def feature_set_map(self) -> Dict[FeatureSetId, FeatureSet]:
-        return {f.features_id: f for f in self.feature_sets}
-
-    def get_feature_set(self, feature_name_list: List[str]) -> Optional[FeatureSet]:
+    def feature_names(self) -> List[str]:
         """
-        Get a feature set by a list of a feature names, returning None if it doesn't
-        exist in the feature sets
+        Returns the list of feature names from the feature set.
         """
-        feature_set_id = feature_names_to_id(feature_name_list)
-        return self.feature_set_map.get(feature_set_id)
+        return self.feature_set.feature_name_list
 
     @property
     def all_feature_names(self) -> List[str]:
         """
-        Returns a list of all unique feature names in the feature sets
+        Returns the list of feature names, including distance if predict method is RAW.
         """
-        return [f.name for f in self.all_features]
+        names = list(self.feature_set.feature_name_list)
+        if self.predict_method == PredictMethod.RAW:
+            names.append(self.distance.name)
+        return names
 
     @property
     def all_features(self) -> List[DataColumn]:
         """
-        Returns a list of all the unique features in the feature sets
+        Returns the list of features, including distance if predict method is RAW.
         """
-        all_features = []
-        for feature_set in self.feature_sets:
-            for feature in feature_set.features:
-                if feature not in all_features:
-                    all_features.append(feature)
-
+        features = list(self.feature_set.features)
         if self.predict_method == PredictMethod.RAW:
-            all_features.append(self.distance)
-
-        return all_features
+            features.append(self.distance)
+        return features

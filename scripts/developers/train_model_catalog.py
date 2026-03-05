@@ -312,26 +312,15 @@ feature_set_3 = [
     pt.DataColumn(name="grade_dec", units="decimal"),
     pt.DataColumn(name="entry_angle", units="degrees"),
 ]
-features = [
-    [pt.DataColumn(name="speed_mph", units="mph")],
-    [
-        pt.DataColumn(name="speed_mph", units="mph"),
-        pt.DataColumn(name="grade_dec", units="decimal"),
-    ],
-    [
-        pt.DataColumn(name="speed_mph", units="mph"),
-        pt.DataColumn(name="previous_speed_mph", units="mph"),
-        pt.DataColumn(name="grade_dec", units="decimal"),
-        pt.DataColumn(name="previous_grade_dec", units="decimal"),
-    ],
-    [
-        pt.DataColumn(name="previous_speed_mph", units="mph"),
-        pt.DataColumn(name="speed_mph", units="mph"),
-        pt.DataColumn(name="previous_grade_dec", units="decimal"),
-        pt.DataColumn(name="grade_dec", units="decimal"),
-        pt.DataColumn(name="entry_angle", units="degrees"),
-        pt.DataColumn(name="exit_angle", units="degrees"),
-    ],
+
+# Default feature set used for training (most comprehensive)
+default_features = [
+    pt.DataColumn(name="previous_speed_mph", units="mph"),
+    pt.DataColumn(name="speed_mph", units="mph"),
+    pt.DataColumn(name="previous_grade_dec", units="decimal"),
+    pt.DataColumn(name="grade_dec", units="decimal"),
+    pt.DataColumn(name="entry_angle", units="degrees"),
+    pt.DataColumn(name="exit_angle", units="degrees"),
 ]
 
 distance = pt.DataColumn(name="miles", units="miles")
@@ -370,7 +359,7 @@ def train_model(model_name):
     config = pt.ModelConfig(
         vehicle_description=model_name,
         powertrain_type=powertrain_type,
-        feature_sets=features,
+        feature_set=default_features,
         distance=distance,
         target=energy_target,
         test_size=0.2,

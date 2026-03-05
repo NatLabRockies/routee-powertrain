@@ -8,11 +8,6 @@ from typing import Dict, List, Optional, TYPE_CHECKING, Union
 from urllib import request
 
 import pandas as pd
-from nrel.routee.powertrain.core.features import (
-    FeatureSetId,
-    feature_id_to_names,
-    feature_names_to_id,
-)
 
 from nrel.routee.powertrain.core.metadata import Metadata
 from nrel.routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
@@ -39,9 +34,8 @@ REGISTERED_ESTIMATORS = {
 
 METADATA_SERIALIZATION_KEY = "metadata"
 MODEL_ERRORS_SERIALIZATION_KEY = "errors"
-ALL_ESTIMATOR_SERIALIZATION_KEY = "all_estimators"
 ESTIMATOR_SERIALIZATION_KEY = "estimator"
-CONSTRUCTOR_TYPE_SERIALIZATION_KEY = "estimator_constructor_type"
+CONSTRUCTOR_TYPE_SERIALIZATION_KEY = "estimator_type"
 
 
 @dataclass
@@ -51,17 +45,17 @@ class Model:
     (i.e. a 2016 Toyota Camry with a 1.5 L gasoline engine).
     """
 
-    estimators: Dict[FeatureSetId, Estimator]
+    estimator: Estimator
     metadata: Metadata
     errors: ModelErrors
 
     @property
-    def feature_sets(self):
-        return self.metadata.config.feature_sets
+    def feature_set(self):
+        return self.metadata.config.feature_set
 
     @property
-    def feature_set_lists(self) -> List[List[str]]:
-        return [feature_id_to_names(fid) for fid in self.estimators.keys()]
+    def feature_names(self) -> List[str]:
+        return self.metadata.config.feature_set.feature_name_list
 
     @classmethod
     def from_dict(cls, input_dict: dict) -> Model:
@@ -84,59 +78,40 @@ class Model:
             )
         model_errors = ModelErrors.from_dict(model_errors_dict)
 
-        all_estimators_dict = input_dict.get(ALL_ESTIMATOR_SERIALIZATION_KEY)
-        if all_estimators_dict is None:
+        constructor_type_str = input_dict.get(CONSTRUCTOR_TYPE_SERIALIZATION_KEY)
+        if constructor_type_str is None:
             raise ValueError(
-                "Model file must contain estimator data at key: "
-                f"'{ALL_ESTIMATOR_SERIALIZATION_KEY}'"
+                "Model file must contain estimator type at key: "
+                f"'{CONSTRUCTOR_TYPE_SERIALIZATION_KEY}'"
             )
 
-        estimator_constructor_type = input_dict.get("estimator_constructor_type")
+        estimator_constructor = REGISTERED_ESTIMATORS.get(constructor_type_str)
+        if estimator_constructor is None:
+            raise ValueError(
+                f"Estimator type '{constructor_type_str}' is not registered. "
+                f"Available types: {list(REGISTERED_ESTIMATORS.keys())}"
+            )
 
-        estimators = {}
-        for feature_set_id, ed in all_estimators_dict.items():
-            constructor_type = ed.get(CONSTRUCTOR_TYPE_SERIALIZATION_KEY)
-            if estimator_constructor_type is None:
-                raise ValueError(
-                    "Model file must contain estimator constructor at key: "
-                    f"'{CONSTRUCTOR_TYPE_SERIALIZATION_KEY}'"
-                )
+        estimator_dict = input_dict.get(ESTIMATOR_SERIALIZATION_KEY)
+        if estimator_dict is None:
+            raise ValueError(
+                "Model file must contain estimator data at key: "
+                f"'{ESTIMATOR_SERIALIZATION_KEY}'"
+            )
 
-            estimator_constructor = REGISTERED_ESTIMATORS.get(constructor_type)
-            if estimator_constructor is None:
-                raise ValueError(
-                    f"Estimator constructor type '{estimator_constructor_type}' "
-                    "is not registered"
-                )
+        estimator = estimator_constructor.from_dict(estimator_dict)
 
-            estimator_input_dict = ed.get(ESTIMATOR_SERIALIZATION_KEY)
-            if estimator_input_dict is None:
-                raise ValueError(
-                    "Model file must contain estimator data at key: "
-                    f"'{ESTIMATOR_SERIALIZATION_KEY}'"
-                )
-
-            estimator = estimator_constructor.from_dict(estimator_input_dict)
-            estimators[feature_set_id] = estimator
-
-        return cls(estimators, metadata, model_errors)
+        return cls(estimator, metadata, model_errors)
 
     def to_dict(self) -> dict:
         """
         Convert model to a dictionary
         """
-        estimator_dict = {}
-        for feature_set_id, estimator in self.estimators.items():
-            estimator_dict[feature_set_id] = {
-                ESTIMATOR_SERIALIZATION_KEY: estimator.to_dict(),
-                CONSTRUCTOR_TYPE_SERIALIZATION_KEY: estimator.__class__.__name__,
-            }
-
         return {
             METADATA_SERIALIZATION_KEY: self.metadata.to_dict(),
             MODEL_ERRORS_SERIALIZATION_KEY: self.errors.to_dict(),
-            ALL_ESTIMATOR_SERIALIZATION_KEY: estimator_dict,
-            CONSTRUCTOR_TYPE_SERIALIZATION_KEY: self.estimators.__class__.__name__,
+            ESTIMATOR_SERIALIZATION_KEY: self.estimator.to_dict(),
+            CONSTRUCTOR_TYPE_SERIALIZATION_KEY: self.estimator.__class__.__name__,
         }
 
     @classmethod
@@ -193,36 +168,28 @@ class Model:
         energy_target: str,
     ) -> pd.DataFrame:
         """
-        Convert the the model to a lookup table for the given estimator id and feature parameters.
+        Convert the the model to a lookup table for the given feature parameters.
         """
         return to_lookup_table(self, feature_parameters, energy_target)
 
     def visualize_features(
         self,
-        estimator_id: FeatureSetId,
         n_samples: Optional[int] = 100,
         output_path: Optional[str] = None,
         return_predictions: Optional[bool] = False,
     ) -> Optional[Dict[str, "Series"]]:
         """
         generates test links to independently test the model's features
-        and creates plots of those predictions for the given estimator id
+        and creates plots of those predictions
 
         Args:
-            estimator_id: the estimator id for generating the plots
             n_samples: the number of samples used to generate the plots
             output_path: an optional path to save the plots as png files.
             return_predictions: if true, returns the dictionary containing the prediction values
 
         Returns: optionally returns a dictionary containing the predictions where the key is the feature tested
         """
-        feature_set = self.metadata.config.get_feature_set(
-            feature_id_to_names(estimator_id)
-        )
-        if feature_set is None:
-            raise KeyError(
-                f"Model does not have a feature set with the features: {feature_id_to_names(estimator_id)}"
-            )
+        feature_set = self.metadata.config.feature_set
         feature_ranges = {}
         for f in feature_set.features:
             if isinf(f.constraints.upper) or isinf(f.constraints.lower):
@@ -246,7 +213,6 @@ class Model:
 
     def contour(
         self,
-        estimator_id: FeatureSetId,
         x_feature: str,
         y_feature: str,
         n_samples: Optional[int] = 100,
@@ -254,10 +220,8 @@ class Model:
     ):
         """
         generates a contour plot of the two test features: x_feature and y_feature.
-        for the given estimator id
 
         Args:
-            estimator_id: the estimator id for generating the plots
             x_feature: one of the features used to generate the energy matrix
                 and will be the x-axis feature
             y_feature: one of the features used to generate the energy matrix
@@ -265,13 +229,7 @@ class Model:
             n_samples: the number of samples used to generate the plots
             output_path: an optional path to save the plots as png files.
         """
-        feature_set = self.metadata.config.get_feature_set(
-            feature_id_to_names(estimator_id)
-        )
-        if feature_set is None:
-            raise KeyError(
-                f"Model does not have a feature set with the features: {feature_id_to_names(estimator_id)}"
-            )
+        feature_set = self.metadata.config.feature_set
         feature_ranges = {}
         for f in feature_set.features:
             if isinf(f.constraints.upper) or isinf(f.constraints.lower):
@@ -305,7 +263,8 @@ class Model:
 
         Args:
             links_df: a dataframe containing the links to predict on
-            feature_columns: the features to use for prediction
+            feature_columns: optional subset of feature columns to use from the dataframe.
+                If not provided, uses the model's configured feature set.
             distance_column: the column to use for distance
 
         Returns: a dataframe containing the predicted energy consumption for each link
@@ -321,55 +280,32 @@ class Model:
         else:
             links_df = links_df.rename(columns={distance_column: config.distance.name})
 
-        # if we only have one estimator, just use that
-        if len(self.estimators) == 1:
-            feature_set_id = list(self.estimators.keys())[0]
-            estimator = self.estimators.get(feature_set_id)
-            if estimator is None:
-                raise ValueError("Could not find estimator")
+        feature_set = config.feature_set
 
-        # if no explicit feature names are supplied we assume that the
-        # dataframe contains all the features needed for prediction;
-        # if that isn't the case, we throw an error
-        elif feature_columns is None:
-            feature_columns = [c for c in links_df.columns if c != distance_column]
-            feature_set_id = feature_names_to_id(feature_columns)
-            estimator = self.estimators.get(feature_set_id)
-            if estimator is None:
+        # Validate that required feature columns exist in the dataframe
+        if feature_columns is not None:
+            missing = [c for c in feature_columns if c not in links_df.columns]
+            if missing:
                 raise ValueError(
-                    "This model has multiple feature sets and no features were "
-                    "explicitly provided. "
-                    "We attempted to just use the columns in the incoming dataframe "
-                    "but we couldn't find an estiamtor that matches the features: "
-                    f"{feature_columns}. "
-                    "Please provide an explicit list of feature names to the features "
-                    "paramter of the predict method or provide a dataframe that only "
-                    "contains the features you want to use. "
-                    "Here are the feature sets that can be used: "
-                    f"{self.feature_set_lists}"
+                    f"The following feature columns are missing from links_df: {missing}"
                 )
         else:
-            feature_set_id = feature_names_to_id(feature_columns)
-            estimator = self.estimators.get(feature_set_id)
-            if estimator is None:
+            # Check that all configured features are in the dataframe
+            missing = [
+                f.name for f in feature_set.features if f.name not in links_df.columns
+            ]
+            if missing:
                 raise ValueError(
-                    "Could not find an estimator that matches the provided "
-                    f"feature columns {feature_columns}. Here are the feature "
-                    f"sets that can be used: {self.feature_set_lists}"
+                    f"links_df is missing the following required features: {missing}. "
+                    f"Expected features: {feature_set.feature_name_list}"
                 )
 
-        feature_set = self.metadata.config.feature_set_map.get(feature_set_id)
-        if feature_set is None:
-            raise ValueError(
-                f"Could not find a feature set {feature_set_id} in model config"
-            )
-
-        pred_energy_df = estimator.predict(
+        pred_energy_df = self.estimator.predict(
             links_df,
             feature_set,
-            self.metadata.config.distance,
-            self.metadata.config.target,
-            self.metadata.config.predict_method,
+            config.distance,
+            config.target,
+            config.predict_method,
         )
 
         for energy in config.target.targets:
@@ -401,44 +337,33 @@ class Model:
         summary_lines.append("-" * 20)
         summary_lines.append(f"Vehicle description: {config.vehicle_description}")
         summary_lines.append(f"Powertrain type: {config.powertrain_type.name}")
-        summary_lines.append(f"Number of estimators: {len(self.estimators)}")
         summary_lines.append("=" * 40)
-        for feature_set_id in self.estimators.keys():
-            estimator_errors = self.errors.estimator_errors.get(feature_set_id)
-            if estimator_errors is None:
-                raise ValueError(
-                    f"Could not find errors for estimator {feature_set_id}"
-                )
-            summary_lines.append("Estimator Summary")
-            summary_lines.append("-" * 20)
-            feature_set = config.feature_set_map.get(feature_set_id)
-            if feature_set is None:
-                raise ValueError(
-                    f"Could not find a feature set {feature_set_id} in model config"
-                )
-            for feature in feature_set.features:
-                summary_lines.append(f"Feature: {feature.name} ({feature.units})")
-            summary_lines.append(
-                f"Distance: {config.distance.name} ({config.distance.units})"
-            )
-            for target in config.target.targets:
-                summary_lines.append(f"Target: {target.name} ({target.units})")
-                target_errors = estimator_errors.error_by_target.get(target.name)
-                if target_errors is None:
-                    raise ValueError(f"Could not find errors for target {target.name}")
 
-                summary_lines.append(
-                    f"Raw Predicted Consumption: {target_errors.pred_dist_per_energy:.3f} "
-                    f"({config.distance.units}/{target.units})"
-                )
-                summary_lines.append(
-                    f"Real World Predicted Consumption: {target_errors.real_world_pred_dist_per_energy:.3f} "
-                    f"({config.distance.units}/{target.units})"
-                )
+        estimator_errors = self.errors.estimator_errors
+        summary_lines.append("Estimator Summary")
+        summary_lines.append("-" * 20)
+        feature_set = config.feature_set
+        for feature in feature_set.features:
+            summary_lines.append(f"Feature: {feature.name} ({feature.units})")
+        summary_lines.append(
+            f"Distance: {config.distance.name} ({config.distance.units})"
+        )
+        for target in config.target.targets:
+            summary_lines.append(f"Target: {target.name} ({target.units})")
+            target_errors = estimator_errors.error_by_target.get(target.name)
+            if target_errors is None:
+                raise ValueError(f"Could not find errors for target {target.name}")
+
             summary_lines.append(
-                f"Predict Method: {config.predict_method.value.upper()}"
+                f"Raw Predicted Consumption: {target_errors.pred_dist_per_energy:.3f} "
+                f"({config.distance.units}/{target.units})"
             )
-            summary_lines.append("=" * 40)
+            summary_lines.append(
+                f"Real World Predicted Consumption: {target_errors.real_world_pred_dist_per_energy:.3f} "
+                f"({config.distance.units}/{target.units})"
+            )
+        summary_lines.append(f"Predict Method: {config.predict_method.value.upper()}")
+        summary_lines.append("=" * 40)
         return "\n".join(summary_lines)
 
     def _repr_html_(self) -> str:
@@ -460,62 +385,49 @@ class Model:
         html_lines.append(
             f"<tr><td>Powertrain type</td><td>{config.powertrain_type.name}</td></tr>"
         )
+
+        estimator_errors = self.errors.estimator_errors
+
+        # Title: Estimator Summary
         html_lines.append(
-            f"<tr><td>Number of estimators</td><td>{len(self.estimators)}</td></tr>"
+            '<tr><th colspan="2" style="border-bottom: 2px solid black; text-align: center;">Estimator Summary</th></tr>'
         )
 
-        for feature_set_id in self.estimators.keys():
-            estimator_errors = self.errors.estimator_errors.get(feature_set_id)
-            if estimator_errors is None:
-                raise ValueError(
-                    f"Could not find errors for estimator {feature_set_id}"
-                )
-
-            # Title: Estimator Summary
+        feature_set = config.feature_set
+        for feature in feature_set.features:
             html_lines.append(
-                '<tr><th colspan="2" style="border-bottom: 2px solid black; text-align: center;">Estimator Summary</th></tr>'
+                f"<tr><td>Feature</td><td>{feature.name} ({feature.units})</td></tr>"
             )
 
-            feature_set = config.feature_set_map.get(feature_set_id)
-            if feature_set is None:
-                raise ValueError(
-                    f"Could not find a feature set {feature_set_id} in model config"
-                )
+        html_lines.append(
+            "<tr><td>Distance</td>"
+            f"<td>{config.distance.name} ({config.distance.units})</td></tr>"
+        )
 
-            for feature in feature_set.features:
-                html_lines.append(
-                    f"<tr><td>Feature</td><td>{feature.name} ({feature.units})</td></tr>"
-                )
-
+        for target in config.target.targets:
             html_lines.append(
-                "<tr><td>Distance</td>"
-                f"<td>{config.distance.name} ({config.distance.units})</td></tr>"
+                f"<tr><td>Target</td><td>{target.name} ({target.units})</td></tr>"
             )
 
-            for target in config.target.targets:
-                html_lines.append(
-                    f"<tr><td>Target</td><td>{target.name} ({target.units})</td></tr>"
-                )
+            target_errors = estimator_errors.error_by_target.get(target.name)
+            if target_errors is None:
+                raise ValueError(f"Could not find errors for target {target.name}")
 
-                target_errors = estimator_errors.error_by_target.get(target.name)
-                if target_errors is None:
-                    raise ValueError(f"Could not find errors for target {target.name}")
-
-                html_lines.append(
-                    "<tr><td>Predicted Consumption</td>"
-                    f"<td>{target_errors.pred_dist_per_energy:.3f} "
-                    f"({config.distance.units}/{target.units})</td></tr>"
-                )
-
-                html_lines.append(
-                    "<tr><td>Real World Predicted Consumption</td>"
-                    f"<td>{target_errors.real_world_pred_dist_per_energy:.3f} "
-                    f"({config.distance.units}/{target.units})</td></tr>"
-                )
             html_lines.append(
-                f"<tr><td>Predict Method</td>"
-                f"<td>{config.predict_method.value.upper()}</td></tr>"
+                "<tr><td>Predicted Consumption</td>"
+                f"<td>{target_errors.pred_dist_per_energy:.3f} "
+                f"({config.distance.units}/{target.units})</td></tr>"
             )
+
+            html_lines.append(
+                "<tr><td>Real World Predicted Consumption</td>"
+                f"<td>{target_errors.real_world_pred_dist_per_energy:.3f} "
+                f"({config.distance.units}/{target.units})</td></tr>"
+            )
+        html_lines.append(
+            f"<tr><td>Predict Method</td>"
+            f"<td>{config.predict_method.value.upper()}</td></tr>"
+        )
 
         # End the HTML table
         html_lines.append("</table>")

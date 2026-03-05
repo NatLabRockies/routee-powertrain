@@ -18,14 +18,20 @@ class TestToLookup(TestCase):
         self.mock_model = pt.load_model("2016_TOYOTA_Camry_4cyl_2WD")
 
     def test_to_lookup_single_feature(self):
-        """Test lookup table generation with a single feature (speed)."""
+        """Test lookup table generation with all features, varying speed only."""
         feature_parameters = [
             {
                 "feature_name": "speed_mph",
                 "lower_bound": 10.0,
                 "upper_bound": 60.0,
                 "n_samples": 6,
-            }
+            },
+            {
+                "feature_name": "grade_percent",
+                "lower_bound": -5.0,
+                "upper_bound": 5.0,
+                "n_samples": 1,
+            },
         ]
 
         result = to_lookup_table(
@@ -36,8 +42,9 @@ class TestToLookup(TestCase):
 
         # Check basic structure
         self.assertIsInstance(result, pd.DataFrame)
-        self.assertEqual(len(result), 6)  # Should have 6 rows
+        self.assertEqual(len(result), 6)  # 6 * 1 = 6 rows
         self.assertIn("speed_mph", result.columns)
+        self.assertIn("grade_percent", result.columns)
         self.assertIn("gge_per_distance", result.columns)
 
         # Check speed values are correctly distributed
@@ -51,7 +58,7 @@ class TestToLookup(TestCase):
         self.assertTrue((result["gge_per_distance"] > 0).all())
 
     def test_to_lookup_two_features(self):
-        """Test lookup table generation with two features (speed and grade)."""
+        """Test lookup table generation with all features varied."""
         feature_parameters = [
             {
                 "feature_name": "speed_mph",
@@ -100,43 +107,6 @@ class TestToLookup(TestCase):
                     combo_exists, f"Missing combination: speed={speed}, grade={grade}"
                 )
 
-    def test_to_lookup_three_features(self):
-        """Test lookup table generation with three features."""
-        feature_parameters = [
-            {
-                "feature_name": "speed_mph",
-                "lower_bound": 30.0,
-                "upper_bound": 50.0,
-                "n_samples": 2,
-            },
-            {
-                "feature_name": "grade_percent",
-                "lower_bound": 0.0,
-                "upper_bound": 10.0,
-                "n_samples": 2,
-            },
-            {
-                "feature_name": "turn_angle",
-                "lower_bound": -10.0,
-                "upper_bound": 10.0,
-                "n_samples": 2,
-            },
-        ]
-
-        result = to_lookup_table(
-            model=self.mock_model,
-            feature_parameters=feature_parameters,
-            energy_target="gge",
-        )
-
-        # Check basic structure - should have 2 * 2 * 2 = 8 combinations
-        self.assertIsInstance(result, pd.DataFrame)
-        self.assertEqual(len(result), 8)
-        self.assertIn("speed_mph", result.columns)
-        self.assertIn("grade_percent", result.columns)
-        self.assertIn("turn_angle", result.columns)
-        self.assertIn("gge_per_distance", result.columns)
-
     def test_invalid_energy_target(self):
         """Test error handling for invalid energy target."""
         feature_parameters = [
@@ -160,14 +130,26 @@ class TestToLookup(TestCase):
         )
 
     def test_invalid_feature_set(self):
-        """Test error handling for invalid feature combinations."""
+        """Test error handling for unknown features."""
         feature_parameters = [
             {
                 "feature_name": "invalid_feature",
                 "lower_bound": 0.0,
                 "upper_bound": 100.0,
                 "n_samples": 5,
-            }
+            },
+            {
+                "feature_name": "speed_mph",
+                "lower_bound": 10.0,
+                "upper_bound": 60.0,
+                "n_samples": 5,
+            },
+            {
+                "feature_name": "grade_percent",
+                "lower_bound": -5.0,
+                "upper_bound": 5.0,
+                "n_samples": 5,
+            },
         ]
 
         with self.assertRaises(KeyError) as context:
@@ -178,19 +160,48 @@ class TestToLookup(TestCase):
             )
 
         self.assertIn(
-            "Model does not have a feature set with the features",
+            "Unknown features",
+            str(context.exception),
+        )
+
+    def test_missing_feature_parameters(self):
+        """Test error handling when not all model features are provided."""
+        feature_parameters = [
+            {
+                "feature_name": "speed_mph",
+                "lower_bound": 10.0,
+                "upper_bound": 60.0,
+                "n_samples": 5,
+            },
+        ]
+
+        with self.assertRaises(KeyError) as context:
+            to_lookup_table(
+                model=self.mock_model,
+                feature_parameters=feature_parameters,
+                energy_target="gge",
+            )
+
+        self.assertIn(
+            "Missing required feature parameters",
             str(context.exception),
         )
 
     def test_single_sample(self):
-        """Test lookup table generation with n_samples=1."""
+        """Test lookup table generation with n_samples=1 for all features."""
         feature_parameters = [
             {
                 "feature_name": "speed_mph",
                 "lower_bound": 30.0,
                 "upper_bound": 30.1,  # Slightly different from lower bound
                 "n_samples": 1,
-            }
+            },
+            {
+                "feature_name": "grade_percent",
+                "lower_bound": -5.0,
+                "upper_bound": 5.0,
+                "n_samples": 1,
+            },
         ]
 
         result = to_lookup_table(
@@ -199,7 +210,7 @@ class TestToLookup(TestCase):
             energy_target="gge",
         )
 
-        # Should have exactly 1 row
+        # Should have exactly 1 row (1 * 1)
         self.assertEqual(len(result), 1)
         self.assertEqual(
             result["speed_mph"].iloc[0], 30.0
@@ -214,7 +225,13 @@ class TestToLookup(TestCase):
                 "lower_bound": 0.0,
                 "upper_bound": 100.0,
                 "n_samples": 101,  # 101 samples from 0 to 100
-            }
+            },
+            {
+                "feature_name": "grade_percent",
+                "lower_bound": -5.0,
+                "upper_bound": 5.0,
+                "n_samples": 1,
+            },
         ]
 
         result = to_lookup_table(
@@ -223,7 +240,7 @@ class TestToLookup(TestCase):
             energy_target="gge",
         )
 
-        # Should have exactly 101 rows
+        # Should have exactly 101 rows (101 * 1)
         self.assertEqual(len(result), 101)
 
         # Check first and last values

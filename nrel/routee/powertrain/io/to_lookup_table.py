@@ -6,8 +6,6 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import numpy as np
 
-from nrel.routee.powertrain.core.features import feature_names_to_id
-
 if TYPE_CHECKING:
     from nrel.routee.powertrain.core.model import Model
 
@@ -50,7 +48,7 @@ def to_lookup_table(
     energy_target: str,
 ) -> pd.DataFrame:
     """
-    Convert the model to a lookup table for the given estimator id and feature parameters.
+    Convert the model to a lookup table for the given feature parameters.
     """
     if energy_target not in model.metadata.config.target.target_name_list:
         raise KeyError(
@@ -63,17 +61,25 @@ def to_lookup_table(
     ]
 
     feature_names_list = [fp.feature_name for fp in parsed_feature_parameters]
-    feature_set_id = feature_names_to_id(feature_names_list)
-    feature_set = model.metadata.config.feature_set_map.get(feature_set_id)
-    if feature_set is None:
+    feature_set = model.metadata.config.feature_set
+
+    # Validate that all model features are provided
+    model_feature_names = set(feature_set.feature_name_list)
+    requested_features = set(feature_names_list)
+    missing_features = model_feature_names - requested_features
+    extra_features = requested_features - model_feature_names
+    if missing_features:
         raise KeyError(
-            f"Model does not have a feature set with the features: {feature_names_list}."
-            f"Here are the available feature sets: {model.feature_set_lists}"
+            f"Missing required feature parameters: {missing_features}. "
+            f"All model features must be specified: {feature_set.feature_name_list}"
+        )
+    if extra_features:
+        raise KeyError(
+            f"Unknown features: {extra_features}. "
+            f"Available features: {feature_set.feature_name_list}"
         )
 
-    estimator = model.estimators.get(feature_set_id)
-    if estimator is None:
-        raise KeyError(f"Model does not have an estimator for {feature_set_id}")
+    estimator = model.estimator
 
     points = tuple(
         np.linspace(f.lower_bound, f.upper_bound, f.n_samples)
@@ -95,7 +101,7 @@ def to_lookup_table(
         model.metadata.config.predict_method,
     )
 
-    lookup = pred_df.drop(columns=[model.metadata.config.distance.name])
+    lookup = pred_df[feature_names_list].copy()
 
     energy_column_key = f"{energy_target}_per_{model.metadata.config.distance.name}"
 
