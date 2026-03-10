@@ -29,6 +29,7 @@ requires-python = ">=3.10,<3.13"
 scikit = ["scikit-learn==1.6.1", "skl2onnx>=1.20,<1.21"]
 ngboost = ["ngboost==0.5.2", "scikit-learn==1.6.1"]
 plot = ["matplotlib"]
+s3 = ["boto3>=1.26"]
 dev = [
     "routee.powertrain[scikit]",
     "routee.powertrain[plot]",

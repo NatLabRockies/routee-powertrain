@@ -58,6 +58,10 @@ class TestTrainEstimatePipeline(TestCase):
             feature_set=feature_set,
             distance=distance,
             target=targets,
+            make="test",
+            model_name="model",
+            year=2024,
+            trim="base",
         )
         self.raw_config = pt.ModelConfig(
             vehicle_description="Test Model",
@@ -65,6 +69,10 @@ class TestTrainEstimatePipeline(TestCase):
             feature_set=feature_set,
             distance=distance,
             target=targets,
+            make="test",
+            model_name="model",
+            year=2024,
+            trim="base",
             predict_method=PredictMethod.RAW,
         )
 

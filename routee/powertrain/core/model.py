@@ -16,6 +16,10 @@ from routee.powertrain.estimators.onnx import ONNXEstimator
 from routee.powertrain.estimators.smart_core import SmartCoreEstimator
 from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
 
+from routee.powertrain.io.archive import (
+    load_archive,
+    save_archive,
+)
 from routee.powertrain.io.to_lookup_table import to_lookup_table
 from routee.powertrain.validation.feature_visualization import (
     contour_plot,
@@ -119,17 +123,22 @@ class Model:
         """
         Load a vehicle model from a file.
 
+        Supports .zip (new archive format) and .json (legacy format).
+
         Args:
             file: the path to the file to load
 
         Returns: a powertrain vehicle
         """
         path = Path(file)
-        if path.suffix != ".json":
-            raise ValueError("Model file must be a .json file")
-        with path.open("r") as f:
-            input_dict = json.load(f)
-        return cls.from_dict(input_dict)
+        if path.suffix == ".zip":
+            return load_archive(path)
+        elif path.suffix == ".json":
+            with path.open("r") as f:
+                input_dict = json.load(f)
+            return cls.from_dict(input_dict)
+        else:
+            raise ValueError("Model file must be a .zip or .json file")
 
     @classmethod
     def from_url(cls, url: str) -> Model:
@@ -151,16 +160,20 @@ class Model:
         """
         Save a vehicle model to a file.
 
+        Supports .zip (new archive format) and .json (legacy format).
+
         Args:
             file: the path to the file to save to
         """
         path = Path(file)
-        if path.suffix != ".json":
-            raise ValueError("Model file must be a .json file")
-
-        output_dict = self.to_dict()
-        with path.open("w") as f:
-            json.dump(output_dict, f)
+        if path.suffix == ".zip":
+            save_archive(self, path)
+        elif path.suffix == ".json":
+            output_dict = self.to_dict()
+            with path.open("w") as f:
+                json.dump(output_dict, f)
+        else:
+            raise ValueError("Model file must be a .zip or .json file")
 
     def to_lookup_table(
         self,

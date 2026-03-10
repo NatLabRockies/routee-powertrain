@@ -9,6 +9,10 @@ __all__ = [
     "Model",
     "ModelConfig",
     "PowertrainType",
+    "ModelId",
+    "ModelInfo",
+    "Catalog",
+    "ModelRegistry",
     "list_available_models",
     "load_model",
     "load_sample_route",
@@ -21,6 +25,9 @@ from .core.model import Model
 from .core.model_config import ModelConfig
 from .core.powertrain_type import PowertrainType
 from .io.load import list_available_models, load_model, load_sample_route
+from .registry.model_id import ModelId, ModelInfo
+from .registry.catalog import Catalog
+from .registry.registry import ModelRegistry
 from .validation.feature_visualization import visualize_features, contour_plot
 
 log = logging.getLogger()

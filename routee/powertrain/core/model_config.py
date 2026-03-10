@@ -39,6 +39,12 @@ class ModelConfig:
     distance: DataColumn
     target: TargetSet
 
+    ## structured vehicle identification
+    make: str
+    model_name: str
+    year: int
+    trim: str
+
     predict_method: PredictMethod = PredictMethod.RATE
 
     test_size: float = 0.2
@@ -49,6 +55,10 @@ class ModelConfig:
     apply_real_world_adjustment: bool = True
 
     def __post_init__(self):
+        # normalize vehicle id fields to lowercase
+        self.make = self.make.lower()
+        self.model_name = self.model_name.lower()
+        self.trim = self.trim.lower()
         # convert feature_set to the correct type
         if isinstance(self.feature_set, dict):
             self.feature_set = FeatureSet.from_dict(self.feature_set)
@@ -85,6 +95,12 @@ class ModelConfig:
 
     @classmethod
     def from_dict(cls, d: dict) -> ModelConfig:
+        # provide defaults for legacy model files that lack vehicle id fields
+        d = d.copy()
+        d.setdefault("make", "unknown")
+        d.setdefault("model_name", "unknown")
+        d.setdefault("year", 0)
+        d.setdefault("trim", "unknown")
         return cls(**d)
 
     def to_dict(self) -> dict:

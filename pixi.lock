@@ -9180,7 +9180,7 @@ packages:
 - pypi: ./
   name: routee-powertrain
   version: 1.4.0
-  sha256: 506a6b2224b6c17f8cd51b85d658220357fa06097f1948545546b6ceec0e8a51
+  sha256: 8e3bae7bd21cc76007b37232ba0e122f5010f9bc46ad39d364458f7bca5eab9e
   requires_dist:
   - numpy>=2.0,<3.0
   - onnx>=1.20,<1.21
@@ -9188,7 +9188,7 @@ packages:
   - pandas>=2.2,<3.0
   - boxsdk ; extra == 'dev'
   - hatch ; extra == 'dev'
-  - jupyter-book ; extra == 'dev'
+  - jupyter-book<2.0 ; extra == 'dev'
   - matplotlib ; extra == 'dev'
   - maturin ; extra == 'dev'
   - mypy>=1.19.1,<1.20 ; extra == 'dev'
@@ -9209,6 +9209,7 @@ packages:
   - ngboost==0.5.2 ; extra == 'ngboost'
   - scikit-learn==1.6.1 ; extra == 'ngboost'
   - matplotlib ; extra == 'plot'
+  - boto3>=1.26 ; extra == 's3'
   - scikit-learn==1.6.1 ; extra == 'scikit'
   - skl2onnx>=1.20,<1.21 ; extra == 'scikit'
   requires_python: '>=3.10,<3.13'
