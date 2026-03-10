@@ -4,8 +4,8 @@ import json
 import warnings
 from dataclasses import dataclass
 
-from nrel.routee.powertrain.core.model_config import ModelConfig
-from nrel.routee.powertrain.utils.fs import get_version
+from routee.powertrain.core.model_config import ModelConfig
+from routee.powertrain.utils.fs import get_version
 
 
 @dataclass

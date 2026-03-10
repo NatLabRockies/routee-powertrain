@@ -8,9 +8,9 @@ import pandas as pd
 
 from importlib.util import find_spec
 
-from nrel.routee.powertrain.core.features import DataColumn, FeatureSet, TargetSet
-from nrel.routee.powertrain.core.model_config import PredictMethod
-from nrel.routee.powertrain.estimators.estimator_interface import Estimator
+from routee.powertrain.core.features import DataColumn, FeatureSet, TargetSet
+from routee.powertrain.core.model_config import PredictMethod
+from routee.powertrain.estimators.estimator_interface import Estimator
 
 
 class NGBoostEstimator(Estimator):
@@ -46,13 +46,13 @@ class NGBoostEstimator(Estimator):
         if find_spec("ngboost") is None:
             raise ImportError(
                 "The NGBoostEstimator estimator requires extra dependencies like joblib and ngboost. "
-                "To install, you can do pip install nrel.routee.powertrain[ngboost]"
+                "To install, you can do pip install routee.powertrain[ngboost]"
             )
 
         if find_spec("joblib") is None:
             raise ImportError(
                 "The NGBoostEstimator estimator requires extra dependencies like joblib and ngboost. "
-                "To install, you can do pip install nrel.routee.powertrain[ngboost]"
+                "To install, you can do pip install routee.powertrain[ngboost]"
             )
         else:
             import joblib
@@ -76,7 +76,7 @@ class NGBoostEstimator(Estimator):
         except ImportError:
             raise ImportError(
                 "The NGBoostEstimator estimator requires extra dependencies like joblib and ngboost. "
-                "To install, you can do pip install nrel.routee.powertrain[ngboost]"
+                "To install, you can do pip install routee.powertrain[ngboost]"
             )
         byte_stream = io.BytesIO()
         joblib.dump(self.model, byte_stream)

@@ -5,9 +5,9 @@ from pathlib import Path
 import onnx
 import onnxruntime as rt
 import pandas as pd
-from nrel.routee.powertrain.core.features import DataColumn, FeatureSet, TargetSet
-from nrel.routee.powertrain.core.model_config import PredictMethod
-from nrel.routee.powertrain.estimators.estimator_interface import Estimator
+from routee.powertrain.core.features import DataColumn, FeatureSet, TargetSet
+from routee.powertrain.core.model_config import PredictMethod
+from routee.powertrain.estimators.estimator_interface import Estimator
 
 ONNX_INPUT_NAME = "input"
 ONNX_DTYPE = "float32"

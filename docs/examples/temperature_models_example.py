@@ -4,7 +4,7 @@
 This example demonstrates how to use models with temperature as a feature in the Routee Powertrain library.
 """
 
-import nrel.routee.powertrain as pt
+import routee.powertrain as pt
 import pandas as pd
 import matplotlib.pyplot as plt
 

@@ -4,9 +4,9 @@ from typing import List, Optional, Union
 
 import pandas as pd
 
-from nrel.routee.powertrain.core.model import Model
-from nrel.routee.powertrain.resources.default_models import default_model_dir
-from nrel.routee.powertrain.resources.sample_routes import sample_route_dir
+from routee.powertrain.core.model import Model
+from routee.powertrain.resources.default_models import default_model_dir
+from routee.powertrain.resources.sample_routes import sample_route_dir
 
 local_models = {
     "2016_TOYOTA_Camry_4cyl_2WD": default_model_dir()
@@ -52,7 +52,7 @@ def load_model(name: Union[str, Path]) -> Model:
 
     Examples:
 
-    >>> import nrel.routee.powertrain as pt
+    >>> import routee.powertrain as pt
     >>>
     >>> # load a default model
     >>> model = pt.load_model("2016_HYUNDAI_Elantra_4cyl_2WD")

@@ -6,11 +6,11 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-from nrel.routee.powertrain.core.features import FeatureSetId
-from nrel.routee.powertrain.core.model_config import ModelConfig
-from nrel.routee.powertrain.estimators.estimator_interface import Estimator
-from nrel.routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
-from nrel.routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
+from routee.powertrain.core.features import FeatureSet, FeatureSetId
+from routee.powertrain.core.model_config import ModelConfig
+from routee.powertrain.estimators.estimator_interface import Estimator
+from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
+from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
 
 REPR_ROWS = {
     "feature_set_id": "Feature Set ID",
@@ -233,26 +233,21 @@ class EstimatorErrors:
 
 @dataclass
 class ModelErrors:
-    estimator_errors: Dict[FeatureSetId, EstimatorErrors]
+    estimator_errors: EstimatorErrors
 
     @classmethod
     def from_dict(cls, d: dict) -> ModelErrors:
-        d["estimator_errors"] = {
-            k: EstimatorErrors.from_dict(v) for k, v in d["estimator_errors"].items()
-        }
-        return ModelErrors(**d)
+        estimator_errors = EstimatorErrors.from_dict(d["estimator_errors"])
+        return ModelErrors(estimator_errors=estimator_errors)
 
     def to_dict(self) -> dict:
-        out_dict = self.__dict__.copy()
-        out_dict["estimator_errors"] = {
-            k: v.to_dict() for k, v in self.estimator_errors.items()
+        return {
+            "estimator_errors": self.estimator_errors.to_dict(),
         }
-        return out_dict
 
     def _repr_html_(self) -> str:
         html_lines = ['<table border="1" style="border-collapse: collapse;">']
-        for _, estimator_error in self.estimator_errors.items():
-            html_lines.extend(estimator_errors_to_html_lines(estimator_error))
+        html_lines.extend(estimator_errors_to_html_lines(self.estimator_errors))
         html_lines.append("</table>")
 
         return "".join(html_lines)
@@ -266,167 +261,160 @@ class ModelErrors:
         max_key_length = max([len(row_name) for row_name in REPR_ROWS.values()])
 
         summary_lines.append("=" * (max_key_length + 20))
-        for feature_set_id, estimator_error in self.estimator_errors.items():
-            for target, errors in estimator_error.error_by_target.items():
-                summary_lines.append(
-                    f"{'Feature Set ID:':<{max_key_length}} {feature_set_id}"
-                )
-                summary_lines.append(f"{'Target:':<{max_key_length}} {target}")
-                for error_name, error_value in errors.to_dict().items():
-                    if error_value is None:
-                        # possible if there are not trip errors
-                        continue
-                    row_name = REPR_ROWS[error_name]
-                    summary_lines.append(
-                        f"{row_name:<{max_key_length}} {error_value:.3f}"
-                    )
-                summary_lines.append("=" * (max_key_length + 20))
+        estimator_error = self.estimator_errors
+        for target, errors in estimator_error.error_by_target.items():
+            summary_lines.append(
+                f"{'Feature Set ID:':<{max_key_length}} {estimator_error.feature_set_id}"
+            )
+            summary_lines.append(f"{'Target:':<{max_key_length}} {target}")
+            for error_name, error_value in errors.to_dict().items():
+                if error_value is None:
+                    # possible if there are not trip errors
+                    continue
+                row_name = REPR_ROWS[error_name]
+                summary_lines.append(f"{row_name:<{max_key_length}} {error_value:.3f}")
+            summary_lines.append("=" * (max_key_length + 20))
 
         return "\n".join(summary_lines)
 
 
 def compute_errors(
     test_df: pd.DataFrame,
-    estimators: Dict[FeatureSetId, Estimator],
+    estimator: Estimator,
+    feature_set: FeatureSet,
     config: ModelConfig,
 ) -> ModelErrors:
     """
-    Computes the error metrics for a set of predictions relative
+    Computes the error metrics for predictions relative
     to the ground truth data
 
     Args:
         test_df: the test dataframe
-        estimators: a set of estimators
+        estimator: the estimator to evaluate
+        feature_set: the feature set used by the estimator
         config: The model configuration
 
-    Returns: a dictionary with all of the error values
+    Returns: a ModelErrors object with all error values
 
     """
     test_df = test_df.copy()
 
-    model_errors = {}
+    feature_set_id = feature_set.features_id
+    target_set = config.target
+    distance = config.distance
+    predict_method = config.predict_method
 
-    for feature_set_id, estimator in estimators.items():
-        feature_set = config.feature_set_map[feature_set_id]
-        target_set = config.target
-        distance = config.distance
-        predict_method = config.predict_method
+    predictions = estimator.predict(
+        test_df,
+        feature_set=feature_set,
+        distance=distance,
+        target_set=target_set,
+        predict_method=predict_method,
+    )
 
-        predictions = estimator.predict(
-            test_df,
-            feature_set=feature_set,
-            distance=distance,
-            target_set=target_set,
-            predict_method=predict_method,
+    estimator_errors = {}
+
+    for energy_name in target_set.target_name_list:
+        errors = {}
+        target = np.array(test_df[energy_name])
+        target_pred = np.array(predictions[energy_name])
+
+        rmse = np.sqrt(mean_squared_error(target, target_pred))
+        errors["link_root_mean_squared_error"] = rmse
+        errors["link_norm_root_mean_squared_error"] = rmse / (
+            sum(test_df[energy_name]) / len(test_df)
         )
 
-        estimator_errors = {}
+        ew_rpe = weighted_relative_percent_difference(target, target_pred)
+        errors["link_weighted_relative_percent_difference"] = ew_rpe
 
-        for energy_name in target_set.target_name_list:
-            errors = {}
-            target = np.array(test_df[energy_name])
-            target_pred = np.array(predictions[energy_name])
+        trip_column = config.trip_column
 
-            rmse = np.sqrt(mean_squared_error(target, target_pred))
-            errors["link_root_mean_squared_error"] = rmse
-            errors["link_norm_root_mean_squared_error"] = rmse / (
-                sum(test_df[energy_name]) / len(test_df)
+        if trip_column in test_df.columns:
+            test_df["energy_pred"] = target_pred
+            gb = test_df.groupby(trip_column).agg(
+                {energy_name: "sum", "energy_pred": "sum"}
+            )
+            t_rpd = relative_percent_difference(gb[energy_name], gb["energy_pred"])
+            t_wrpd = weighted_relative_percent_difference(
+                gb[energy_name], gb["energy_pred"]
+            )
+            t_rmse = np.sqrt(mean_squared_error(gb[energy_name], gb["energy_pred"]))
+
+            errors["trip_relative_percent_difference"] = t_rpd
+            errors["trip_weighted_relative_percent_difference"] = t_wrpd
+            errors["trip_root_mean_squared_error"] = t_rmse
+            errors["trip_norm_root_mean_squared_error"] = t_rmse / (
+                sum(gb[energy_name]) / len(gb)
             )
 
-            ew_rpe = weighted_relative_percent_difference(target, target_pred)
-            errors["link_weighted_relative_percent_difference"] = ew_rpe
+        if isinstance(estimator, NGBoostEstimator):
+            try:
+                from scipy.stats import norm
+            except ImportError:
+                raise ImportError(
+                    "The errors for the NGBoostEstimator requires other dependnecies like scipy. "
+                    "To install, you can do `pip install routee.powertrain[ngboost]"
+                )
+            target_std = np.array(predictions[energy_name + "_std"])
+            alpha = 0.05
+            z = norm.ppf(1 - alpha / 2)  # z-score for 95% confidence
+            lower_bound = target_pred - z * target_std
+            upper_bound = target_pred + z * target_std
 
-            trip_column = config.trip_column
+            errors["link_negative_log_likelihood"] = calculate_nll(
+                target, target_pred, target_std
+            )
+            errors["link_continuous_ranked_probability_score"] = calculate_crps(
+                target, target_pred, target_std
+            )
+            errors["link_prediction_interval_coverage_probability"] = round(
+                calculate_picp(target, lower_bound, upper_bound), 2
+            )
 
             if trip_column in test_df.columns:
                 test_df["energy_pred"] = target_pred
+                test_df["energy_pred_std"] = target_std
                 gb = test_df.groupby(trip_column).agg(
-                    {energy_name: "sum", "energy_pred": "sum"}
+                    {
+                        energy_name: "sum",
+                        "energy_pred": "sum",
+                        "energy_pred_std": calculate_combined_sd,
+                    }
                 )
-                t_rpd = relative_percent_difference(gb[energy_name], gb["energy_pred"])
-                t_wrpd = weighted_relative_percent_difference(
-                    gb[energy_name], gb["energy_pred"]
-                )
-                t_rmse = np.sqrt(mean_squared_error(gb[energy_name], gb["energy_pred"]))
+                lower_bound = gb["energy_pred"] - z * gb["energy_pred_std"]
+                upper_bound = gb["energy_pred"] + z * gb["energy_pred_std"]
 
-                errors["trip_relative_percent_difference"] = t_rpd
-                errors["trip_weighted_relative_percent_difference"] = t_wrpd
-                errors["trip_root_mean_squared_error"] = t_rmse
-                errors["trip_norm_root_mean_squared_error"] = t_rmse / (
-                    sum(gb[energy_name]) / len(gb)
+                errors["trip_negative_log_likelihood"] = calculate_nll(
+                    gb[energy_name], gb["energy_pred"], gb["energy_pred_std"]
                 )
-
-            if isinstance(estimator, NGBoostEstimator):
-                try:
-                    from scipy.stats import norm
-                except ImportError:
-                    raise ImportError(
-                        "The errors for the NGBoostEstimator requires other dependnecies like scipy. "
-                        "To install, you can do `pip install nrel.routee.powertrain[ngboost]"
-                    )
-                target_std = np.array(predictions[energy_name + "_std"])
-                alpha = 0.05
-                z = norm.ppf(1 - alpha / 2)  # z-score for 95% confidence
-                lower_bound = target_pred - z * target_std
-                upper_bound = target_pred + z * target_std
-
-                errors["link_negative_log_likelihood"] = calculate_nll(
-                    target, target_pred, target_std
+                errors["trip_continuous_ranked_probability_score"] = calculate_crps(
+                    gb[energy_name], gb["energy_pred"], gb["energy_pred_std"]
                 )
-                errors["link_continuous_ranked_probability_score"] = calculate_crps(
-                    target, target_pred, target_std
-                )
-                errors["link_prediction_interval_coverage_probability"] = round(
-                    calculate_picp(target, lower_bound, upper_bound), 2
+                errors["trip_prediction_interval_coverage_probability"] = round(
+                    calculate_picp(gb[energy_name], lower_bound, upper_bound), 2
                 )
 
-                if trip_column in test_df.columns:
-                    test_df["energy_pred"] = target_pred
-                    test_df["energy_pred_std"] = target_std
-                    gb = test_df.groupby(trip_column).agg(
-                        {
-                            energy_name: "sum",
-                            "energy_pred": "sum",
-                            "energy_pred_std": calculate_combined_sd,
-                        }
-                    )
-                    lower_bound = gb["energy_pred"] - z * gb["energy_pred_std"]
-                    upper_bound = gb["energy_pred"] + z * gb["energy_pred_std"]
+        errors["net_error"] = net_energy_error(target, target_pred)
 
-                    errors["trip_negative_log_likelihood"] = calculate_nll(
-                        gb[energy_name], gb["energy_pred"], gb["energy_pred_std"]
-                    )
-                    errors["trip_continuous_ranked_probability_score"] = calculate_crps(
-                        gb[energy_name], gb["energy_pred"], gb["energy_pred_std"]
-                    )
-                    errors["trip_prediction_interval_coverage_probability"] = round(
-                        calculate_picp(gb[energy_name], lower_bound, upper_bound), 2
-                    )
+        total_dist = test_df[distance.name].sum()
 
-            errors["net_error"] = net_energy_error(target, target_pred)
+        real_word_pred = target_pred * ADJUSTMENT_FACTORS[config.powertrain_type]
 
-            total_dist = test_df[distance.name].sum()
+        pred_energy = np.sum(target_pred)
+        real_word_pred_energy = np.sum(real_word_pred)
+        actual_energy = np.sum(target)
 
-            real_word_pred = target_pred * ADJUSTMENT_FACTORS[config.powertrain_type]
+        errors["actual_dist_per_energy"] = total_dist / actual_energy
+        errors["pred_dist_per_energy"] = total_dist / pred_energy
+        errors["real_world_pred_dist_per_energy"] = total_dist / real_word_pred_energy
 
-            pred_energy = np.sum(target_pred)
-            real_word_pred_energy = np.sum(real_word_pred)
-            actual_energy = np.sum(target)
+        errors_obj = Errors(**errors)
 
-            errors["actual_dist_per_energy"] = total_dist / actual_energy
-            errors["pred_dist_per_energy"] = total_dist / pred_energy
-            errors["real_world_pred_dist_per_energy"] = (
-                total_dist / real_word_pred_energy
-            )
+        estimator_errors[energy_name] = errors_obj
 
-            errors_obj = Errors(**errors)
+    estimator_errors_obj = EstimatorErrors(feature_set_id, estimator_errors)
 
-            estimator_errors[energy_name] = errors_obj
-
-        estimator_errors_obj = EstimatorErrors(feature_set_id, estimator_errors)
-
-        model_errors[feature_set_id] = estimator_errors_obj
-
-    model_errors_obj = ModelErrors(model_errors)
+    model_errors_obj = ModelErrors(estimator_errors_obj)
 
     return model_errors_obj

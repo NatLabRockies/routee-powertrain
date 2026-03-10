@@ -11,8 +11,8 @@ from typing import NamedTuple, Dict, Union
 
 import yaml
 
-from nrel.routee.powertrain.validation.feature_visualization import visualize_features
-from nrel.routee.powertrain import Model
+from routee.powertrain.validation.feature_visualization import visualize_features
+from routee.powertrain import Model
 
 formatter = logging.Formatter("%(asctime)s [%(levelname)s] - %(message)s")
 log = logging.getLogger(__name__)

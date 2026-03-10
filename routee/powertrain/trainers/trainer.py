@@ -3,12 +3,12 @@ from abc import ABC, abstractmethod
 
 import pandas as pd
 
-from nrel.routee.powertrain.core.metadata import Metadata
-from nrel.routee.powertrain.core.model import Model
-from nrel.routee.powertrain.core.model_config import ModelConfig, PredictMethod
-from nrel.routee.powertrain.estimators.estimator_interface import Estimator
-from nrel.routee.powertrain.trainers.utils import test_train_split
-from nrel.routee.powertrain.validation.errors import compute_errors
+from routee.powertrain.core.metadata import Metadata
+from routee.powertrain.core.model import Model
+from routee.powertrain.core.model_config import ModelConfig, PredictMethod
+from routee.powertrain.estimators.estimator_interface import Estimator
+from routee.powertrain.trainers.utils import test_train_split
+from routee.powertrain.validation.errors import compute_errors
 
 ENERGY_RATE_NAME = "energy_rate"
 
@@ -46,23 +46,21 @@ class Trainer(ABC):
                 f" set to {config.predict_method} and the target is {config.target}."
             )
 
-        # train an estimator for each feature set
-        estimators = {}
-        for feature_set in config.feature_sets:
-            name_list = feature_set.feature_name_list
-            if config.predict_method == PredictMethod.RAW:
-                name_list.append(distance_name)
-            sub_features = all_features[name_list]
-            estimator = self.inner_train(
-                features=sub_features, target=target, config=config
-            )
-            estimators[feature_set.features_id] = estimator
+        # train the estimator for the feature set
+        feature_set = config.feature_set
+        name_list = list(feature_set.feature_name_list)
+        if config.predict_method == PredictMethod.RAW:
+            name_list.append(distance_name)
+        sub_features = all_features[name_list]
+        estimator = self.inner_train(
+            features=sub_features, target=target, config=config
+        )
 
         metadata = Metadata(config=config)
 
-        model_errors = compute_errors(test, estimators, config)
+        model_errors = compute_errors(test, estimator, feature_set, config)
 
-        vehicle_model = Model(estimators, metadata, model_errors)
+        vehicle_model = Model(estimator, metadata, model_errors)
 
         return vehicle_model
 

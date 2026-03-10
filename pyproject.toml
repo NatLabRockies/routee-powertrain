@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "nrel.routee.powertrain"
+name = "routee.powertrain"
 dynamic = ["version"]
 description = "RouteE-Powertrain is a tool for predicting energy usage over a set of road links."
 readme = "README.md"
@@ -30,9 +30,9 @@ scikit = ["scikit-learn==1.6.1", "skl2onnx>=1.20,<1.21"]
 ngboost = ["ngboost==0.5.2", "scikit-learn==1.6.1"]
 plot = ["matplotlib"]
 dev = [
-    "nrel.routee.powertrain[scikit]",
-    "nrel.routee.powertrain[plot]",
-    "nrel.routee.powertrain[ngboost]",
+    "routee.powertrain[scikit]",
+    "routee.powertrain[plot]",
+    "routee.powertrain[ngboost]",
     "tqdm",
     "pytest",
     "mypy>=1.19.1,<1.20",
@@ -41,7 +41,7 @@ dev = [
     "hatch",
     "shapely",
     "boxsdk",
-    "jupyter-book",
+    "jupyter-book<2.0",
     "sphinx-book-theme",
     "types-PyYAML",
     "types-protobuf",
@@ -52,16 +52,16 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/NREL/routee-powertrain"
+Homepage = "https://github.com/NatLabRockies/routee-powertrain"
 
 [tool.hatch.version]
-path = "nrel/routee/powertrain/__about__.py"
+path = "routee/powertrain/__about__.py"
 
 [tool.hatch.build.targets.sdist]
 exclude = ["scripts/", "tests/", "docs/"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["nrel"]
+packages = ["routee"]
 
 [tool.mypy]
 ignore_missing_imports = true
@@ -70,7 +70,7 @@ explicit_package_bases = true
 exclude = ["docs/", "build/", "dist/", "py-notebooks/"]
 
 [tool.ruff]
-include = ["nrel/**/*.py", "tests/*.py"]
+include = ["routee/**/*.py", "tests/*.py"]
 # Exclude a variety of commonly ignored directories.
 exclude = [
     ".bzr",
@@ -169,4 +169,4 @@ check = { depends-on = ["fmt_fix", "lint_fix", "typing", "test"] }
 ci = { depends-on = ["fmt_check", "lint_check", "typing", "test"] }
 
 [tool.pixi.pypi-dependencies]
-nrel-routee-powertrain = { path = ".", editable = true }
+routee-powertrain = { path = ".", editable = true }
