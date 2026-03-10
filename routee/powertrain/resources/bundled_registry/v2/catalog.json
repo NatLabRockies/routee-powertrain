@@ -1,0 +1,77 @@
+{
+  "schema_version": "v2",
+  "models": [
+    {
+      "model_id": {
+        "make": "toyota",
+        "model_name": "camry",
+        "year": 2016,
+        "trim": "4cyl_2wd",
+        "variant": "default",
+        "version": 1
+      },
+      "estimator_type": "ONNXEstimator",
+      "feature_names": [
+        "speed_mph",
+        "grade_percent"
+      ],
+      "target_names": [
+        "gge"
+      ],
+      "powertrain_type": "ICE",
+      "errors": {
+        "gge": {
+          "link_root_mean_squared_error": 0.0012698840872346134,
+          "link_norm_root_mean_squared_error": 0.7240177664023913,
+          "link_weighted_relative_percent_difference": 0.36264801841324906,
+          "net_error": 0.017718058813985083,
+          "actual_dist_per_energy": 30.82589200688958,
+          "pred_dist_per_energy": 30.289225724080254,
+          "real_world_pred_dist_per_energy": 25.977037499211228,
+          "trip_relative_percent_difference": 0.16894018208419193,
+          "trip_weighted_relative_percent_difference": 0.09843317383042983,
+          "trip_root_mean_squared_error": 0.008502485147408074,
+          "trip_norm_root_mean_squared_error": 0.16527194182282584
+        }
+      },
+      "vehicle_description": "2016_TOYOTA_Camry_4cyl_2WD trained July 2024",
+      "path": "v2/toyota/camry/2016/4cyl_2wd/default/v1.zip"
+    },
+    {
+      "model_id": {
+        "make": "chevrolet",
+        "model_name": "bolt",
+        "year": 2017,
+        "trim": "default",
+        "variant": "default",
+        "version": 1
+      },
+      "estimator_type": "ONNXEstimator",
+      "feature_names": [
+        "speed_mph",
+        "grade_percent"
+      ],
+      "target_names": [
+        "kwh"
+      ],
+      "powertrain_type": "BEV",
+      "errors": {
+        "kwh": {
+          "link_root_mean_squared_error": 0.019031045651014208,
+          "link_norm_root_mean_squared_error": 1.4866731668102635,
+          "link_weighted_relative_percent_difference": 0.7349972159773847,
+          "net_error": -0.009809671977623587,
+          "actual_dist_per_energy": 4.180673987907612,
+          "pred_dist_per_energy": 4.222091318804658,
+          "real_world_pred_dist_per_energy": 3.02485407565887,
+          "trip_relative_percent_difference": 0.48704066565087567,
+          "trip_weighted_relative_percent_difference": 0.16109247823531392,
+          "trip_root_mean_squared_error": 0.1229873635354859,
+          "trip_norm_root_mean_squared_error": 0.3285596302409108
+        }
+      },
+      "vehicle_description": "2017_CHEVROLET_Bolt trained July 2024",
+      "path": "v2/chevrolet/bolt/2017/default/default/v1.zip"
+    }
+  ]
+}
