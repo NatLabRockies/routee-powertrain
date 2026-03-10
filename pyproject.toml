@@ -41,7 +41,7 @@ dev = [
     "hatch",
     "shapely",
     "boxsdk",
-    "jupyter-book",
+    "jupyter-book<2.0",
     "sphinx-book-theme",
     "types-PyYAML",
     "types-protobuf",
