@@ -6,7 +6,7 @@
 To install the base package for model prediction, we recommend you use `pip`:
 
 ```bash
-pip install nrel.routee.powertrain
+pip install routee.powertrain
 ```
 
 ## From Source
@@ -29,7 +29,7 @@ Each training pipeline has its own set of dependencies.
 To install the depenecies the scikit learn training pipeline, use the following command:
 
 ```bash
-pip install nrel.routee.powertrain[scikit]
+pip install routee.powertrain[scikit]
 ```
 
 This should support usage of the following trainers:

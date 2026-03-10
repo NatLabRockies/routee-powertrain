@@ -7,14 +7,14 @@ RouteE-Powertrain is a Python package that allows users to work with a set of pr
 RouteE Powertrain is available on PyPI and can be installed with `pip`:
 
 ```bash
-pip install nrel.routee.powertrain
+pip install routee.powertrain
 ```
 
 Then, you can import the package and use a pre-trained model from the RouteE model catalog:
 
 ```python
 import pandas as pd
-import nrel.routee.powertrain as pt
+import routee.powertrain as pt
 
 # Print the available pre-trained models
 print(pt.list_available_models(local=True, external=True))

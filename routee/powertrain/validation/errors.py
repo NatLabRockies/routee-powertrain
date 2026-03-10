@@ -6,11 +6,11 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-from nrel.routee.powertrain.core.features import FeatureSet, FeatureSetId
-from nrel.routee.powertrain.core.model_config import ModelConfig
-from nrel.routee.powertrain.estimators.estimator_interface import Estimator
-from nrel.routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
-from nrel.routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
+from routee.powertrain.core.features import FeatureSet, FeatureSetId
+from routee.powertrain.core.model_config import ModelConfig
+from routee.powertrain.estimators.estimator_interface import Estimator
+from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
+from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
 
 REPR_ROWS = {
     "feature_set_id": "Feature Set ID",
@@ -354,7 +354,7 @@ def compute_errors(
             except ImportError:
                 raise ImportError(
                     "The errors for the NGBoostEstimator requires other dependnecies like scipy. "
-                    "To install, you can do `pip install nrel.routee.powertrain[ngboost]"
+                    "To install, you can do `pip install routee.powertrain[ngboost]"
                 )
             target_std = np.array(predictions[energy_name + "_std"])
             alpha = 0.05

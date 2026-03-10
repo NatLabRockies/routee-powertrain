@@ -1,4 +1,4 @@
-from nrel.routee.powertrain.core.powertrain_type import PowertrainType
+from routee.powertrain.core.powertrain_type import PowertrainType
 
 # real world adjustment factors used to generally correct
 # for environmental variables (like temperature)

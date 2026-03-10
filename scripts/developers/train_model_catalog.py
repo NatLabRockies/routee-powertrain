@@ -11,9 +11,9 @@ from joblib import Parallel, delayed
 
 import shapely
 
-import nrel.routee.powertrain as pt
+import routee.powertrain as pt
 
-from nrel.routee.powertrain.trainers.sklearn_random_forest import (
+from routee.powertrain.trainers.sklearn_random_forest import (
     SklearnRandomForestTrainer,
 )
 

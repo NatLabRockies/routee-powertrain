@@ -4,12 +4,12 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List
 
-from nrel.routee.powertrain.core.features import (
+from routee.powertrain.core.features import (
     DataColumn,
     FeatureSet,
     TargetSet,
 )
-from nrel.routee.powertrain.core.powertrain_type import PowertrainType
+from routee.powertrain.core.powertrain_type import PowertrainType
 
 
 class PredictMethod(Enum):

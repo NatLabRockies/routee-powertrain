@@ -3,12 +3,12 @@ from abc import ABC, abstractmethod
 
 import pandas as pd
 
-from nrel.routee.powertrain.core.metadata import Metadata
-from nrel.routee.powertrain.core.model import Model
-from nrel.routee.powertrain.core.model_config import ModelConfig, PredictMethod
-from nrel.routee.powertrain.estimators.estimator_interface import Estimator
-from nrel.routee.powertrain.trainers.utils import test_train_split
-from nrel.routee.powertrain.validation.errors import compute_errors
+from routee.powertrain.core.metadata import Metadata
+from routee.powertrain.core.model import Model
+from routee.powertrain.core.model_config import ModelConfig, PredictMethod
+from routee.powertrain.estimators.estimator_interface import Estimator
+from routee.powertrain.trainers.utils import test_train_split
+from routee.powertrain.validation.errors import compute_errors
 
 ENERGY_RATE_NAME = "energy_rate"
 

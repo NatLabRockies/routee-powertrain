@@ -5,19 +5,19 @@ from unittest import TestCase, skip
 
 import pandas as pd
 
-import nrel.routee.powertrain as pt
-from nrel.routee.powertrain.core.model_config import PredictMethod
-from nrel.routee.powertrain.estimators.onnx import ONNXEstimator
-from nrel.routee.powertrain.estimators.smart_core import SmartCoreEstimator
-from nrel.routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
+import routee.powertrain as pt
+from routee.powertrain.core.model_config import PredictMethod
+from routee.powertrain.estimators.onnx import ONNXEstimator
+from routee.powertrain.estimators.smart_core import SmartCoreEstimator
+from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
 
-from nrel.routee.powertrain.trainers.sklearn_random_forest import (
+from routee.powertrain.trainers.sklearn_random_forest import (
     SklearnRandomForestTrainer,
 )
-from nrel.routee.powertrain.trainers.smartcore_random_forest import (
+from routee.powertrain.trainers.smartcore_random_forest import (
     SmartcoreRandomForestTrainer,
 )
-from nrel.routee.powertrain.trainers.ngboost_trainer import (
+from routee.powertrain.trainers.ngboost_trainer import (
     NGBoostTrainer,
 )
 

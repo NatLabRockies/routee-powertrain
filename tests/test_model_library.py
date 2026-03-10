@@ -5,7 +5,7 @@ from unittest import TestCase, skip
 from tqdm import tqdm
 
 
-import nrel.routee.powertrain as pt
+import routee.powertrain as pt
 
 this_dir = Path(__file__).parent
 

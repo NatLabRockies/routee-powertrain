@@ -7,7 +7,7 @@ import numpy as np
 from pandas import DataFrame
 
 if TYPE_CHECKING:
-    from nrel.routee.powertrain.core.model import Model
+    from routee.powertrain.core.model import Model
     from pandas import Series
 
 log = logging.getLogger(__name__)

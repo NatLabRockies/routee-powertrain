@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 from pathlib import Path
 
 import pandas as pd
-from nrel.routee.powertrain.core.features import DataColumn, FeatureSet, TargetSet
-from nrel.routee.powertrain.core.model_config import PredictMethod
-from nrel.routee.powertrain.estimators.estimator_interface import Estimator
+from routee.powertrain.core.features import DataColumn, FeatureSet, TargetSet
+from routee.powertrain.core.model_config import PredictMethod
+from routee.powertrain.estimators.estimator_interface import Estimator
 
 from .port_to_c import (
     c_header_from_random_forest,

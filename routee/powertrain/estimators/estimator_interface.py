@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 import pandas as pd
-from nrel.routee.powertrain.core.features import DataColumn, FeatureSet, TargetSet
-from nrel.routee.powertrain.core.model_config import PredictMethod
+from routee.powertrain.core.features import DataColumn, FeatureSet, TargetSet
+from routee.powertrain.core.model_config import PredictMethod
 
 
 class Estimator(ABC):

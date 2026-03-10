@@ -2,8 +2,8 @@
 
 <div align="left">
     <img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue"/>
-  <a href="https://pypi.org/project/nrel.routee.powertrain/">
-    <img src="https://img.shields.io/pypi/v/nrel.routee.powertrain" alt="PyPi Latest Release"/>
+  <a href="https://pypi.org/project/routee.powertrain/">
+    <img src="https://img.shields.io/pypi/v/routee.powertrain" alt="PyPi Latest Release"/>
   </a>
 </div>
 
@@ -25,13 +25,13 @@ RouteE Powertrain is available on PyPI and can be installed with `pip`:
 
 ```bash
 pip install pip --upgrade
-pip install nrel.routee.powertrain
+pip install routee.powertrain
 ```
 
 If `pip` is unavailable, use `pip3`:
 ```bash
 pip3 install pip --upgrade
-pip3 install nrel.routee.powertrain
+pip3 install routee.powertrain
 ```
 
 (For more detailed instructions, see [here](https://nrel.github.io/routee-powertrain/installation.html))
@@ -40,7 +40,7 @@ Then, you can import the package and use a pre-trained model from the RouteE mod
 
 ```python
 import pandas as pd
-import nrel.routee.powertrain as pt
+import routee.powertrain as pt
 
 # Print the available pre-trained models
 print(pt.list_available_models(local=True, external=True))

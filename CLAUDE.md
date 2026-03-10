@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**nrel.routee.powertrain** is a Python package for predicting vehicle energy consumption over road network links. It ships pre-trained mesoscopic vehicle energy models (ICE, HEV, BEV, PHEV, heavy-duty) and supports training custom models from drive-cycle data.
+**routee.powertrain** is a Python package for predicting vehicle energy consumption over road network links. It ships pre-trained mesoscopic vehicle energy models (ICE, HEV, BEV, PHEV, heavy-duty) and supports training custom models from drive-cycle data.
 
 - **Maintainer**: National Laboratory of the Rockies 
 - **License**: BSD 3-Clause
@@ -73,7 +73,7 @@ Package source lives under `nrel/routee/powertrain/`.
 - `logging.getLogger(__name__)` module-level logger pattern
 - snake_case functions/variables, PascalCase classes, UPPER_SNAKE_CASE constants
 - `TYPE_CHECKING` guard for circular import avoidance
-- Absolute imports within the package: `from nrel.routee.powertrain.core.features import ...`
+- Absolute imports within the package: `from routee.powertrain.core.features import ...`
 
 ## Linting & Formatting Config
 

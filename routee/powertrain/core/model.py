@@ -9,19 +9,19 @@ from urllib import request
 
 import pandas as pd
 
-from nrel.routee.powertrain.core.metadata import Metadata
-from nrel.routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
-from nrel.routee.powertrain.estimators.estimator_interface import Estimator
-from nrel.routee.powertrain.estimators.onnx import ONNXEstimator
-from nrel.routee.powertrain.estimators.smart_core import SmartCoreEstimator
-from nrel.routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
+from routee.powertrain.core.metadata import Metadata
+from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
+from routee.powertrain.estimators.estimator_interface import Estimator
+from routee.powertrain.estimators.onnx import ONNXEstimator
+from routee.powertrain.estimators.smart_core import SmartCoreEstimator
+from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
 
-from nrel.routee.powertrain.io.to_lookup_table import to_lookup_table
-from nrel.routee.powertrain.validation.feature_visualization import (
+from routee.powertrain.io.to_lookup_table import to_lookup_table
+from routee.powertrain.validation.feature_visualization import (
     contour_plot,
     visualize_features,
 )
-from nrel.routee.powertrain.validation.errors import ModelErrors
+from routee.powertrain.validation.errors import ModelErrors
 
 if TYPE_CHECKING:
     from pandas import Series
@@ -196,7 +196,7 @@ class Model:
                 raise ValueError(
                     f"Feature: {f.name} has constraints with positive/negative infinity in the lower/upper bound. "
                     f"You can add constraints when training a model or set custom constraints during visualization using "
-                    f"nrel.routee.powertrain.validation.feature_visualization.visualize_features"
+                    f"routee.powertrain.validation.feature_visualization.visualize_features"
                 )
             feature_ranges[f.name] = {
                 "upper": f.constraints.upper,
@@ -236,7 +236,7 @@ class Model:
                 raise ValueError(
                     f"Feature: {f.name} has constraints with positive/negative infinity in the lower/upper bound. "
                     f"You can add constraints when training a model or set custom constraints during visualization using "
-                    f"nrel.routee.powertrain.validation.feature_visualization.contour_plot"
+                    f"routee.powertrain.validation.feature_visualization.contour_plot"
                 )
             feature_ranges[f.name] = {
                 "upper": f.constraints.upper,

@@ -5,10 +5,10 @@ from ngboost import NGBRegressor
 from ngboost.distns import Normal
 
 
-from nrel.routee.powertrain.core.model_config import ModelConfig
-from nrel.routee.powertrain.estimators.estimator_interface import Estimator
-from nrel.routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
-from nrel.routee.powertrain.trainers.trainer import Trainer
+from routee.powertrain.core.model_config import ModelConfig
+from routee.powertrain.estimators.estimator_interface import Estimator
+from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
+from routee.powertrain.trainers.trainer import Trainer
 
 
 class NGBoostTrainer(Trainer):

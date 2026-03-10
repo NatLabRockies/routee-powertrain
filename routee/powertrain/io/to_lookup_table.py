@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 if TYPE_CHECKING:
-    from nrel.routee.powertrain.core.model import Model
+    from routee.powertrain.core.model import Model
 
 
 @dataclass

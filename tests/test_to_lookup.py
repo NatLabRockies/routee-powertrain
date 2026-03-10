@@ -4,8 +4,8 @@ from unittest import TestCase
 import pandas as pd
 import numpy as np
 
-import nrel.routee.powertrain as pt
-from nrel.routee.powertrain.io.to_lookup_table import (
+import routee.powertrain as pt
+from routee.powertrain.io.to_lookup_table import (
     to_lookup_table,
     LookupTableFeatureParameter,
 )

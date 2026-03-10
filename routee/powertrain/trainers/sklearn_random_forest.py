@@ -6,10 +6,10 @@ from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import FloatTensorType
 from sklearn.ensemble import RandomForestRegressor
 
-from nrel.routee.powertrain.core.model_config import ModelConfig
-from nrel.routee.powertrain.estimators.estimator_interface import Estimator
-from nrel.routee.powertrain.estimators.onnx import ONNX_INPUT_NAME, ONNXEstimator
-from nrel.routee.powertrain.trainers.trainer import Trainer
+from routee.powertrain.core.model_config import ModelConfig
+from routee.powertrain.estimators.estimator_interface import Estimator
+from routee.powertrain.estimators.onnx import ONNX_INPUT_NAME, ONNXEstimator
+from routee.powertrain.trainers.trainer import Trainer
 
 
 class RandomForestTrainerOutput(Enum):

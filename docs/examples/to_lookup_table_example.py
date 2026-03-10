@@ -5,7 +5,7 @@ This example demonstrates how to convert a Routee Powertrain model into a lookup
 Lookup tables are useful for fast energy consumption predictions across a predefined grid of operating conditions.
 """
 
-import nrel.routee.powertrain as pt
+import routee.powertrain as pt
 import numpy as np
 
 

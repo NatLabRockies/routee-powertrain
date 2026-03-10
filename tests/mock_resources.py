@@ -3,8 +3,8 @@ import uuid
 import pandas as pd
 import numpy as np
 
-from nrel.routee.powertrain import load_model, FeatureSet, DataColumn
-from nrel.routee.powertrain.core.model import Model
+from routee.powertrain import load_model, FeatureSet, DataColumn
+from routee.powertrain.core.model import Model
 
 
 def mock_model() -> Model:
