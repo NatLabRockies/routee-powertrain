@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Union
 
 from routee.powertrain.core.metadata import Metadata
-from routee.powertrain.validation.errors import ModelErrors
 
 if TYPE_CHECKING:
     from routee.powertrain.core.model import Model
@@ -25,14 +24,7 @@ def _get_estimator_registry():
 
 def _build_metadata_dict(model: Model) -> dict:
     """Build the metadata dictionary for serialization."""
-    estimator = model.estimator
-    return {
-        "schema_version": SCHEMA_VERSION,
-        "estimator_type": estimator.__class__.__name__,
-        "model_file": "model" + estimator.file_extension,
-        "metadata": model.metadata.to_dict(),
-        "errors": model.errors.to_dict(),
-    }
+    return model.metadata.to_dict()
 
 
 def _model_from_metadata_and_bytes(metadata_dict: dict, model_bytes: bytes) -> Model:
@@ -63,10 +55,9 @@ def _model_from_metadata_and_bytes(metadata_dict: dict, model_bytes: bytes) -> M
         raise ValueError("Archive metadata must contain 'model_file'")
 
     estimator = estimator_cls.from_bytes(model_bytes)
-    metadata = Metadata.from_dict(metadata_dict["metadata"])
-    errors = ModelErrors.from_dict(metadata_dict["errors"])
+    metadata = Metadata.from_dict(metadata_dict)
 
-    return Model(estimator=estimator, metadata=metadata, errors=errors)
+    return Model(estimator=estimator, metadata=metadata)
 
 
 # ---------------------------------------------------------------------------

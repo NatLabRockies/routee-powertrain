@@ -55,7 +55,7 @@ def _model_info_from_metadata(
     metadata_dict: dict, model_id: ModelId, path: str
 ) -> ModelInfo:
     """Convert an archive metadata dict + ModelId into a ModelInfo."""
-    config = metadata_dict["metadata"]["config"]
+    config = metadata_dict["config"]
 
     est_errors = metadata_dict["errors"]["estimator_errors"]
     error_summary = {}

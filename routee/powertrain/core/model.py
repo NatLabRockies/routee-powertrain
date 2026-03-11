@@ -25,7 +25,6 @@ from routee.powertrain.validation.feature_visualization import (
     contour_plot,
     visualize_features,
 )
-from routee.powertrain.validation.errors import ModelErrors
 
 if TYPE_CHECKING:
     from pandas import Series
@@ -46,7 +45,6 @@ class Model:
 
     estimator: Estimator
     metadata: Metadata
-    errors: ModelErrors
 
     @property
     def feature_set(self):
@@ -270,7 +268,7 @@ class Model:
         summary_lines.append(f"Powertrain type: {config.powertrain_type.name}")
         summary_lines.append("=" * 40)
 
-        estimator_errors = self.errors.estimator_errors
+        estimator_errors = self.metadata.errors.estimator_errors
         summary_lines.append("Estimator Summary")
         summary_lines.append("-" * 20)
         feature_set = config.feature_set
@@ -317,7 +315,7 @@ class Model:
             f"<tr><td>Powertrain type</td><td>{config.powertrain_type.name}</td></tr>"
         )
 
-        estimator_errors = self.errors.estimator_errors
+        estimator_errors = self.metadata.errors.estimator_errors
 
         # Title: Estimator Summary
         html_lines.append(

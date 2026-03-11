@@ -119,7 +119,7 @@ class TestLocalRegistry(TestCase):
     def test_get_metadata(self):
         model_id = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", 1)
         meta = self.registry.get_metadata(model_id)
-        self.assertIn("metadata", meta)
+        self.assertIn("config", meta)
         self.assertIn("estimator_type", meta)
 
     def test_query_returns_model_info(self):
