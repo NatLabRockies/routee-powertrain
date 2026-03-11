@@ -18,6 +18,8 @@ def list_available_models(
     year: Optional[int] = None,
     variant: Optional[str] = None,
     registry: Optional[ModelRegistry] = None,
+    fuzzy: bool = True,
+    fuzzy_threshold: int = 80,
 ) -> List[ModelInfo]:
     """
     Returns a list of available pretrained models from the registry.
@@ -30,6 +32,8 @@ def list_available_models(
         year: filter by model year
         variant: filter by variant
         registry: a ModelRegistry instance; defaults to get_default_registry()
+        fuzzy: if True, use fuzzy string matching for string fields (default True)
+        fuzzy_threshold: minimum score (0–100) for a fuzzy match (default 80)
 
     Returns: list of ModelInfo with full metadata and error metrics
     """
@@ -43,6 +47,8 @@ def list_available_models(
         model_name=model_name,
         year=year,
         variant=variant,
+        fuzzy=fuzzy,
+        fuzzy_threshold=fuzzy_threshold,
     )
 
 

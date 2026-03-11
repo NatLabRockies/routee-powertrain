@@ -5,12 +5,13 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 from routee.powertrain.core.model import Model
-from routee.powertrain.core.year import parse_year, year_contains
+from routee.powertrain.core.year import parse_year
 from routee.powertrain.io.archive import (
     load_model_directory,
     read_directory_metadata,
     METADATA_FILENAME,
 )
+from routee.powertrain.registry.filtering import filter_models
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry
 
@@ -137,23 +138,20 @@ class LocalRegistry(ModelRegistry):
         year: Optional[int] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
+        fuzzy: bool = True,
+        fuzzy_threshold: int = 80,
     ) -> List[ModelInfo]:
         results = self._scan_models()
-        if make is not None:
-            make_lower = make.lower()
-            results = [m for m in results if m.model_id.make == make_lower]
-        if model_name is not None:
-            model_name_lower = model_name.lower()
-            results = [m for m in results if m.model_id.model_name == model_name_lower]
-        if year is not None:
-            results = [m for m in results if year_contains(m.model_id.year, year)]
-        if variant is not None:
-            variant_lower = variant.lower()
-            results = [m for m in results if m.model_id.variant == variant_lower]
-        if feature_set_id is not None:
-            fs_lower = feature_set_id.lower()
-            results = [m for m in results if m.model_id.feature_set_id == fs_lower]
-        return results
+        return filter_models(
+            results,
+            make=make,
+            model_name=model_name,
+            year=year,
+            variant=variant,
+            feature_set_id=feature_set_id,
+            fuzzy=fuzzy,
+            fuzzy_threshold=fuzzy_threshold,
+        )
 
     def load(self, model_id: ModelId) -> Model:
         rel_path = model_id.to_path(self.schema_version)

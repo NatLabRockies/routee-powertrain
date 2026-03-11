@@ -24,12 +24,25 @@ class ModelRegistry(ABC):
         year: Optional[int] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
+        fuzzy: bool = True,
+        fuzzy_threshold: int = 80,
     ) -> List[ModelInfo]:
         """
         List models matching the given filters.
 
         All parameters are optional; passing none returns all models.
         Returns lightweight metadata — no model binaries are downloaded.
+
+        Args:
+            make: filter by vehicle make
+            model_name: filter by model name
+            year: filter by model year
+            variant: filter by variant
+            feature_set_id: filter by feature set id
+            fuzzy: if True, use fuzzy string matching for string
+                fields (default True)
+            fuzzy_threshold: minimum score (0–100) for a fuzzy match
+                to be accepted (default 80)
         """
 
     @abstractmethod

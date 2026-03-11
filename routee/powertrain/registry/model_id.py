@@ -91,13 +91,14 @@ class ModelInfo:
     def __repr__(self) -> str:
         lines = [
             f"ModelInfo({self.model_id})",
-            f"  make and model: {self.model_id.make} {self.model_id.model_name}",
-            f"  year:           {format_year(self.model_id.year)}",
-            f"  variant:        {self.model_id.variant}",
             f"  description:    {self.vehicle_description}",
+            f"  year:           {format_year(self.model_id.year)}",
+            f"  make:           {self.model_id.make}",
+            f"  model:          {self.model_id.model_name}",
+            f"  powertrain:     {self.powertrain_type}",
+            f"  variant:        {self.model_id.variant}",
             f"  estimator:      {self.estimator_type}",
             f"  features:       {self.feature_names}",
             f"  targets:        {self.target_names}",
-            f"  powertrain:     {self.powertrain_type}",
         ]
         return "\n".join(lines)

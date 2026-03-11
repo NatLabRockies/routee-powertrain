@@ -134,3 +134,40 @@ class TestLocalRegistry(TestCase):
         self.assertEqual(info.estimator_type, "ONNXEstimator")
         self.assertIn("speed_mph", info.feature_names)
         self.assertIn("gallons_fastsim", info.target_names)
+
+    def test_fuzzy_partial_make(self):
+        """Partial make like 'toy' should match 'toyota'."""
+        results = self.registry.query(make="toy")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].model_id.make, "toyota")
+
+    def test_fuzzy_partial_model_name(self):
+        """Partial model name like 'camry' should match 'camry_4cyl_fwd'."""
+        results = self.registry.query(model_name="camry")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].model_id.model_name, "camry_4cyl_fwd")
+
+    def test_fuzzy_disabled_exact_match(self):
+        """With fuzzy=False, exact match is required."""
+        results = self.registry.query(make="toyota", fuzzy=False)
+        self.assertEqual(len(results), 1)
+
+    def test_fuzzy_disabled_no_partial(self):
+        """With fuzzy=False, partial match should not work."""
+        results = self.registry.query(make="toy", fuzzy=False)
+        self.assertEqual(len(results), 0)
+
+    def test_fuzzy_no_match(self):
+        """Completely unrelated query should not match even with fuzzy."""
+        results = self.registry.query(make="zzzzz")
+        self.assertEqual(len(results), 0)
+
+    def test_fuzzy_threshold_controls_sensitivity(self):
+        """High threshold rejects weak matches; low threshold accepts them."""
+        # With a very high threshold, a weak partial match is rejected
+        results_strict = self.registry.query(make="toyta", fuzzy_threshold=100)
+        self.assertEqual(len(results_strict), 0)
+
+        # With a lower threshold, the partial match is accepted
+        results_relaxed = self.registry.query(make="toyta", fuzzy_threshold=80)
+        self.assertEqual(len(results_relaxed), 1)
