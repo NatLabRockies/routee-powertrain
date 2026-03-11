@@ -83,7 +83,7 @@ def load_model(
     >>> # load via registry
     >>> from routee.powertrain.registry import ModelId, get_default_registry
     >>> reg = get_default_registry()
-    >>> mid = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", 1)
+    >>> mid = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", "grade_speed", 1)
     >>> model = pt.load_model(mid, registry=reg)
 
     """

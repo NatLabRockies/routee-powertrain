@@ -81,6 +81,7 @@ class CachedRegistry(ModelRegistry):
         year: Optional[int] = None,
         trim: Optional[str] = None,
         variant: Optional[str] = None,
+        feature_set_id: Optional[str] = None,
     ) -> List[ModelInfo]:
         results = models
         if make is not None:
@@ -97,6 +98,9 @@ class CachedRegistry(ModelRegistry):
         if variant is not None:
             variant_lower = variant.lower()
             results = [m for m in results if m.model_id.variant == variant_lower]
+        if feature_set_id is not None:
+            fs_lower = feature_set_id.lower()
+            results = [m for m in results if m.model_id.feature_set_id == fs_lower]
         return results
 
     def query(
@@ -106,6 +110,7 @@ class CachedRegistry(ModelRegistry):
         year: Optional[int] = None,
         trim: Optional[str] = None,
         variant: Optional[str] = None,
+        feature_set_id: Optional[str] = None,
     ) -> List[ModelInfo]:
         cached = self._load_cached_query()
         if cached is not None:
@@ -116,6 +121,7 @@ class CachedRegistry(ModelRegistry):
                 year=year,
                 trim=trim,
                 variant=variant,
+                feature_set_id=feature_set_id,
             )
 
         # Cache miss — fetch all models from inner registry
@@ -133,6 +139,7 @@ class CachedRegistry(ModelRegistry):
             year=year,
             trim=trim,
             variant=variant,
+            feature_set_id=feature_set_id,
         )
 
     def load(self, model_id: ModelId) -> Model:

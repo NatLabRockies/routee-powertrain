@@ -22,19 +22,19 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
     """
     Derive a ModelId from the directory path relative to the schema root.
 
-    Expected structure: <make>/<model>/<year>/<trim>/<variant>/v<N>/
+    Expected structure: <make>/<model>/<year>/<trim>/<variant>/<feature_set_id>/v<N>/
     """
     rel = model_dir.relative_to(schema_root)
     parts = list(rel.parts)
 
-    if len(parts) != 6:
+    if len(parts) != 7:
         raise ValueError(
             f"Unexpected path depth for {model_dir}. "
-            f"Expected <make>/<model>/<year>/<trim>/<variant>/v<N>, "
+            f"Expected <make>/<model>/<year>/<trim>/<variant>/<feature_set_id>/v<N>, "
             f"got {'/'.join(parts)}"
         )
 
-    make, model_name, year_str, trim, variant, version_dir = parts
+    make, model_name, year_str, trim, variant, feature_set_id, version_dir = parts
 
     match = VERSION_RE.match(version_dir)
     if not match:
@@ -48,6 +48,7 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
         year=parse_year(year_str),
         trim=trim,
         variant=variant,
+        feature_set_id=feature_set_id,
         version=int(match.group(1)),
     )
 
@@ -90,7 +91,7 @@ class LocalRegistry(ModelRegistry):
 
     Directory layout::
 
-        <root>/<schema_version>/<make>/<model>/<year>/<trim>/<variant>/v<N>/
+        <root>/<schema_version>/<make>/<model>/<year>/<trim>/<variant>/<feature_set_id>/v<N>/
             metadata.json
             model.onnx  (or other binary)
 
@@ -137,6 +138,7 @@ class LocalRegistry(ModelRegistry):
         year: Optional[int] = None,
         trim: Optional[str] = None,
         variant: Optional[str] = None,
+        feature_set_id: Optional[str] = None,
     ) -> List[ModelInfo]:
         results = self._scan_models()
         if make is not None:
@@ -153,6 +155,9 @@ class LocalRegistry(ModelRegistry):
         if variant is not None:
             variant_lower = variant.lower()
             results = [m for m in results if m.model_id.variant == variant_lower]
+        if feature_set_id is not None:
+            fs_lower = feature_set_id.lower()
+            results = [m for m in results if m.model_id.feature_set_id == fs_lower]
         return results
 
     def load(self, model_id: ModelId) -> Model:

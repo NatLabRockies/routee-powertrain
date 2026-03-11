@@ -15,6 +15,7 @@ class ModelId:
     year: Year
     trim: str
     variant: str
+    feature_set_id: str
     version: int
 
     def __post_init__(self):
@@ -22,17 +23,19 @@ class ModelId:
         self.model_name = self.model_name.lower()
         self.trim = self.trim.lower()
         self.variant = self.variant.lower()
+        self.feature_set_id = self.feature_set_id.lower()
         self.year = parse_year(self.year)
 
     def to_path(self, schema_version: str = "v2") -> str:
         """
         Build the registry path for this model.
 
-        Returns: e.g. "v2/toyota/camry/2016/4cyl_fwd/default/v1"
+        Returns: e.g. "v2/toyota/camry/2016/4cyl_fwd/default/speed_grade/v1"
         """
         return (
             f"{schema_version}/{self.make}/{self.model_name}/"
-            f"{format_year(self.year)}/{self.trim}/{self.variant}/v{self.version}"
+            f"{format_year(self.year)}/{self.trim}/{self.variant}/"
+            f"{self.feature_set_id}/v{self.version}"
         )
 
     def to_dict(self) -> dict:
@@ -42,6 +45,7 @@ class ModelId:
             "year": serialize_year(self.year),
             "trim": self.trim,
             "variant": self.variant,
+            "feature_set_id": self.feature_set_id,
             "version": self.version,
         }
 
@@ -52,7 +56,7 @@ class ModelId:
     def __str__(self) -> str:
         return (
             f"{self.make}/{self.model_name}/{format_year(self.year)}/"
-            f"{self.trim}/{self.variant}/v{self.version}"
+            f"{self.trim}/{self.variant}/{self.feature_set_id}/v{self.version}"
         )
 
 
@@ -90,10 +94,11 @@ class ModelInfo:
     def __repr__(self) -> str:
         lines = [
             f"ModelInfo({self.model_id})",
-            f"  description: {self.vehicle_description}",
-            f"  estimator:   {self.estimator_type}",
-            f"  features:    {self.feature_names}",
-            f"  targets:     {self.target_names}",
-            f"  powertrain:  {self.powertrain_type}",
+            f"  description:    {self.vehicle_description}",
+            f"  estimator:      {self.estimator_type}",
+            f"  feature_set_id: {self.model_id.feature_set_id}",
+            f"  features:       {self.feature_names}",
+            f"  targets:        {self.target_names}",
+            f"  powertrain:     {self.powertrain_type}",
         ]
         return "\n".join(lines)

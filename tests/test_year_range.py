@@ -9,7 +9,6 @@ import pandas as pd
 
 import routee.powertrain as pt
 from routee.powertrain.core.year import (
-    Year,
     format_year,
     parse_year,
     serialize_year,
@@ -175,25 +174,31 @@ class TestModelIdYearRange(TestCase):
     """Test that ModelId works with year ranges."""
 
     def test_single_year_path(self):
-        mid = ModelId("toyota", "camry", 2016, "base", "default", 1)
+        mid = ModelId("toyota", "camry", 2016, "base", "default", "grade_speed", 1)
         self.assertIn("/2016/", mid.to_path())
 
     def test_year_range_path(self):
-        mid = ModelId("generic", "sedan", (2020, 2026), "base", "default", 1)
+        mid = ModelId(
+            "generic", "sedan", (2020, 2026), "base", "default", "grade_speed", 1
+        )
         self.assertIn("/2020-2026/", mid.to_path())
 
     def test_year_range_str(self):
-        mid = ModelId("generic", "sedan", (2020, 2026), "base", "default", 1)
+        mid = ModelId(
+            "generic", "sedan", (2020, 2026), "base", "default", "grade_speed", 1
+        )
         self.assertIn("2020-2026", str(mid))
 
     def test_year_range_dict_roundtrip(self):
-        mid = ModelId("generic", "sedan", (2020, 2026), "base", "default", 1)
+        mid = ModelId(
+            "generic", "sedan", (2020, 2026), "base", "default", "grade_speed", 1
+        )
         d = mid.to_dict()
         restored = ModelId.from_dict(d)
         self.assertEqual(restored.year, (2020, 2026))
 
     def test_single_year_dict_roundtrip(self):
-        mid = ModelId("toyota", "camry", 2016, "base", "default", 1)
+        mid = ModelId("toyota", "camry", 2016, "base", "default", "grade_speed", 1)
         d = mid.to_dict()
         restored = ModelId.from_dict(d)
         self.assertEqual(restored.year, 2016)
@@ -242,7 +247,15 @@ class TestLocalRegistryYearRange(TestCase):
         trainer = SklearnRandomForestTrainer()
         self.model = trainer.train(df, config)
 
-        model_id = ModelId("generic", "sedan", (2020, 2026), "base", "default", 1)
+        model_id = ModelId(
+            "generic",
+            "sedan",
+            (2020, 2026),
+            "base",
+            "default",
+            "grade_dec_speed_mph",
+            1,
+        )
         rel_path = model_id.to_path(self.schema_version)
         full_path = self.root / rel_path
         save_model_directory(self.model, full_path)

@@ -1,11 +1,7 @@
 # %%
-import pandas as pd
+from routee.powertrain.registry import LocalRegistry 
 # %%
-df = pd.read_csv("../nrel/routee/powertrain/resources/sample_routes/sample_route.csv")
+registry = LocalRegistry("../model-library.ignore")
 # %%
-df["grade_percent"] = df["grade_dec"] * 100
-df["distance"] = df["miles"]
-# %%
-df[["speed_mph", "grade_percent", "distance"]].to_csv("../nrel/routee/powertrain/resources/sample_routes/sample_route.csv", index=False)
-# %%
+registry.query(make="chevrolet")
 # %%

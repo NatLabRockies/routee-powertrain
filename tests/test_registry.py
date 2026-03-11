@@ -17,19 +17,20 @@ this_dir = Path(__file__).parent
 
 class TestModelId(TestCase):
     def test_to_path(self):
-        mid = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", 1)
+        mid = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", "grade_speed", 1)
         path = mid.to_path("v2")
-        self.assertEqual(path, "v2/toyota/camry/2016/4cyl_fwd/default/v1")
+        self.assertEqual(path, "v2/toyota/camry/2016/4cyl_fwd/default/grade_speed/v1")
 
     def test_lowercase_normalization(self):
-        mid = ModelId("Toyota", "Camry", 2016, "4Cyl_FWD", "Default", 1)
+        mid = ModelId("Toyota", "Camry", 2016, "4Cyl_FWD", "Default", "Grade_Speed", 1)
         self.assertEqual(mid.make, "toyota")
         self.assertEqual(mid.model_name, "camry")
         self.assertEqual(mid.trim, "4cyl_fwd")
         self.assertEqual(mid.variant, "default")
+        self.assertEqual(mid.feature_set_id, "grade_speed")
 
     def test_roundtrip_dict(self):
-        mid = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", 1)
+        mid = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", "grade_speed", 1)
         d = mid.to_dict()
         mid2 = ModelId.from_dict(d)
         self.assertEqual(mid, mid2)
@@ -79,7 +80,9 @@ class TestLocalRegistry(TestCase):
         self.df = df
 
         # Save to registry path as a flat directory
-        model_id = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", 1)
+        model_id = ModelId(
+            "toyota", "camry", 2016, "4cyl_fwd", "default", "grade_dec_speed_mph", 1
+        )
         rel_path = model_id.to_path(self.schema_version)
         full_path = self.root / rel_path
         save_model_directory(self.model, full_path)
@@ -107,7 +110,9 @@ class TestLocalRegistry(TestCase):
         self.assertEqual(len(results), 0)
 
     def test_load(self):
-        model_id = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", 1)
+        model_id = ModelId(
+            "toyota", "camry", 2016, "4cyl_fwd", "default", "grade_dec_speed_mph", 1
+        )
         loaded = self.registry.load(model_id)
 
         r1 = self.model.predict(self.df)
@@ -117,7 +122,9 @@ class TestLocalRegistry(TestCase):
         )
 
     def test_get_metadata(self):
-        model_id = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", 1)
+        model_id = ModelId(
+            "toyota", "camry", 2016, "4cyl_fwd", "default", "grade_dec_speed_mph", 1
+        )
         meta = self.registry.get_metadata(model_id)
         self.assertIn("config", meta)
         self.assertIn("estimator_type", meta)

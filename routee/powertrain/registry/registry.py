@@ -24,6 +24,7 @@ class ModelRegistry(ABC):
         year: Optional[int] = None,
         trim: Optional[str] = None,
         variant: Optional[str] = None,
+        feature_set_id: Optional[str] = None,
     ) -> List[ModelInfo]:
         """
         List models matching the given filters.
