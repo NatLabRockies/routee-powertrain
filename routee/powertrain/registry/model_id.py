@@ -31,9 +31,7 @@ class ModelId:
     def from_path(cls, path: str) -> ModelId:
         """Parse a ModelId from a path string.
 
-        Accepts both formats:
-        - With schema version: ``v2/make/model/year/variant/feature_set/v1``
-        - Without schema version: ``make/model/year/variant/feature_set/v1``
+        Expected format: ``make/model/year/variant/feature_set/v<N>``
 
         Args:
             path: a ``/``-separated path string
@@ -45,18 +43,14 @@ class ModelId:
         """
         parts = [p for p in path.strip("/").split("/") if p]
 
-        # With schema version prefix (e.g. "v2/make/model/...")
-        if len(parts) == 7:
-            _, make, model_name, year_str, variant, feature_set_id, version_dir = parts
-        # Without schema version prefix
-        elif len(parts) == 6:
-            make, model_name, year_str, variant, feature_set_id, version_dir = parts
-        else:
+        if len(parts) != 6:
             raise ValueError(
                 f"Cannot parse model id from path '{path}'. "
-                f"Expected <make>/<model>/<year>/<variant>/<feature_set_id>/v<N> "
-                f"(optionally prefixed with a schema version), got {len(parts)} segments."
+                f"Expected <make>/<model>/<year>/<variant>/<feature_set_id>/v<N>, "
+                f"got {len(parts)} segments."
             )
+
+        make, model_name, year_str, variant, feature_set_id, version_dir = parts
 
         match = _VERSION_RE.match(version_dir)
         if not match:
@@ -73,14 +67,14 @@ class ModelId:
             version=int(match.group(1)),
         )
 
-    def to_path(self, schema_version: str = "v2") -> str:
+    def to_path(self) -> str:
         """
         Build the registry path for this model.
 
-        Returns: e.g. "v2/toyota/camry_4cyl_fwd/2016/default/speed_grade/v1"
+        Returns: e.g. "toyota/camry_4cyl_fwd/2016/default/speed_grade/v1"
         """
         return (
-            f"{schema_version}/{self.make}/{self.model_name}/"
+            f"{self.make}/{self.model_name}/"
             f"{format_year(self.year)}/{self.variant}/"
             f"{self.feature_set_id}/v{self.version}"
         )

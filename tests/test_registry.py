@@ -18,8 +18,8 @@ this_dir = Path(__file__).parent
 class TestModelId(TestCase):
     def test_to_path(self):
         mid = ModelId("toyota", "camry_4cyl_fwd", 2016, "default", "grade_speed", 1)
-        path = mid.to_path("v2")
-        self.assertEqual(path, "v2/toyota/camry_4cyl_fwd/2016/default/grade_speed/v1")
+        path = mid.to_path()
+        self.assertEqual(path, "toyota/camry_4cyl_fwd/2016/default/grade_speed/v1")
 
     def test_lowercase_normalization(self):
         mid = ModelId("Toyota", "Camry_4Cyl_FWD", 2016, "Default", "Grade_Speed", 1)
@@ -81,7 +81,7 @@ class TestLocalRegistry(TestCase):
         model_id = ModelId(
             "toyota", "camry_4cyl_fwd", 2016, "default", "grade_dec_speed_mph", 1
         )
-        rel_path = model_id.to_path(self.schema_version)
+        rel_path = f"{self.schema_version}/{model_id.to_path()}"
         full_path = self.root / rel_path
         save_model_directory(self.model, full_path)
 

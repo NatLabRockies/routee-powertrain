@@ -155,16 +155,14 @@ class LocalRegistry(ModelRegistry):
 
     def load(self, model_id: Union[str, ModelId]) -> Model:
         model_id = _resolve_model_id(model_id)
-        rel_path = model_id.to_path(self.schema_version)
-        full_path = self.root / rel_path
+        full_path = self._schema_root / model_id.to_path()
         if not full_path.exists():
             raise FileNotFoundError(f"Model directory not found: {full_path}")
         return load_model_directory(full_path)
 
     def get_metadata(self, model_id: Union[str, ModelId]) -> dict:
         model_id = _resolve_model_id(model_id)
-        rel_path = model_id.to_path(self.schema_version)
-        full_path = self.root / rel_path
+        full_path = self._schema_root / model_id.to_path()
         if not full_path.exists():
             raise FileNotFoundError(f"Model directory not found: {full_path}")
         return read_directory_metadata(full_path)

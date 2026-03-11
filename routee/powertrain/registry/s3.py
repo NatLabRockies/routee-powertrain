@@ -190,7 +190,7 @@ class S3Registry(ModelRegistry):
 
     def load(self, model_id: Union[str, ModelId]) -> Model:
         model_id = _resolve_model_id(model_id)
-        dir_key = model_id.to_path(self.schema_version)
+        dir_key = f"{self.schema_version}/{model_id.to_path()}"
         # Fetch metadata to learn the model filename
         meta_key = f"{dir_key}/{METADATA_FILENAME}"
         meta_bytes = self._fetch_bytes(meta_key)
@@ -206,7 +206,7 @@ class S3Registry(ModelRegistry):
 
     def get_metadata(self, model_id: Union[str, ModelId]) -> dict:
         model_id = _resolve_model_id(model_id)
-        dir_key = model_id.to_path(self.schema_version)
+        dir_key = f"{self.schema_version}/{model_id.to_path()}"
         meta_key = f"{dir_key}/{METADATA_FILENAME}"
         data = self._fetch_bytes(meta_key)
         return json.loads(data)

@@ -44,9 +44,8 @@ class CachedRegistry(ModelRegistry):
     def _query_timestamp_path(self) -> Path:
         return self.cache_dir / "query_cache.timestamp"
 
-    def _model_cache_path(self, model_id: ModelId, schema_version: str = "v2") -> Path:
-        rel_path = model_id.to_path(schema_version)
-        return self.cache_dir / (rel_path + ".zip")
+    def _model_cache_path(self, model_id: ModelId) -> Path:
+        return self.cache_dir / (model_id.to_path() + ".zip")
 
     def _is_query_cache_fresh(self) -> bool:
         ts_path = self._query_timestamp_path()

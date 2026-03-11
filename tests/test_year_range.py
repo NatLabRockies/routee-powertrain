@@ -244,7 +244,7 @@ class TestLocalRegistryYearRange(TestCase):
             "grade_dec_speed_mph",
             1,
         )
-        rel_path = model_id.to_path(self.schema_version)
+        rel_path = f"{self.schema_version}/{model_id.to_path()}"
         full_path = self.root / rel_path
         save_model_directory(self.model, full_path)
 
