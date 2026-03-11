@@ -13,7 +13,7 @@ from routee.powertrain.io.archive import (
 )
 from routee.powertrain.registry.filtering import filter_models
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
-from routee.powertrain.registry.registry import ModelRegistry
+from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
 
 # Pattern to extract version number from directory name like v1, v2
 VERSION_RE = re.compile(r"^v(\d+)$")
@@ -153,14 +153,16 @@ class LocalRegistry(ModelRegistry):
             fuzzy_threshold=fuzzy_threshold,
         )
 
-    def load(self, model_id: ModelId) -> Model:
+    def load(self, model_id: Union[str, ModelId]) -> Model:
+        model_id = _resolve_model_id(model_id)
         rel_path = model_id.to_path(self.schema_version)
         full_path = self.root / rel_path
         if not full_path.exists():
             raise FileNotFoundError(f"Model directory not found: {full_path}")
         return load_model_directory(full_path)
 
-    def get_metadata(self, model_id: ModelId) -> dict:
+    def get_metadata(self, model_id: Union[str, ModelId]) -> dict:
+        model_id = _resolve_model_id(model_id)
         rel_path = model_id.to_path(self.schema_version)
         full_path = self.root / rel_path
         if not full_path.exists():

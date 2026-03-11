@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from routee.powertrain.core.model import Model
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
+
+
+def _resolve_model_id(model_id: Union[str, ModelId]) -> ModelId:
+    """Coerce a string or ModelId into a ModelId."""
+    if isinstance(model_id, str):
+        return ModelId.from_path(model_id)
+    return model_id
 
 
 class ModelRegistry(ABC):
@@ -46,23 +53,27 @@ class ModelRegistry(ABC):
         """
 
     @abstractmethod
-    def load(self, model_id: ModelId) -> Model:
+    def load(self, model_id: Union[str, ModelId]) -> Model:
         """
         Download and deserialize a specific model.
 
         Args:
-            model_id: unique identifier for the model to load
+            model_id: unique identifier for the model to load.
+                Can be a ModelId instance or a string path that will
+                be parsed via ``ModelId.from_path()``.
 
         Returns: a fully deserialized Model instance
         """
 
     @abstractmethod
-    def get_metadata(self, model_id: ModelId) -> dict:
+    def get_metadata(self, model_id: Union[str, ModelId]) -> dict:
         """
         Fetch only the metadata for a model (without downloading the binary).
 
         Args:
-            model_id: unique identifier for the model
+            model_id: unique identifier for the model.
+                Can be a ModelId instance or a string path that will
+                be parsed via ``ModelId.from_path()``.
 
         Returns: the parsed metadata dictionary from the archive
         """

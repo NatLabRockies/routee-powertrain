@@ -3,13 +3,13 @@ from __future__ import annotations
 import json
 import time
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from routee.powertrain.core.model import Model
 from routee.powertrain.io.archive import load_archive, save_archive
 from routee.powertrain.registry.filtering import filter_models
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
-from routee.powertrain.registry.registry import ModelRegistry
+from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
 
 DEFAULT_CACHE_DIR = Path.home() / ".routee" / "cache"
 DEFAULT_CATALOG_TTL_SECONDS = 3600  # 1 hour
@@ -115,7 +115,8 @@ class CachedRegistry(ModelRegistry):
             fuzzy_threshold=fuzzy_threshold,
         )
 
-    def load(self, model_id: ModelId) -> Model:
+    def load(self, model_id: Union[str, ModelId]) -> Model:
+        model_id = _resolve_model_id(model_id)
         cache_path = self._model_cache_path(model_id)
         if cache_path.exists():
             return load_archive(cache_path)
@@ -131,7 +132,8 @@ class CachedRegistry(ModelRegistry):
 
         return model
 
-    def get_metadata(self, model_id: ModelId) -> dict:
+    def get_metadata(self, model_id: Union[str, ModelId]) -> dict:
+        model_id = _resolve_model_id(model_id)
         return self.inner.get_metadata(model_id)
 
     def clear_cache(self) -> None:
