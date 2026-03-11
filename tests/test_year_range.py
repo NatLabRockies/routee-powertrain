@@ -111,7 +111,6 @@ class TestModelConfigYearRange(TestCase):
             make="test",
             model_name="model",
             year=2020,
-            trim="base",
         )
         self.assertEqual(config.year, 2020)
         d = config.to_dict()
@@ -129,7 +128,6 @@ class TestModelConfigYearRange(TestCase):
             make="test",
             model_name="model",
             year=(2020, 2026),
-            trim="base",
         )
         self.assertEqual(config.year, (2020, 2026))
         d = config.to_dict()
@@ -147,7 +145,6 @@ class TestModelConfigYearRange(TestCase):
             make="test",
             model_name="model",
             year="2020-2026",
-            trim="base",
         )
         self.assertEqual(config.year, (2020, 2026))
 
@@ -163,7 +160,6 @@ class TestModelConfigYearRange(TestCase):
             make="test",
             model_name="model",
             year=(2020, 2026),
-            trim="base",
         )
         d = config.to_dict()
         restored = pt.ModelConfig.from_dict(d)
@@ -174,31 +170,25 @@ class TestModelIdYearRange(TestCase):
     """Test that ModelId works with year ranges."""
 
     def test_single_year_path(self):
-        mid = ModelId("toyota", "camry", 2016, "base", "default", "grade_speed", 1)
+        mid = ModelId("toyota", "camry", 2016, "default", "grade_speed", 1)
         self.assertIn("/2016/", mid.to_path())
 
     def test_year_range_path(self):
-        mid = ModelId(
-            "generic", "sedan", (2020, 2026), "base", "default", "grade_speed", 1
-        )
+        mid = ModelId("generic", "sedan", (2020, 2026), "default", "grade_speed", 1)
         self.assertIn("/2020-2026/", mid.to_path())
 
     def test_year_range_str(self):
-        mid = ModelId(
-            "generic", "sedan", (2020, 2026), "base", "default", "grade_speed", 1
-        )
+        mid = ModelId("generic", "sedan", (2020, 2026), "default", "grade_speed", 1)
         self.assertIn("2020-2026", str(mid))
 
     def test_year_range_dict_roundtrip(self):
-        mid = ModelId(
-            "generic", "sedan", (2020, 2026), "base", "default", "grade_speed", 1
-        )
+        mid = ModelId("generic", "sedan", (2020, 2026), "default", "grade_speed", 1)
         d = mid.to_dict()
         restored = ModelId.from_dict(d)
         self.assertEqual(restored.year, (2020, 2026))
 
     def test_single_year_dict_roundtrip(self):
-        mid = ModelId("toyota", "camry", 2016, "base", "default", "grade_speed", 1)
+        mid = ModelId("toyota", "camry", 2016, "default", "grade_speed", 1)
         d = mid.to_dict()
         restored = ModelId.from_dict(d)
         self.assertEqual(restored.year, 2016)
@@ -242,7 +232,6 @@ class TestLocalRegistryYearRange(TestCase):
             make="Generic",
             model_name="Sedan",
             year=(2020, 2026),
-            trim="base",
         )
         trainer = SklearnRandomForestTrainer()
         self.model = trainer.train(df, config)
@@ -251,7 +240,6 @@ class TestLocalRegistryYearRange(TestCase):
             "generic",
             "sedan",
             (2020, 2026),
-            "base",
             "default",
             "grade_dec_speed_mph",
             1,
@@ -327,7 +315,6 @@ class TestYearRangeArchiveRoundtrip(TestCase):
             make="Generic",
             model_name="Sedan",
             year=(2020, 2026),
-            trim="base",
         )
         trainer = SklearnRandomForestTrainer()
         model = trainer.train(self.df, config)

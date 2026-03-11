@@ -16,7 +16,6 @@ def list_available_models(
     make: Optional[str] = None,
     model_name: Optional[str] = None,
     year: Optional[int] = None,
-    trim: Optional[str] = None,
     variant: Optional[str] = None,
     registry: Optional[ModelRegistry] = None,
 ) -> List[ModelInfo]:
@@ -29,7 +28,6 @@ def list_available_models(
         make: filter by vehicle make
         model_name: filter by model name
         year: filter by model year
-        trim: filter by trim
         variant: filter by variant
         registry: a ModelRegistry instance; defaults to get_default_registry()
 
@@ -44,7 +42,6 @@ def list_available_models(
         make=make,
         model_name=model_name,
         year=year,
-        trim=trim,
         variant=variant,
     )
 

@@ -22,19 +22,19 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
     """
     Derive a ModelId from the directory path relative to the schema root.
 
-    Expected structure: <make>/<model>/<year>/<trim>/<variant>/<feature_set_id>/v<N>/
+    Expected structure: <make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/
     """
     rel = model_dir.relative_to(schema_root)
     parts = list(rel.parts)
 
-    if len(parts) != 7:
+    if len(parts) != 6:
         raise ValueError(
             f"Unexpected path depth for {model_dir}. "
-            f"Expected <make>/<model>/<year>/<trim>/<variant>/<feature_set_id>/v<N>, "
+            f"Expected <make>/<model>/<year>/<variant>/<feature_set_id>/v<N>, "
             f"got {'/'.join(parts)}"
         )
 
-    make, model_name, year_str, trim, variant, feature_set_id, version_dir = parts
+    make, model_name, year_str, variant, feature_set_id, version_dir = parts
 
     match = VERSION_RE.match(version_dir)
     if not match:
@@ -46,7 +46,6 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
         make=make,
         model_name=model_name,
         year=parse_year(year_str),
-        trim=trim,
         variant=variant,
         feature_set_id=feature_set_id,
         version=int(match.group(1)),
@@ -91,7 +90,7 @@ class LocalRegistry(ModelRegistry):
 
     Directory layout::
 
-        <root>/<schema_version>/<make>/<model>/<year>/<trim>/<variant>/<feature_set_id>/v<N>/
+        <root>/<schema_version>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/
             metadata.json
             model.onnx  (or other binary)
 
@@ -136,7 +135,6 @@ class LocalRegistry(ModelRegistry):
         make: Optional[str] = None,
         model_name: Optional[str] = None,
         year: Optional[int] = None,
-        trim: Optional[str] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
     ) -> List[ModelInfo]:
@@ -149,9 +147,6 @@ class LocalRegistry(ModelRegistry):
             results = [m for m in results if m.model_id.model_name == model_name_lower]
         if year is not None:
             results = [m for m in results if year_contains(m.model_id.year, year)]
-        if trim is not None:
-            trim_lower = trim.lower()
-            results = [m for m in results if m.model_id.trim == trim_lower]
         if variant is not None:
             variant_lower = variant.lower()
             results = [m for m in results if m.model_id.variant == variant_lower]

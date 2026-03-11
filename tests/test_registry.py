@@ -17,20 +17,19 @@ this_dir = Path(__file__).parent
 
 class TestModelId(TestCase):
     def test_to_path(self):
-        mid = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", "grade_speed", 1)
+        mid = ModelId("toyota", "camry_4cyl_fwd", 2016, "default", "grade_speed", 1)
         path = mid.to_path("v2")
-        self.assertEqual(path, "v2/toyota/camry/2016/4cyl_fwd/default/grade_speed/v1")
+        self.assertEqual(path, "v2/toyota/camry_4cyl_fwd/2016/default/grade_speed/v1")
 
     def test_lowercase_normalization(self):
-        mid = ModelId("Toyota", "Camry", 2016, "4Cyl_FWD", "Default", "Grade_Speed", 1)
+        mid = ModelId("Toyota", "Camry_4Cyl_FWD", 2016, "Default", "Grade_Speed", 1)
         self.assertEqual(mid.make, "toyota")
-        self.assertEqual(mid.model_name, "camry")
-        self.assertEqual(mid.trim, "4cyl_fwd")
+        self.assertEqual(mid.model_name, "camry_4cyl_fwd")
         self.assertEqual(mid.variant, "default")
         self.assertEqual(mid.feature_set_id, "grade_speed")
 
     def test_roundtrip_dict(self):
-        mid = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", "grade_speed", 1)
+        mid = ModelId("toyota", "camry_4cyl_fwd", 2016, "default", "grade_speed", 1)
         d = mid.to_dict()
         mid2 = ModelId.from_dict(d)
         self.assertEqual(mid, mid2)
@@ -71,9 +70,8 @@ class TestLocalRegistry(TestCase):
                 ],
             ),
             make="Toyota",
-            model_name="Camry",
+            model_name="Camry_4cyl_fwd",
             year=2016,
-            trim="4cyl_fwd",
         )
         trainer = SklearnRandomForestTrainer()
         self.model = trainer.train(df, config)
@@ -81,7 +79,7 @@ class TestLocalRegistry(TestCase):
 
         # Save to registry path as a flat directory
         model_id = ModelId(
-            "toyota", "camry", 2016, "4cyl_fwd", "default", "grade_dec_speed_mph", 1
+            "toyota", "camry_4cyl_fwd", 2016, "default", "grade_dec_speed_mph", 1
         )
         rel_path = model_id.to_path(self.schema_version)
         full_path = self.root / rel_path
@@ -99,7 +97,7 @@ class TestLocalRegistry(TestCase):
     def test_query(self):
         results = self.registry.query(make="toyota")
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].model_id.model_name, "camry")
+        self.assertEqual(results[0].model_id.model_name, "camry_4cyl_fwd")
 
     def test_query_all(self):
         results = self.registry.query()
@@ -111,7 +109,7 @@ class TestLocalRegistry(TestCase):
 
     def test_load(self):
         model_id = ModelId(
-            "toyota", "camry", 2016, "4cyl_fwd", "default", "grade_dec_speed_mph", 1
+            "toyota", "camry_4cyl_fwd", 2016, "default", "grade_dec_speed_mph", 1
         )
         loaded = self.registry.load(model_id)
 
@@ -123,7 +121,7 @@ class TestLocalRegistry(TestCase):
 
     def test_get_metadata(self):
         model_id = ModelId(
-            "toyota", "camry", 2016, "4cyl_fwd", "default", "grade_dec_speed_mph", 1
+            "toyota", "camry_4cyl_fwd", 2016, "default", "grade_dec_speed_mph", 1
         )
         meta = self.registry.get_metadata(model_id)
         self.assertIn("config", meta)

@@ -22,7 +22,6 @@ class ModelRegistry(ABC):
         make: Optional[str] = None,
         model_name: Optional[str] = None,
         year: Optional[int] = None,
-        trim: Optional[str] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
     ) -> List[ModelInfo]:

@@ -65,7 +65,6 @@ class TestArchiveRoundTrip(TestCase):
             make="test",
             model_name="model",
             year=2024,
-            trim="base",
         )
 
     def tearDown(self) -> None:
@@ -210,9 +209,8 @@ class TestArchiveRoundTrip(TestCase):
             distance=self.rate_config.distance,
             target=self.rate_config.target,
             make="Toyota",
-            model_name="Camry",
+            model_name="Camry_4cyl_FWD",
             year=2016,
-            trim="4cyl_FWD",
         )
         trainer = SklearnRandomForestTrainer()
         model = trainer.train(self.df, config)
@@ -223,9 +221,8 @@ class TestArchiveRoundTrip(TestCase):
 
         loaded = pt.load_model(outdir)
         self.assertEqual(loaded.metadata.config.make, "toyota")
-        self.assertEqual(loaded.metadata.config.model_name, "camry")
+        self.assertEqual(loaded.metadata.config.model_name, "camry_4cyl_fwd")
         self.assertEqual(loaded.metadata.config.year, 2016)
-        self.assertEqual(loaded.metadata.config.trim, "4cyl_fwd")
 
         # Test with zip format
         outfile = self.out_path / "structured.zip"
@@ -233,6 +230,5 @@ class TestArchiveRoundTrip(TestCase):
 
         loaded = pt.load_model(outfile)
         self.assertEqual(loaded.metadata.config.make, "toyota")
-        self.assertEqual(loaded.metadata.config.model_name, "camry")
+        self.assertEqual(loaded.metadata.config.model_name, "camry_4cyl_fwd")
         self.assertEqual(loaded.metadata.config.year, 2016)
-        self.assertEqual(loaded.metadata.config.trim, "4cyl_fwd")

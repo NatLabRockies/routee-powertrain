@@ -44,7 +44,6 @@ class ModelConfig:
     make: str
     model_name: str
     year: Year
-    trim: str
 
     predict_method: PredictMethod = PredictMethod.RATE
 
@@ -59,7 +58,6 @@ class ModelConfig:
         # normalize vehicle id fields to lowercase
         self.make = self.make.lower()
         self.model_name = self.model_name.lower()
-        self.trim = self.trim.lower()
         # parse year (supports int, tuple, or "YYYY-YYYY" string)
         self.year = parse_year(self.year)
         # convert feature_set to the correct type
@@ -103,7 +101,11 @@ class ModelConfig:
         d.setdefault("make", "unknown")
         d.setdefault("model_name", "unknown")
         d.setdefault("year", 0)
-        d.setdefault("trim", "unknown")
+        # legacy files may still contain "trim" — fold it into model_name
+        trim = d.pop("trim", None)
+        if trim and trim not in ("unknown", "default"):
+            base = d.get("model_name", "unknown")
+            d["model_name"] = f"{base}_{trim}"
         return cls(**d)
 
     def to_dict(self) -> dict:

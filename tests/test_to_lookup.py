@@ -19,7 +19,7 @@ class TestToLookup(TestCase):
     def setUp(self) -> None:
         registry = LocalRegistry(root=bundled_registry_root(), schema_version="v2")
         model_id = ModelId(
-            "toyota", "camry", 2016, "4cyl_2wd", "default", "grade_percent_speed_mph", 1
+            "toyota", "camry_4cyl_2wd", 2016, "default", "grade_percent_speed_mph", 1
         )
         self.mock_model = registry.load(model_id)
 

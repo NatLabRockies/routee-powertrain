@@ -6,25 +6,25 @@
         "estimator_errors": {
             "feature_set_id": "grade_percent&speed_mph",
             "error_by_target": {
-                "gge": {
-                    "link_root_mean_squared_error": 0.0012698840872346134,
-                    "link_norm_root_mean_squared_error": 0.7240177664023913,
-                    "link_weighted_relative_percent_difference": 0.36264801841324906,
-                    "net_error": 0.017718058813985083,
-                    "actual_dist_per_energy": 30.82589200688958,
-                    "pred_dist_per_energy": 30.289225724080254,
-                    "real_world_pred_dist_per_energy": 25.977037499211228,
-                    "trip_relative_percent_difference": 0.16894018208419193,
-                    "trip_weighted_relative_percent_difference": 0.09843317383042983,
-                    "trip_root_mean_squared_error": 0.008502485147408074,
-                    "trip_norm_root_mean_squared_error": 0.16527194182282584
+                "kwh": {
+                    "link_root_mean_squared_error": 0.019031045651014208,
+                    "link_norm_root_mean_squared_error": 1.4866731668102635,
+                    "link_weighted_relative_percent_difference": 0.7349972159773847,
+                    "net_error": -0.009809671977623587,
+                    "actual_dist_per_energy": 4.180673987907612,
+                    "pred_dist_per_energy": 4.222091318804658,
+                    "real_world_pred_dist_per_energy": 3.02485407565887,
+                    "trip_relative_percent_difference": 0.48704066565087567,
+                    "trip_weighted_relative_percent_difference": 0.16109247823531392,
+                    "trip_root_mean_squared_error": 0.1229873635354859,
+                    "trip_norm_root_mean_squared_error": 0.3285596302409108
                 }
             }
         }
     },
     "config": {
-        "vehicle_description": "2016_TOYOTA_Camry_4cyl_2WD trained July 2024",
-        "powertrain_type": "ICE",
+        "vehicle_description": "2017_CHEVROLET_Bolt trained July 2024",
+        "powertrain_type": "BEV",
         "feature_set": {
             "features": [
                 {
@@ -59,8 +59,8 @@
         "target": {
             "targets": [
                 {
-                    "name": "gge",
-                    "units": "gallons gasoline",
+                    "name": "kwh",
+                    "units": "kilowatt-hour",
                     "dtype": "float32",
                     "constraints": {
                         "lower": null,
@@ -69,10 +69,9 @@
                 }
             ]
         },
-        "make": "unknown",
-        "model_name": "unknown",
-        "year": 0,
-        "trim": "unknown",
+        "make": "chevrolet",
+        "model_name": "bolt",
+        "year": 2017,
         "predict_method": "rate",
         "test_size": 0.2,
         "random_seed": 42,

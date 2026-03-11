@@ -79,7 +79,6 @@ class CachedRegistry(ModelRegistry):
         make: Optional[str] = None,
         model_name: Optional[str] = None,
         year: Optional[int] = None,
-        trim: Optional[str] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
     ) -> List[ModelInfo]:
@@ -92,9 +91,6 @@ class CachedRegistry(ModelRegistry):
             results = [m for m in results if m.model_id.model_name == model_name_lower]
         if year is not None:
             results = [m for m in results if year_contains(m.model_id.year, year)]
-        if trim is not None:
-            trim_lower = trim.lower()
-            results = [m for m in results if m.model_id.trim == trim_lower]
         if variant is not None:
             variant_lower = variant.lower()
             results = [m for m in results if m.model_id.variant == variant_lower]
@@ -108,7 +104,6 @@ class CachedRegistry(ModelRegistry):
         make: Optional[str] = None,
         model_name: Optional[str] = None,
         year: Optional[int] = None,
-        trim: Optional[str] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
     ) -> List[ModelInfo]:
@@ -119,7 +114,6 @@ class CachedRegistry(ModelRegistry):
                 make=make,
                 model_name=model_name,
                 year=year,
-                trim=trim,
                 variant=variant,
                 feature_set_id=feature_set_id,
             )
@@ -137,7 +131,6 @@ class CachedRegistry(ModelRegistry):
             make=make,
             model_name=model_name,
             year=year,
-            trim=trim,
             variant=variant,
             feature_set_id=feature_set_id,
         )

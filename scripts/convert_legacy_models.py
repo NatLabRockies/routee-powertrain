@@ -28,6 +28,7 @@ import argparse
 import base64
 import json
 import logging
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
@@ -46,13 +47,24 @@ class VehicleIdentity:
     make: str
     model_name: str
     year: int | str
-    trim: str
     variant: str = "default"
 
 
 # ---------------------------------------------------------------------------
 # Estimator type → binary helpers
 # ---------------------------------------------------------------------------
+
+
+def _sanitize_infinities(obj):
+    """Recursively replace float('inf') and float('-inf') with None."""
+    if isinstance(obj, float) and math.isinf(obj):
+        return None
+    if isinstance(obj, dict):
+        return {k: _sanitize_infinities(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_infinities(item) for item in obj]
+    return obj
+
 
 ESTIMATOR_FILE_MAP = {
     "ONNXEstimator": ("model.onnx", "onnx_model"),
@@ -197,7 +209,6 @@ def convert_legacy_json(
             "make": identity.make,
             "model_name": identity.model_name,
             "year": identity.year,
-            "trim": identity.trim,
             "predict_method": old_config.get("predict_method", "rate"),
             "test_size": old_config.get("test_size", 0.2),
             "random_seed": old_config.get("random_seed", 42),
@@ -241,7 +252,6 @@ def convert_legacy_json(
             / identity.make
             / identity.model_name
             / str(identity.year)
-            / identity.trim
             / identity.variant
             / fs_dir_name
             / f"v{version}"
@@ -250,6 +260,7 @@ def convert_legacy_json(
         model_dir.mkdir(parents=True, exist_ok=True)
 
         # Write metadata.json
+        metadata = _sanitize_infinities(metadata)
         metadata_path = model_dir / "metadata.json"
         metadata_path.write_text(json.dumps(metadata, indent=2))
 
@@ -283,12 +294,9 @@ def main():
     parser.add_argument("output_dir", type=Path, help="Root output directory.")
     parser.add_argument("--make", required=True, help="Vehicle make (e.g. toyota).")
     parser.add_argument(
-        "--model_name", required=True, help="Vehicle model (e.g. camry)."
+        "--model_name", required=True, help="Vehicle model (e.g. camry_4cyl_2wd)."
     )
     parser.add_argument("--year", type=int, required=True, help="Model year.")
-    parser.add_argument(
-        "--trim", default="default", help="Vehicle trim (e.g. 4cyl_2wd)."
-    )
     parser.add_argument(
         "--variant", default="default", help="Model variant (e.g. charge_depleting)."
     )
@@ -300,7 +308,6 @@ def main():
         make=args.make,
         model_name=args.model_name,
         year=args.year,
-        trim=args.trim,
         variant=args.variant,
     )
     created = convert_legacy_json(

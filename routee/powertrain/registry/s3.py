@@ -22,7 +22,7 @@ def _parse_model_id_from_key(key: str, schema_version: str) -> ModelId:
     Derive a ModelId from an S3 key.
 
     Expected key format:
-        <schema_version>/<make>/<model>/<year>/<trim>/<variant>/<feature_set_id>/v<N>/metadata.json
+        <schema_version>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/metadata.json
     """
     prefix = schema_version + "/"
     if not key.startswith(prefix):
@@ -30,14 +30,14 @@ def _parse_model_id_from_key(key: str, schema_version: str) -> ModelId:
 
     rel = key[len(prefix) :]
     parts = rel.split("/")
-    # parts: [make, model, year, trim, variant, feature_set_id, vN, metadata.json]
-    if len(parts) != 8 or parts[-1] != METADATA_FILENAME:
+    # parts: [make, model, year, variant, feature_set_id, vN, metadata.json]
+    if len(parts) != 7 or parts[-1] != METADATA_FILENAME:
         raise ValueError(
             f"Unexpected S3 key structure: {key}. "
-            f"Expected <schema>/<make>/<model>/<year>/<trim>/<variant>/<feature_set_id>/v<N>/{METADATA_FILENAME}"
+            f"Expected <schema>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/{METADATA_FILENAME}"
         )
 
-    make, model_name, year_str, trim, variant, feature_set_id, version_dir, _ = parts
+    make, model_name, year_str, variant, feature_set_id, version_dir, _ = parts
     match = VERSION_RE.match(version_dir)
     if not match:
         raise ValueError(f"Version directory '{version_dir}' does not match v<N>")
@@ -46,7 +46,6 @@ def _parse_model_id_from_key(key: str, schema_version: str) -> ModelId:
         make=make,
         model_name=model_name,
         year=parse_year(year_str),
-        trim=trim,
         variant=variant,
         feature_set_id=feature_set_id,
         version=int(match.group(1)),
@@ -91,7 +90,7 @@ class S3Registry(ModelRegistry):
 
     Bucket layout::
 
-        s3://<bucket>/<schema_version>/<make>/<model>/<year>/<trim>/<variant>/<feature_set_id>/v<N>/
+        s3://<bucket>/<schema_version>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/
             metadata.json
             model.onnx
 
@@ -171,7 +170,6 @@ class S3Registry(ModelRegistry):
         make: Optional[str] = None,
         model_name: Optional[str] = None,
         year: Optional[int] = None,
-        trim: Optional[str] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
     ) -> List[ModelInfo]:
@@ -184,9 +182,6 @@ class S3Registry(ModelRegistry):
             results = [m for m in results if m.model_id.model_name == model_name_lower]
         if year is not None:
             results = [m for m in results if year_contains(m.model_id.year, year)]
-        if trim is not None:
-            trim_lower = trim.lower()
-            results = [m for m in results if m.model_id.trim == trim_lower]
         if variant is not None:
             variant_lower = variant.lower()
             results = [m for m in results if m.model_id.variant == variant_lower]
