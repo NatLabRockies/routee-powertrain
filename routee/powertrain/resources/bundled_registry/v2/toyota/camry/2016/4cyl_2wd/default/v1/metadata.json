@@ -52,8 +52,8 @@
             "units": "miles",
             "dtype": "float32",
             "constraints": {
-                "lower": -Infinity,
-                "upper": Infinity
+                "lower": null,
+                "upper": null
             }
         },
         "target": {
@@ -63,8 +63,8 @@
                     "units": "gallons gasoline",
                     "dtype": "float32",
                     "constraints": {
-                        "lower": -Infinity,
-                        "upper": Infinity
+                        "lower": null,
+                        "upper": null
                     }
                 }
             ]

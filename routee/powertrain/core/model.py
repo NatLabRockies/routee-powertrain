@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import isinf
 from pathlib import Path
 from typing import Dict, List, Optional, TYPE_CHECKING, Union
 
@@ -121,9 +120,9 @@ class Model:
         feature_set = self.metadata.config.feature_set
         feature_ranges = {}
         for f in feature_set.features:
-            if isinf(f.constraints.upper) or isinf(f.constraints.lower):
+            if f.constraints.upper is None or f.constraints.lower is None:
                 raise ValueError(
-                    f"Feature: {f.name} has constraints with positive/negative infinity in the lower/upper bound. "
+                    f"Feature: {f.name} has constraints without a lower/upper bound. "
                     f"You can add constraints when training a model or set custom constraints during visualization using "
                     f"routee.powertrain.validation.feature_visualization.visualize_features"
                 )
@@ -161,9 +160,9 @@ class Model:
         feature_set = self.metadata.config.feature_set
         feature_ranges = {}
         for f in feature_set.features:
-            if isinf(f.constraints.upper) or isinf(f.constraints.lower):
+            if f.constraints.upper is None or f.constraints.lower is None:
                 raise ValueError(
-                    f"Feature: {f.name} has constraints with positive/negative infinity in the lower/upper bound. "
+                    f"Feature: {f.name} has constraints without a lower/upper bound. "
                     f"You can add constraints when training a model or set custom constraints during visualization using "
                     f"routee.powertrain.validation.feature_visualization.contour_plot"
                 )
