@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 from routee.powertrain.core.model import Model
+from routee.powertrain.core.year import parse_year, year_contains
 from routee.powertrain.io.archive import (
     load_model_directory,
     read_directory_metadata,
@@ -44,7 +45,7 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
     return ModelId(
         make=make,
         model_name=model_name,
-        year=int(year_str),
+        year=parse_year(year_str),
         trim=trim,
         variant=variant,
         version=int(match.group(1)),
@@ -145,7 +146,7 @@ class LocalRegistry(ModelRegistry):
             model_name_lower = model_name.lower()
             results = [m for m in results if m.model_id.model_name == model_name_lower]
         if year is not None:
-            results = [m for m in results if m.model_id.year == year]
+            results = [m for m in results if year_contains(m.model_id.year, year)]
         if trim is not None:
             trim_lower = trim.lower()
             results = [m for m in results if m.model_id.trim == trim_lower]

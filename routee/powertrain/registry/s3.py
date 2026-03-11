@@ -5,6 +5,7 @@ import re
 from typing import List, Optional
 
 from routee.powertrain.core.model import Model
+from routee.powertrain.core.year import parse_year, year_contains
 from routee.powertrain.io.archive import (
     _model_from_metadata_and_bytes,
     METADATA_FILENAME,
@@ -44,7 +45,7 @@ def _parse_model_id_from_key(key: str, schema_version: str) -> ModelId:
     return ModelId(
         make=make,
         model_name=model_name,
-        year=int(year_str),
+        year=parse_year(year_str),
         trim=trim,
         variant=variant,
         version=int(match.group(1)),
@@ -180,7 +181,7 @@ class S3Registry(ModelRegistry):
             model_name_lower = model_name.lower()
             results = [m for m in results if m.model_id.model_name == model_name_lower]
         if year is not None:
-            results = [m for m in results if m.model_id.year == year]
+            results = [m for m in results if year_contains(m.model_id.year, year)]
         if trim is not None:
             trim_lower = trim.lower()
             results = [m for m in results if m.model_id.trim == trim_lower]

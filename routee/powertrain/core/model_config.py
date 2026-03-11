@@ -10,6 +10,7 @@ from routee.powertrain.core.features import (
     TargetSet,
 )
 from routee.powertrain.core.powertrain_type import PowertrainType
+from routee.powertrain.core.year import Year, parse_year, serialize_year
 
 
 class PredictMethod(Enum):
@@ -42,7 +43,7 @@ class ModelConfig:
     ## structured vehicle identification
     make: str
     model_name: str
-    year: int
+    year: Year
     trim: str
 
     predict_method: PredictMethod = PredictMethod.RATE
@@ -59,6 +60,8 @@ class ModelConfig:
         self.make = self.make.lower()
         self.model_name = self.model_name.lower()
         self.trim = self.trim.lower()
+        # parse year (supports int, tuple, or "YYYY-YYYY" string)
+        self.year = parse_year(self.year)
         # convert feature_set to the correct type
         if isinstance(self.feature_set, dict):
             self.feature_set = FeatureSet.from_dict(self.feature_set)
@@ -110,6 +113,7 @@ class ModelConfig:
         d["distance"] = self.distance.to_dict()
         d["target"] = self.target.to_dict()
         d["predict_method"] = self.predict_method.value
+        d["year"] = serialize_year(self.year)
 
         return d
 

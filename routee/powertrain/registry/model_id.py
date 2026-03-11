@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+from routee.powertrain.core.year import Year, format_year, parse_year, serialize_year
+
 
 @dataclass
 class ModelId:
@@ -10,7 +12,7 @@ class ModelId:
 
     make: str
     model_name: str
-    year: int
+    year: Year
     trim: str
     variant: str
     version: int
@@ -20,6 +22,7 @@ class ModelId:
         self.model_name = self.model_name.lower()
         self.trim = self.trim.lower()
         self.variant = self.variant.lower()
+        self.year = parse_year(self.year)
 
     def to_path(self, schema_version: str = "v2") -> str:
         """
@@ -29,14 +32,14 @@ class ModelId:
         """
         return (
             f"{schema_version}/{self.make}/{self.model_name}/"
-            f"{self.year}/{self.trim}/{self.variant}/v{self.version}"
+            f"{format_year(self.year)}/{self.trim}/{self.variant}/v{self.version}"
         )
 
     def to_dict(self) -> dict:
         return {
             "make": self.make,
             "model_name": self.model_name,
-            "year": self.year,
+            "year": serialize_year(self.year),
             "trim": self.trim,
             "variant": self.variant,
             "version": self.version,
@@ -48,7 +51,7 @@ class ModelId:
 
     def __str__(self) -> str:
         return (
-            f"{self.make}/{self.model_name}/{self.year}/"
+            f"{self.make}/{self.model_name}/{format_year(self.year)}/"
             f"{self.trim}/{self.variant}/v{self.version}"
         )
 
