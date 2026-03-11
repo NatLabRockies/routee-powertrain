@@ -25,11 +25,11 @@ class ModelId:
         """
         Build the registry path for this model.
 
-        Returns: e.g. "v2/toyota/camry/2016/4cyl_fwd/default/v1.zip"
+        Returns: e.g. "v2/toyota/camry/2016/4cyl_fwd/default/v1"
         """
         return (
             f"{schema_version}/{self.make}/{self.model_name}/"
-            f"{self.year}/{self.trim}/{self.variant}/v{self.version}.zip"
+            f"{self.year}/{self.trim}/{self.variant}/v{self.version}"
         )
 
     def to_dict(self) -> dict:

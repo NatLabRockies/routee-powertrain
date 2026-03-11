@@ -9180,7 +9180,7 @@ packages:
 - pypi: ./
   name: routee-powertrain
   version: 1.4.0
-  sha256: 8e3bae7bd21cc76007b37232ba0e122f5010f9bc46ad39d364458f7bca5eab9e
+  sha256: 4d5f60bf5caa6d2a5dec1b258c19430f73976c4e4561e8fb99e1c26d581c263b
   requires_dist:
   - numpy>=2.0,<3.0
   - onnx>=1.20,<1.21

@@ -4,18 +4,22 @@ from unittest import TestCase
 import pandas as pd
 import numpy as np
 
-import routee.powertrain as pt
 from routee.powertrain.io.to_lookup_table import (
     to_lookup_table,
     LookupTableFeatureParameter,
 )
+from routee.powertrain.registry.local import LocalRegistry
+from routee.powertrain.registry.model_id import ModelId
+from routee.powertrain.resources.bundled_registry import bundled_registry_root
 
 this_dir = Path(__file__).parent
 
 
 class TestToLookup(TestCase):
     def setUp(self) -> None:
-        self.mock_model = pt.load_model("2016_TOYOTA_Camry_4cyl_2WD")
+        registry = LocalRegistry(root=bundled_registry_root(), schema_version="v2")
+        model_id = ModelId("toyota", "camry", 2016, "4cyl_2wd", "default", 1)
+        self.mock_model = registry.load(model_id)
 
     def test_to_lookup_single_feature(self):
         """Test lookup table generation with all features, varying speed only."""

@@ -1,5 +1,6 @@
 import logging as log
 import math
+import shutil
 from pathlib import Path
 from unittest import TestCase
 
@@ -7,7 +8,14 @@ import pandas as pd
 
 import routee.powertrain as pt
 from routee.powertrain.estimators.onnx import ONNXEstimator
-from routee.powertrain.io.archive import load_archive, save_archive
+from routee.powertrain.io.archive import (
+    load_archive,
+    load_model_directory,
+    load_tar_archive,
+    save_archive,
+    save_model_directory,
+    save_tar_archive,
+)
 
 from routee.powertrain.trainers.sklearn_random_forest import (
     SklearnRandomForestTrainer,
@@ -21,7 +29,7 @@ log.basicConfig(level=log.INFO)
 
 
 class TestArchiveRoundTrip(TestCase):
-    """Test the new .zip archive serialization format."""
+    """Test model serialization across all supported formats."""
 
     def setUp(self) -> None:
         data_path = (
@@ -61,10 +69,9 @@ class TestArchiveRoundTrip(TestCase):
         )
 
     def tearDown(self) -> None:
-        # cleanup tmp files
-        for f in self.out_path.iterdir():
-            f.unlink()
-        self.out_path.rmdir()
+        # cleanup tmp directory recursively
+        if self.out_path.exists():
+            shutil.rmtree(self.out_path)
 
     def test_sklearn_zip_roundtrip(self):
         """Train an ONNX model, save as .zip, reload, and verify predictions match."""
@@ -120,16 +127,74 @@ class TestArchiveRoundTrip(TestCase):
             math.isclose(r1.gallons_fastsim.sum(), r2.gallons_fastsim.sum())
         )
 
-    def test_json_still_works(self):
-        """Legacy .json format should still work for both read and write."""
+    def test_directory_roundtrip(self):
+        """Save as flat directory, reload, and verify predictions match."""
         trainer = SklearnRandomForestTrainer()
         model = trainer.train(self.df, self.rate_config)
 
-        outfile = self.out_path / "legacy.json"
+        r1 = model.predict(self.df)
+        energy1 = round(r1.gallons_fastsim.sum(), 2)
+
+        outdir = self.out_path / "model_dir"
+        model.to_file(outdir)
+        self.assertTrue(outdir.is_dir())
+        self.assertTrue((outdir / "metadata.json").exists())
+        self.assertTrue((outdir / "model.onnx").exists())
+
+        loaded = pt.load_model(outdir)
+        r2 = loaded.predict(self.df)
+        energy2 = round(r2.gallons_fastsim.sum(), 2)
+
+        self.assertTrue(math.isclose(energy1, energy2))
+
+    def test_directory_low_level(self):
+        """Test save_model_directory / load_model_directory directly."""
+        trainer = SklearnRandomForestTrainer()
+        model = trainer.train(self.df, self.rate_config)
+
+        outdir = self.out_path / "low_level_dir"
+        save_model_directory(model, outdir)
+
+        loaded = load_model_directory(outdir)
+        self.assertEqual(loaded.metadata.config.vehicle_description, "Test Model")
+        self.assertIsInstance(loaded.estimator, ONNXEstimator)
+
+        r1 = model.predict(self.df)
+        r2 = loaded.predict(self.df)
+        self.assertTrue(
+            math.isclose(r1.gallons_fastsim.sum(), r2.gallons_fastsim.sum())
+        )
+
+    def test_tar_roundtrip(self):
+        """Save as .tar.gz, reload, and verify predictions match."""
+        trainer = SklearnRandomForestTrainer()
+        model = trainer.train(self.df, self.rate_config)
+
+        r1 = model.predict(self.df)
+        energy1 = round(r1.gallons_fastsim.sum(), 2)
+
+        outfile = self.out_path / "model.tar.gz"
         model.to_file(outfile)
         self.assertTrue(outfile.exists())
 
         loaded = pt.load_model(outfile)
+        r2 = loaded.predict(self.df)
+        energy2 = round(r2.gallons_fastsim.sum(), 2)
+
+        self.assertTrue(math.isclose(energy1, energy2))
+
+    def test_tar_low_level(self):
+        """Test save_tar_archive / load_tar_archive directly."""
+        trainer = SklearnRandomForestTrainer()
+        model = trainer.train(self.df, self.rate_config)
+
+        outfile = self.out_path / "low_level.tar.gz"
+        save_tar_archive(model, outfile)
+
+        loaded = load_tar_archive(outfile)
+        self.assertEqual(loaded.metadata.config.vehicle_description, "Test Model")
+        self.assertIsInstance(loaded.estimator, ONNXEstimator)
+
         r1 = model.predict(self.df)
         r2 = loaded.predict(self.df)
         self.assertTrue(
@@ -152,6 +217,17 @@ class TestArchiveRoundTrip(TestCase):
         trainer = SklearnRandomForestTrainer()
         model = trainer.train(self.df, config)
 
+        # Test with directory format
+        outdir = self.out_path / "structured_dir"
+        model.to_file(outdir)
+
+        loaded = pt.load_model(outdir)
+        self.assertEqual(loaded.metadata.config.make, "toyota")
+        self.assertEqual(loaded.metadata.config.model_name, "camry")
+        self.assertEqual(loaded.metadata.config.year, 2016)
+        self.assertEqual(loaded.metadata.config.trim, "4cyl_fwd")
+
+        # Test with zip format
         outfile = self.out_path / "structured.zip"
         model.to_file(outfile)
 

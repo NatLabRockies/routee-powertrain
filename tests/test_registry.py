@@ -5,8 +5,7 @@ from unittest import TestCase
 import pandas as pd
 
 import routee.powertrain as pt
-from routee.powertrain.io.archive import save_archive
-from routee.powertrain.registry.catalog import Catalog
+from routee.powertrain.io.archive import save_model_directory
 from routee.powertrain.registry.local import LocalRegistry
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.trainers.sklearn_random_forest import (
@@ -20,7 +19,7 @@ class TestModelId(TestCase):
     def test_to_path(self):
         mid = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", 1)
         path = mid.to_path("v2")
-        self.assertEqual(path, "v2/toyota/camry/2016/4cyl_fwd/default/v1.zip")
+        self.assertEqual(path, "v2/toyota/camry/2016/4cyl_fwd/default/v1")
 
     def test_lowercase_normalization(self):
         mid = ModelId("Toyota", "Camry", 2016, "4Cyl_FWD", "Default", 1)
@@ -34,68 +33,6 @@ class TestModelId(TestCase):
         d = mid.to_dict()
         mid2 = ModelId.from_dict(d)
         self.assertEqual(mid, mid2)
-
-
-class TestCatalog(TestCase):
-    def setUp(self):
-        self.info1 = ModelInfo(
-            model_id=ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", 1),
-            estimator_type="ONNXEstimator",
-            feature_names=["speed_mph", "grade_dec"],
-            target_names=["gallons_fastsim"],
-            powertrain_type="ICE",
-            errors={"gallons_fastsim": {"net_error": 0.01}},
-            vehicle_description="2016 Toyota Camry",
-            path="v2/toyota/camry/2016/4cyl_fwd/default/v1.zip",
-        )
-        self.info2 = ModelInfo(
-            model_id=ModelId("chevrolet", "bolt", 2017, "ev", "default", 1),
-            estimator_type="ONNXEstimator",
-            feature_names=["speed_mph", "grade_dec"],
-            target_names=["kwh"],
-            powertrain_type="BEV",
-            errors={"kwh": {"net_error": 0.02}},
-            vehicle_description="2017 Chevrolet Bolt",
-            path="v2/chevrolet/bolt/2017/ev/default/v1.zip",
-        )
-        self.catalog = Catalog(schema_version="v2", models=[self.info1, self.info2])
-
-    def test_query_all(self):
-        results = self.catalog.query()
-        self.assertEqual(len(results), 2)
-
-    def test_query_by_make(self):
-        results = self.catalog.query(make="toyota")
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].model_id.make, "toyota")
-
-    def test_query_by_year(self):
-        results = self.catalog.query(year=2017)
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].model_id.model_name, "bolt")
-
-    def test_query_no_match(self):
-        results = self.catalog.query(make="ford")
-        self.assertEqual(len(results), 0)
-
-    def test_query_multiple_filters(self):
-        results = self.catalog.query(make="toyota", year=2016)
-        self.assertEqual(len(results), 1)
-
-    def test_roundtrip_dict(self):
-        d = self.catalog.to_dict()
-        catalog2 = Catalog.from_dict(d)
-        self.assertEqual(len(catalog2.models), 2)
-        self.assertEqual(catalog2.schema_version, "v2")
-
-    def test_roundtrip_json_file(self):
-        import tempfile
-
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "catalog.json"
-            self.catalog.to_json(path)
-            catalog2 = Catalog.from_json(path)
-            self.assertEqual(len(catalog2.models), 2)
 
 
 class TestLocalRegistry(TestCase):
@@ -141,28 +78,11 @@ class TestLocalRegistry(TestCase):
         self.model = trainer.train(df, config)
         self.df = df
 
-        # Save to registry path
+        # Save to registry path as a flat directory
         model_id = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", 1)
         rel_path = model_id.to_path(self.schema_version)
         full_path = self.root / rel_path
-        full_path.parent.mkdir(parents=True, exist_ok=True)
-        save_archive(self.model, full_path)
-
-        # Build catalog
-        info = ModelInfo(
-            model_id=model_id,
-            estimator_type="ONNXEstimator",
-            feature_names=["speed_mph", "grade_dec"],
-            target_names=["gallons_fastsim"],
-            powertrain_type="ICE",
-            errors={"gallons_fastsim": {"net_error": 0.01}},
-            vehicle_description="2016 Toyota Camry 4cyl FWD",
-            path=rel_path,
-        )
-        catalog = Catalog(schema_version=self.schema_version, models=[info])
-        catalog_dir = self.root / self.schema_version
-        catalog_dir.mkdir(parents=True, exist_ok=True)
-        catalog.to_json(catalog_dir / "catalog.json")
+        save_model_directory(self.model, full_path)
 
         self.registry = LocalRegistry(
             root=self.root, schema_version=self.schema_version
@@ -177,6 +97,10 @@ class TestLocalRegistry(TestCase):
         results = self.registry.query(make="toyota")
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].model_id.model_name, "camry")
+
+    def test_query_all(self):
+        results = self.registry.query()
+        self.assertEqual(len(results), 1)
 
     def test_query_no_match(self):
         results = self.registry.query(make="ford")
@@ -197,3 +121,11 @@ class TestLocalRegistry(TestCase):
         meta = self.registry.get_metadata(model_id)
         self.assertIn("metadata", meta)
         self.assertIn("estimator_type", meta)
+
+    def test_query_returns_model_info(self):
+        results = self.registry.query(make="toyota")
+        info = results[0]
+        self.assertIsInstance(info, ModelInfo)
+        self.assertEqual(info.estimator_type, "ONNXEstimator")
+        self.assertIn("speed_mph", info.feature_names)
+        self.assertIn("gallons_fastsim", info.target_names)

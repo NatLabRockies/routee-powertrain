@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import json
 import time
 from pathlib import Path
 from typing import List, Optional
 
 from routee.powertrain.core.model import Model
-from routee.powertrain.io.archive import load_archive
-from routee.powertrain.registry.catalog import Catalog
+from routee.powertrain.io.archive import load_archive, save_archive
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry
 
@@ -18,13 +18,13 @@ class CachedRegistry(ModelRegistry):
     """
     A caching wrapper around any ModelRegistry implementation.
 
-    Caches model zip files and the catalog index locally to avoid
+    Caches model zip files and a query-results index locally to avoid
     re-downloading on repeated queries/loads.
 
     Args:
         inner: the registry to wrap
         cache_dir: local directory for cached files (default: ~/.routee/cache/)
-        catalog_ttl: time-to-live in seconds for the cached catalog (default: 1 hour)
+        catalog_ttl: time-to-live in seconds for the cached query index (default: 1 hour)
     """
 
     def __init__(
@@ -37,18 +37,18 @@ class CachedRegistry(ModelRegistry):
         self.cache_dir = cache_dir or DEFAULT_CACHE_DIR
         self.catalog_ttl = catalog_ttl
 
-    def _catalog_cache_path(self) -> Path:
-        return self.cache_dir / "catalog.json"
+    def _query_cache_path(self) -> Path:
+        return self.cache_dir / "query_cache.json"
 
-    def _catalog_timestamp_path(self) -> Path:
-        return self.cache_dir / "catalog.timestamp"
+    def _query_timestamp_path(self) -> Path:
+        return self.cache_dir / "query_cache.timestamp"
 
     def _model_cache_path(self, model_id: ModelId, schema_version: str = "v2") -> Path:
         rel_path = model_id.to_path(schema_version)
-        return self.cache_dir / rel_path
+        return self.cache_dir / (rel_path + ".zip")
 
-    def _is_catalog_fresh(self) -> bool:
-        ts_path = self._catalog_timestamp_path()
+    def _is_query_cache_fresh(self) -> bool:
+        ts_path = self._query_timestamp_path()
         if not ts_path.exists():
             return False
         try:
@@ -57,17 +57,46 @@ class CachedRegistry(ModelRegistry):
         except (ValueError, OSError):
             return False
 
-    def _load_cached_catalog(self) -> Optional[Catalog]:
-        cache_path = self._catalog_cache_path()
-        if cache_path.exists() and self._is_catalog_fresh():
-            return Catalog.from_json(cache_path)
+    def _load_cached_query(self) -> Optional[List[ModelInfo]]:
+        cache_path = self._query_cache_path()
+        if cache_path.exists() and self._is_query_cache_fresh():
+            with cache_path.open("r") as f:
+                data = json.load(f)
+            return [ModelInfo.from_dict(d) for d in data]
         return None
 
-    def _save_catalog_to_cache(self, catalog: Catalog) -> None:
+    def _save_query_cache(self, models: List[ModelInfo]) -> None:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        cache_path = self._catalog_cache_path()
-        catalog.to_json(cache_path)
-        self._catalog_timestamp_path().write_text(str(time.time()))
+        cache_path = self._query_cache_path()
+        with cache_path.open("w") as f:
+            json.dump([m.to_dict() for m in models], f)
+        self._query_timestamp_path().write_text(str(time.time()))
+
+    def _filter(
+        self,
+        models: List[ModelInfo],
+        make: Optional[str] = None,
+        model_name: Optional[str] = None,
+        year: Optional[int] = None,
+        trim: Optional[str] = None,
+        variant: Optional[str] = None,
+    ) -> List[ModelInfo]:
+        results = models
+        if make is not None:
+            make_lower = make.lower()
+            results = [m for m in results if m.model_id.make == make_lower]
+        if model_name is not None:
+            model_name_lower = model_name.lower()
+            results = [m for m in results if m.model_id.model_name == model_name_lower]
+        if year is not None:
+            results = [m for m in results if m.model_id.year == year]
+        if trim is not None:
+            trim_lower = trim.lower()
+            results = [m for m in results if m.model_id.trim == trim_lower]
+        if variant is not None:
+            variant_lower = variant.lower()
+            results = [m for m in results if m.model_id.variant == variant_lower]
+        return results
 
     def query(
         self,
@@ -77,9 +106,10 @@ class CachedRegistry(ModelRegistry):
         trim: Optional[str] = None,
         variant: Optional[str] = None,
     ) -> List[ModelInfo]:
-        catalog = self._load_cached_catalog()
-        if catalog is not None:
-            return catalog.query(
+        cached = self._load_cached_query()
+        if cached is not None:
+            return self._filter(
+                cached,
                 make=make,
                 model_name=model_name,
                 year=year,
@@ -87,24 +117,22 @@ class CachedRegistry(ModelRegistry):
                 variant=variant,
             )
 
-        # Cache miss — fetch from inner registry (which fetches the full catalog)
-        results = self.inner.query(
+        # Cache miss — fetch all models from inner registry
+        all_models = self.inner.query()
+
+        try:
+            self._save_query_cache(all_models)
+        except Exception:
+            pass  # Don't fail the query if caching doesn't work
+
+        return self._filter(
+            all_models,
             make=make,
             model_name=model_name,
             year=year,
             trim=trim,
             variant=variant,
         )
-
-        # Also cache the full catalog for next time
-        try:
-            all_models = self.inner.query()
-            full_catalog = Catalog(schema_version="v2", models=all_models)
-            self._save_catalog_to_cache(full_catalog)
-        except Exception:
-            pass  # Don't fail the query if caching doesn't work
-
-        return results
 
     def load(self, model_id: ModelId) -> Model:
         cache_path = self._model_cache_path(model_id)
@@ -113,11 +141,9 @@ class CachedRegistry(ModelRegistry):
 
         model = self.inner.load(model_id)
 
-        # Cache the model for next time by saving the archive
+        # Cache the model as a .zip for compactness
         try:
             cache_path.parent.mkdir(parents=True, exist_ok=True)
-            from routee.powertrain.io.archive import save_archive
-
             save_archive(model, cache_path)
         except Exception:
             pass  # Don't fail the load if caching doesn't work
