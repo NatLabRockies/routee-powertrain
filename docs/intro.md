@@ -16,18 +16,20 @@ Then, you can import the package and use a pre-trained model from the RouteE mod
 import pandas as pd
 import routee.powertrain as pt
 
-# Print the available pre-trained models
-print(pt.list_available_models(local=True, external=True))
+# List the available pre-trained models (returns a list of ModelId objects)
+print(pt.list_available_models())
 
 # [
-#   '2016_TOYOTA_Camry_4cyl_2WD',
-#   '2017_CHEVROLET_Bolt',
-#   '2012_Ford_Focus',
+#   toyota/camry_4cyl_2wd/2016/default/grade_percent_speed_mph/v1,
+#   chevrolet/bolt/2017/default/grade_percent_speed_mph/v1,
 #   ...
 # ]
 
-# Load a pre-trained model
-model = pt.load_model("2016_TOYOTA_Camry_4cyl_2WD")
+# You can also query available models with filters for more detail
+results = pt.query_available_models(make="toyota", model_name="camry")
+
+# Load a pre-trained model using its registry path
+model = pt.load_model("toyota/camry_4cyl_2wd/2016/default/grade_percent_speed_mph/v1")
 
 # Inspect the model to see what it expects for input
 print(model)
@@ -35,34 +37,26 @@ print(model)
 # ========================================
 # Model Summary
 # --------------------
-# Vehicle description: 2016_TOYOTA_Camry_4cyl_2WD
+# Vehicle description: 2016_TOYOTA_Camry_4cyl_2WD trained July 2024
 # Powertrain type: ICE
-# Number of estimators: 2
 # ========================================
 # Estimator Summary
 # --------------------
 # Feature: speed_mph (mph)
-# Distance: miles (miles)
-# Target: gge (gallons_gasoline)
-# Raw Predicted Consumption: 29.856 (miles/gallons_gasoline)
-# Real World Predicted Consumption: 25.606 (miles/gallons_gasoline)
-# ========================================
-# Estimator Summary
-# --------------------
-# Feature: speed_mph (mph)
-# Feature: grade_dec (decimal)
-# Distance: miles (miles)
-# Target: gge (gallons_gasoline)
-# Raw Predicted Consumption: 29.845 (miles/gallons_gasoline)
-# Real World Predicted Consumption: 25.596 (miles/gallons_gasoline)
+# Feature: grade_percent (percent)
+# Distance: distance (miles)
+# Target: gge (gallons gasoline)
+# Raw Predicted Consumption: 30.289 (miles/gge)
+# Real World Predicted Consumption: 25.977 (miles/gge)
+# Predict Method: RATE
 # ========================================
 
 # Predict energy consumption for a set of road links
 links_df = pd.DataFrame(
     {
-        "miles": [0.1, 0.2, 0.3], # miles
-        "speed_mph": [30, 40, 50], # mph
-        "grade_dec": [-0.05, 0, 0.05], # decimal
+        "distance": [0.1, 0.2, 0.3], # miles
+        "speed_mph": [30, 40, 50],   # mph
+        "grade_percent": [-5.0, 0, 5.0], # percent
     }
 )
 
