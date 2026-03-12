@@ -11,6 +11,7 @@ from routee.powertrain.io.archive import (
     read_directory_metadata,
     METADATA_FILENAME,
 )
+from routee.powertrain.core.metadata import SCHEMA_VERSION_STRING
 from routee.powertrain.registry.filtering import filter_models
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
@@ -103,7 +104,7 @@ class LocalRegistry(ModelRegistry):
     def __init__(
         self,
         root: Union[str, Path],
-        schema_version: str = "v2",
+        schema_version: str = SCHEMA_VERSION_STRING,
     ) -> None:
         self.root = Path(root)
         self.schema_version = schema_version
@@ -129,6 +130,21 @@ class LocalRegistry(ModelRegistry):
                 results.append(info)
             except Exception:
                 continue  # skip malformed entries
+        return results
+
+    def list_models(self) -> List[ModelId]:
+        schema_root = self._schema_root
+        if not schema_root.exists():
+            return []
+
+        results: List[ModelId] = []
+        for meta_path in sorted(schema_root.glob(f"**/{METADATA_FILENAME}")):
+            model_dir = meta_path.parent
+            try:
+                model_id = _parse_model_id_from_path(model_dir, schema_root)
+                results.append(model_id)
+            except Exception:
+                continue
         return results
 
     def query(

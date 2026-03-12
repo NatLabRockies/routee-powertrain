@@ -13,6 +13,30 @@ log = logging.getLogger(__name__)
 
 
 def list_available_models(
+    registry: Optional[ModelRegistry] = None,
+) -> List[ModelId]:
+    """
+    Returns a list of model identifiers available in the registry.
+
+    This is a lightweight operation that returns only the model paths
+    without fetching any metadata or binaries.
+
+    If no registry is provided, the default registry is used.
+
+    Args:
+        registry: a ModelRegistry instance; defaults to get_default_registry()
+
+    Returns: list of ModelId for every model in the registry
+    """
+    if registry is None:
+        from routee.powertrain.registry.default import get_default_registry
+
+        registry = get_default_registry()
+
+    return registry.list_models()
+
+
+def query_available_models(
     make: Optional[str] = None,
     model_name: Optional[str] = None,
     year: Optional[int] = None,
@@ -22,8 +46,9 @@ def list_available_models(
     fuzzy_threshold: int = 80,
 ) -> List[ModelInfo]:
     """
-    Returns a list of available pretrained models from the registry.
+    Query available pretrained models from the registry with optional filters.
 
+    Returns full metadata and error metrics for each matching model.
     If no registry is provided, the default registry is used.
 
     Args:
@@ -64,7 +89,7 @@ def load_model(
     1. **File path** — pass a ``Path`` or string pointing to a model
        directory (containing ``metadata.json``), ``.zip`` archive,
        or ``.tar.gz`` archive on disk.
-    2. **Registry ModelId** — pass a ``ModelId`` to fetch from a
+    2. **Registry ModelId** — pass a ``ModelId`` object or model id path to fetch from a
        registry (uses the default registry if none is provided).
 
     Args:
@@ -84,28 +109,43 @@ def load_model(
     >>> model = pt.load_model("MyModel.zip")
     >>>
     >>> # load via registry
-    >>> from routee.powertrain.registry import ModelId, get_default_registry
-    >>> reg = get_default_registry()
-    >>> mid = ModelId("toyota", "camry", 2016, "4cyl_fwd", "default", "grade_speed", 1)
-    >>> model = pt.load_model(mid, registry=reg)
+    >>> from routee.powertrain.registry import ModelId
+    >>> mid = ModelId("toyota", "camry", 2016, "default", "grade_speed", 1)
+    >>> model = pt.load_model(mid)
+    >>>
+    >>> mid_str = "toyota/camry/2016/default/grade_speed/v1"
+    >>> model = pt.load_model(mid_str)
 
     """
-    # Mode 1: ModelId with registry
-    if isinstance(name_or_path, ModelId):
-        if registry is None:
-            from routee.powertrain.registry.default import get_default_registry
+    # First assume the model is local
+    if isinstance(name_or_path, (str, Path)):
+        path = Path(name_or_path)
+        if path.exists():
+            return Model.from_file(path)
 
-            registry = get_default_registry()
+    # If not found locally, try loading from registry if it's a ModelId or a valid ModelId string
+    if registry is None:
+        from routee.powertrain.registry.default import get_default_registry
+
+        registry = get_default_registry()
+
+    if isinstance(name_or_path, ModelId):
         return registry.load(name_or_path)
 
-    # Mode 2: file or directory path on disk
-    path = Path(name_or_path)
-    if path.exists():
-        return Model.from_file(path)
+    if isinstance(name_or_path, str):
+        try:
+            mid = ModelId.from_path(name_or_path)
+            if registry is None:
+                from routee.powertrain.registry.default import get_default_registry
+
+                registry = get_default_registry()
+            return registry.load(mid)
+        except ValueError:
+            pass
 
     raise ValueError(
         f"Could not load model: {name_or_path}. "
-        "Provide a valid file/directory path or a ModelId with a registry."
+        "Provide a valid local file/directory or a valid ModelId/string with a registry."
     )
 
 

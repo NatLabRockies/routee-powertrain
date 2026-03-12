@@ -66,6 +66,17 @@ class ModelRegistry(ABC):
         """
 
     @abstractmethod
+    def list_models(self) -> List[ModelId]:
+        """
+        List all model identifiers in the registry.
+
+        This is a lightweight operation that returns only the model
+        paths/identifiers without fetching any metadata or binaries.
+
+        Returns: list of ModelId for every model in the registry
+        """
+
+    @abstractmethod
     def get_metadata(self, model_id: Union[str, ModelId]) -> dict:
         """
         Fetch only the metadata for a model (without downloading the binary).

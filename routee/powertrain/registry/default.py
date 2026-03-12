@@ -3,10 +3,10 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from routee.powertrain.core.metadata import SCHEMA_VERSION_STRING
 from routee.powertrain.registry.registry import ModelRegistry
 
-DEFAULT_BUCKET = "routee-powertrain-models"
-DEFAULT_SCHEMA_VERSION = "v2"
+DEFAULT_BUCKET = "routeecore-bucket"
 DEFAULT_REGION = "us-west-2"
 DEFAULT_ROOT_PREFIX = "routee-powertrain-model-library"
 
@@ -23,7 +23,7 @@ def get_default_registry() -> ModelRegistry:
     Build the default model registry from environment variables.
 
     The default backend is ``"s3"``, which fetches models from a public
-    S3 bucket and caches them locally.  Set ``ROUTEE_REGISTRY_BACKEND=local``
+    S3 bucket.  Set ``ROUTEE_REGISTRY_BACKEND=local``
     to use a local filesystem registry instead (e.g. for CI or offline use).
     When the local backend is selected, the bundled registry shipped with
     the package is used unless ``ROUTEE_LOCAL_REGISTRY_ROOT`` is set.
@@ -35,16 +35,13 @@ def get_default_registry() -> ModelRegistry:
         ROUTEE_S3_ROOT_PREFIX: Top-level folder in the S3 bucket
             (default: routee-powertrain-model-library)
         ROUTEE_SCHEMA_VERSION: schema version (default: v2)
-        ROUTEE_CACHE_DIR: local cache directory (default: ~/.routee/cache/)
         ROUTEE_LOCAL_REGISTRY_ROOT: root directory for local registry backend
             (default: bundled registry shipped with the package)
 
-    Returns: a ModelRegistry (CachedRegistry wrapping S3Registry, or LocalRegistry)
+    Returns: a ModelRegistry (S3Registry, or LocalRegistry)
     """
     backend = os.environ.get("ROUTEE_REGISTRY_BACKEND", "s3")
-    schema_version = os.environ.get("ROUTEE_SCHEMA_VERSION", DEFAULT_SCHEMA_VERSION)
-    cache_dir_str = os.environ.get("ROUTEE_CACHE_DIR")
-    cache_dir = Path(cache_dir_str) if cache_dir_str else None
+    schema_version = os.environ.get("ROUTEE_SCHEMA_VERSION", SCHEMA_VERSION_STRING)
 
     inner: ModelRegistry
     if backend == "s3":
@@ -67,10 +64,5 @@ def get_default_registry() -> ModelRegistry:
         inner = LocalRegistry(root=root, schema_version=schema_version)
     else:
         raise ValueError(f"Unknown registry backend: '{backend}'. Use 's3' or 'local'.")
-
-    if backend == "s3":
-        from routee.powertrain.registry.cache import CachedRegistry
-
-        return CachedRegistry(inner=inner, cache_dir=cache_dir)
 
     return inner

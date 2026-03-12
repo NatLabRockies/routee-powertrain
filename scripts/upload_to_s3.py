@@ -37,10 +37,10 @@ import boto3
 
 from routee.powertrain.core.metadata import SCHEMA_VERSION_STRING
 from routee.powertrain.io.archive import METADATA_FILENAME
-from routee.powertrain.registry.s3 import (
-    DEFAULT_S3_BUCKET,
-    DEFAULT_S3_REGION,
-    DEFAULT_S3_ROOT_PREFIX,
+from routee.powertrain.registry.default import (
+    DEFAULT_BUCKET,
+    DEFAULT_REGION,
+    DEFAULT_ROOT_PREFIX,
 )
 
 log = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ def upload_model_dir(
     root: Path,
     bucket: str,
     dry_run: bool = False,
-    root_prefix: str = DEFAULT_S3_ROOT_PREFIX,
+    root_prefix: str = DEFAULT_ROOT_PREFIX,
 ) -> int:
     """
     Upload all files in a model directory to S3.
@@ -98,13 +98,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--bucket",
-        default=DEFAULT_S3_BUCKET,
-        help=f"S3 bucket name (default: {DEFAULT_S3_BUCKET}).",
+        default=DEFAULT_BUCKET,
+        help=f"S3 bucket name (default: {DEFAULT_BUCKET}).",
     )
     parser.add_argument(
         "--region",
-        default=DEFAULT_S3_REGION,
-        help=f"AWS region (default: {DEFAULT_S3_REGION}).",
+        default=DEFAULT_REGION,
+        help=f"AWS region (default: {DEFAULT_REGION}).",
     )
     parser.add_argument(
         "--schema-version",
@@ -113,9 +113,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--root-prefix",
-        default=DEFAULT_S3_ROOT_PREFIX,
+        default=DEFAULT_ROOT_PREFIX,
         help=f"Top-level folder in the bucket under which all models are stored "
-        f"(default: {DEFAULT_S3_ROOT_PREFIX}).",
+        f"(default: {DEFAULT_ROOT_PREFIX}).",
     )
     parser.add_argument(
         "--prefix",

@@ -7,12 +7,11 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Union
 
-from routee.powertrain.core.metadata import Metadata
+from routee.powertrain.core.metadata import Metadata, SCHEMA_VERSION
 
 if TYPE_CHECKING:
     from routee.powertrain.core.model import Model
 
-SCHEMA_VERSION = 2
 METADATA_FILENAME = "metadata.json"
 
 

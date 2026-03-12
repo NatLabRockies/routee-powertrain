@@ -14,6 +14,11 @@ from routee.powertrain.io.archive import (
 from routee.powertrain.registry.filtering import _matches
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
+from routee.powertrain.registry.default import (
+    DEFAULT_BUCKET,
+    DEFAULT_REGION,
+    DEFAULT_ROOT_PREFIX,
+)
 
 import boto3
 
@@ -22,9 +27,6 @@ from botocore.config import Config
 
 # Pattern to extract version from path segment like "v1", "v2"
 VERSION_RE = re.compile(r"^v(\d+)$")
-DEFAULT_S3_BUCKET = "routeecore-bucket"
-DEFAULT_S3_REGION = "us-west-2"
-DEFAULT_S3_ROOT_PREFIX = "routee-powertrain-model-library"
 
 
 def _parse_model_id_from_key(
@@ -121,11 +123,11 @@ class S3Registry(ModelRegistry):
 
     def __init__(
         self,
-        bucket: str = DEFAULT_S3_BUCKET,
+        bucket: str = DEFAULT_BUCKET,
         schema_version: str = SCHEMA_VERSION_STRING,
-        region: str = DEFAULT_S3_REGION,
+        region: str = DEFAULT_REGION,
         anonymous: bool = False,
-        root_prefix: str = DEFAULT_S3_ROOT_PREFIX,
+        root_prefix: str = DEFAULT_ROOT_PREFIX,
     ) -> None:
         self.bucket = bucket
         self.schema_version = schema_version
@@ -251,6 +253,18 @@ class S3Registry(ModelRegistry):
                 dir_key = key[: -len(f"/{METADATA_FILENAME}")]
                 info = _model_info_from_metadata(metadata_dict, model_id, dir_key)
                 results.append(info)
+            except Exception:
+                continue
+        return results
+
+    def list_models(self) -> List[ModelId]:
+        results: List[ModelId] = []
+        for key in self._list_metadata_keys():
+            try:
+                model_id = _parse_model_id_from_key(
+                    key, self.schema_version, self.root_prefix
+                )
+                results.append(model_id)
             except Exception:
                 continue
         return results
