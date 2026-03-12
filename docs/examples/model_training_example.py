@@ -1,0 +1,106 @@
+"""
+# Model Training
+
+If you have your own ground truth energy data, you can train a custom RouteE powertrain model.
+
+You'll want to make sure you've installed the proper dependencies that are not installed by default when you do a pip install.
+
+In this example, we'll use the scikit-learn based estimators which you can install by doing:
+
+```bash
+pip install routee.powertrain[scikit]
+```
+"""
+
+import routee.powertrain as pt
+
+from routee.powertrain.trainers.sklearn_random_forest import SklearnRandomForestTrainer
+
+"""
+For demonstration purposes, we'll use a very small set of training data.
+You can access this dataset yourself [here](https://github.com/NREL/routee-powertrain/blob/main/tests/routee-powertrain-test-data/sample_train_data.csv)
+"""
+import pandas as pd
+
+df = pd.read_csv("../../tests/routee-powertrain-test-data/sample_train_data.csv")
+df.head()
+"""
+This dataframe represents a set of road network links (i.e. roads) in which we've already computed the energy consumption over. In this case, we've use the Fastsim software to simulate a vehicle driving over a high resolution drive cycle and then have aggregated everything up to the link level. We also have link level attributes like average driving speed in mile per hour (`speed`), road gradient as a decimal (`grade`), road distance in miles (`miles`) and road classification as a integer category (`road_class`). Lastly, we have a trip identifier column (`trip_id`) which is only 1 in this case, represeting a single trip taken by this vehicle.
+
+Ok, onto setting up the training pipeline.
+
+First, we need to tell the trainer what feature sets we want to use for the internal estimators (Random Forests in this case). We can provide one or many feature sets, depending on the different features we might expect to see when apply this model. In this case, we'll just use three different features sets. One with just `speed`, one with `speed` and `grade` and then another with `speed`, `grade`, and `road_class`. This will make it such that our model is flexible to cases where we might only have speed information for a link or we might have more feature resolution.  
+"""
+feature_set_1 = [pt.DataColumn(name="speed_mph", units="mph")]
+feature_set_2 = [
+    pt.DataColumn(name="speed_mph", units="mph"),
+    pt.DataColumn(name="grade_dec", units="decimal"),
+]
+feature_set_3 = [
+    pt.DataColumn(name="speed_mph", units="mph"),
+    pt.DataColumn(name="grade_dec", units="decimal"),
+    pt.DataColumn(name="road_class", units="category"),
+]
+features = [feature_set_1, feature_set_2, feature_set_3]
+"""
+Note that we didn't incude the distance column in any of our feature sets. That is because, RouteE Powertrain always requires distance information and so we have a special designation for distance in the training configuation whereas features can be any arbitrary link attribute. So, let's define our distance columns
+"""
+distance = pt.DataColumn(name="miles", units="miles")
+"""
+Now, we need to define our energy target which is gallons of gasoline simualted by Fastsim:
+"""
+energy_target = pt.DataColumn(
+    name="gallons_fastsim",
+    units="gallons_gasoline",
+)
+"""
+We also need to decide how we want to predict the energy.
+We have two options: "rate" or "raw".
+"rate" will take our energy values and divide them by the distance column to arrive at and energy rate.
+Then, the estimator will be trained to predict the rate value (without using distance as a feature) and then the model will multiply the rate value by the incoming link distance to give a final raw energy value.
+This can be useful in your training data is sparse as it allows the model to be flexible to distance.
+"raw" will tell the estimator to predict the energy on the link directly, using distance as an explicit feature.
+This can be more robust for situations where the energy rate on a link might vary with respect to distance but can lead to weird results if there are not a good representation of different distance values in the training dataset.
+In our case we'll use "rate" since our training data is very sparse.
+"""
+predict_method = "rate"
+"""
+Finally, we can build a model configuration that we can pass to the trainer. This will also include things like the vehicle powertrain type and a model name
+"""
+config = pt.ModelConfig(
+    vehicle_description="Test Vehicle",
+    powertrain_type=pt.PowertrainType.ICE,
+    feature_sets=features,
+    distance=distance,
+    target=energy_target,
+    make="test",
+    model_name="vehicle",
+    year=2024,
+    trim="base",
+    test_size=0.2,
+    predict_method=predict_method,
+)
+"""
+Now we build the random forest trainer and give it the desired parameters
+"""
+trainer = SklearnRandomForestTrainer(
+    max_depth=10, min_samples_split=10, n_estimators=20, cores=4
+)
+"""
+All trainers have a `train` method on them which will return a trained vehicle model
+"""
+test_vehicle = trainer.train(df, config)
+"""
+With the model trained, we can inspect the errors for each estimator type and energy target (note, it's possible that we could have given multiple energy targets to the trainer, like gasoline and electricity for a plug-in hybrid vehicle)
+"""
+test_vehicle.metadata.errors
+"""
+While this training dataset is far too small to draw real conclusions, these metrics can give you an idea of how well the model performed on a holdout test set (20% of the training data as we specificed by the `test_size` parameter in the configuration. 
+"""
+"""
+Now, we can write the model to a json file that can be loaded later:
+
+```python
+test_vehicle.to_file("Test_Vehicle.json")
+```
+"""

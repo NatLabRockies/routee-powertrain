@@ -11,12 +11,12 @@ parts:
 
   - caption: User Reference
     chapters:
-    - file: model_prediction 
-    - file: model_training 
     - file: api_docs
   
   - caption: Examples
     chapters:
+    - file: examples/model_prediction_example
+    - file: examples/model_training_example
     - file: examples/temperature_models_example
     - file: examples/to_lookup_table_example
 
