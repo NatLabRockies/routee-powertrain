@@ -8,6 +8,7 @@ from routee.powertrain.registry.registry import ModelRegistry
 DEFAULT_BUCKET = "routee-powertrain-models"
 DEFAULT_SCHEMA_VERSION = "v2"
 DEFAULT_REGION = "us-west-2"
+DEFAULT_ROOT_PREFIX = "routee-powertrain-model-library"
 
 
 def _bundled_registry_root() -> Path:
@@ -31,6 +32,8 @@ def get_default_registry() -> ModelRegistry:
         ROUTEE_REGISTRY_BACKEND: "s3" (default) or "local"
         ROUTEE_S3_BUCKET: S3 bucket name (default: routee-powertrain-models)
         ROUTEE_S3_REGION: AWS region (default: us-west-2)
+        ROUTEE_S3_ROOT_PREFIX: Top-level folder in the S3 bucket
+            (default: routee-powertrain-model-library)
         ROUTEE_SCHEMA_VERSION: schema version (default: v2)
         ROUTEE_CACHE_DIR: local cache directory (default: ~/.routee/cache/)
         ROUTEE_LOCAL_REGISTRY_ROOT: root directory for local registry backend
@@ -49,10 +52,12 @@ def get_default_registry() -> ModelRegistry:
 
         bucket = os.environ.get("ROUTEE_S3_BUCKET", DEFAULT_BUCKET)
         region = os.environ.get("ROUTEE_S3_REGION", DEFAULT_REGION)
+        root_prefix = os.environ.get("ROUTEE_S3_ROOT_PREFIX", DEFAULT_ROOT_PREFIX)
         inner = S3Registry(
             bucket=bucket,
             schema_version=schema_version,
             region=region,
+            root_prefix=root_prefix,
         )
     elif backend == "local":
         from routee.powertrain.registry.local import LocalRegistry

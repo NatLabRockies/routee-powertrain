@@ -4,6 +4,7 @@ import json
 import re
 from typing import List, Optional, Union
 
+from routee.powertrain.core.metadata import SCHEMA_VERSION_STRING
 from routee.powertrain.core.model import Model
 from routee.powertrain.core.year import parse_year
 from routee.powertrain.io.archive import (
@@ -14,22 +15,35 @@ from routee.powertrain.registry.filtering import filter_models
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
 
+import boto3
+
+from botocore import UNSIGNED
+from botocore.config import Config
+
 # Pattern to extract version from path segment like "v1", "v2"
 VERSION_RE = re.compile(r"^v(\d+)$")
+DEFAULT_S3_BUCKET = "routeecore-bucket"
+DEFAULT_S3_REGION = "us-west-2"
+DEFAULT_S3_ROOT_PREFIX = "routee-powertrain-model-library"
 
 
-def _parse_model_id_from_key(key: str, schema_version: str) -> ModelId:
+def _parse_model_id_from_key(
+    key: str, schema_version: str, root_prefix: str = ""
+) -> ModelId:
     """
     Derive a ModelId from an S3 key.
 
     Expected key format:
-        <schema_version>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/metadata.json
+        [<root_prefix>/]<schema_version>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/metadata.json
     """
-    prefix = schema_version + "/"
-    if not key.startswith(prefix):
-        raise ValueError(f"Key {key} does not start with {prefix}")
+    if root_prefix:
+        full_prefix = root_prefix + "/" + schema_version + "/"
+    else:
+        full_prefix = schema_version + "/"
+    if not key.startswith(full_prefix):
+        raise ValueError(f"Key {key} does not start with {full_prefix}")
 
-    rel = key[len(prefix) :]
+    rel = key[len(full_prefix) :]
     parts = rel.split("/")
     # parts: [make, model, year, variant, feature_set_id, vN, metadata.json]
     if len(parts) != 7 or parts[-1] != METADATA_FILENAME:
@@ -91,45 +105,41 @@ class S3Registry(ModelRegistry):
 
     Bucket layout::
 
-        s3://<bucket>/<schema_version>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/
+        s3://<bucket>/<root_prefix>/<schema_version>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/
             metadata.json
             model.onnx
-
-    Requires ``boto3`` (install with ``pip install routee.powertrain[s3]``).
-
     Args:
         bucket: S3 bucket name
         schema_version: schema version to use (default "v2")
         region: AWS region for the bucket (default "us-west-2")
+        anonymous: If True (default), use unsigned requests for public bucket
+            access. Set to False to use standard AWS credential resolution
+            (environment variables, ~/.aws/credentials, IAM role, etc.).
+        root_prefix: Top-level folder in the bucket under which all models
+            are stored (default "routee-powertrain-model-library").
     """
 
     def __init__(
         self,
-        bucket: str,
-        schema_version: str = "v2",
-        region: str = "us-west-2",
+        bucket: str = DEFAULT_S3_BUCKET,
+        schema_version: str = SCHEMA_VERSION_STRING,
+        region: str = DEFAULT_S3_REGION,
+        anonymous: bool = False,
+        root_prefix: str = DEFAULT_S3_ROOT_PREFIX,
     ) -> None:
         self.bucket = bucket
         self.schema_version = schema_version
         self.region = region
+        self.anonymous = anonymous
+        self.root_prefix = root_prefix.strip("/")
         self._client = None
 
     def _get_client(self):
         if self._client is None:
-            try:
-                import boto3
-                from botocore import UNSIGNED
-                from botocore.config import Config
-            except ImportError:
-                raise ImportError(
-                    "S3Registry requires boto3. "
-                    "Install with: pip install routee.powertrain[s3]"
-                )
-            self._client = boto3.client(
-                "s3",
-                region_name=self.region,
-                config=Config(signature_version=UNSIGNED),
-            )
+            kwargs = {"region_name": self.region}
+            if self.anonymous:
+                kwargs["config"] = Config(signature_version=UNSIGNED)
+            self._client = boto3.client("s3", **kwargs)
         return self._client
 
     def _fetch_bytes(self, key: str) -> bytes:
@@ -137,10 +147,16 @@ class S3Registry(ModelRegistry):
         response = client.get_object(Bucket=self.bucket, Key=key)
         return response["Body"].read()
 
+    def _s3_prefix(self) -> str:
+        """Return the full S3 key prefix for schema-versioned models."""
+        if self.root_prefix:
+            return f"{self.root_prefix}/{self.schema_version}"
+        return self.schema_version
+
     def _list_metadata_keys(self) -> List[str]:
         """List all metadata.json keys under the schema prefix using pagination."""
         client = self._get_client()
-        prefix = f"{self.schema_version}/"
+        prefix = f"{self._s3_prefix()}/"
         keys: List[str] = []
         paginator = client.get_paginator("list_objects_v2")
         for page in paginator.paginate(Bucket=self.bucket, Prefix=prefix):
@@ -155,7 +171,9 @@ class S3Registry(ModelRegistry):
         results: List[ModelInfo] = []
         for key in self._list_metadata_keys():
             try:
-                model_id = _parse_model_id_from_key(key, self.schema_version)
+                model_id = _parse_model_id_from_key(
+                    key, self.schema_version, self.root_prefix
+                )
                 data = self._fetch_bytes(key)
                 metadata_dict = json.loads(data)
                 # path is the directory prefix (key without /metadata.json)
@@ -190,7 +208,7 @@ class S3Registry(ModelRegistry):
 
     def load(self, model_id: Union[str, ModelId]) -> Model:
         model_id = _resolve_model_id(model_id)
-        dir_key = f"{self.schema_version}/{model_id.to_path()}"
+        dir_key = f"{self._s3_prefix()}/{model_id.to_path()}"
         # Fetch metadata to learn the model filename
         meta_key = f"{dir_key}/{METADATA_FILENAME}"
         meta_bytes = self._fetch_bytes(meta_key)
@@ -206,7 +224,7 @@ class S3Registry(ModelRegistry):
 
     def get_metadata(self, model_id: Union[str, ModelId]) -> dict:
         model_id = _resolve_model_id(model_id)
-        dir_key = f"{self.schema_version}/{model_id.to_path()}"
+        dir_key = f"{self._s3_prefix()}/{model_id.to_path()}"
         meta_key = f"{dir_key}/{METADATA_FILENAME}"
         data = self._fetch_bytes(meta_key)
         return json.loads(data)
