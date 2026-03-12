@@ -114,7 +114,7 @@ class S3Registry(ModelRegistry):
         bucket: S3 bucket name
         schema_version: schema version to use (default "v2")
         region: AWS region for the bucket (default "us-west-2")
-        anonymous: If True (default), use unsigned requests for public bucket
+        anonymous: If True, use unsigned requests for public bucket
             access. Set to False to use standard AWS credential resolution
             (environment variables, ~/.aws/credentials, IAM role, etc.).
         root_prefix: Top-level folder in the bucket under which all models

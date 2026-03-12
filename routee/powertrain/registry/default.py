@@ -30,7 +30,7 @@ def get_default_registry() -> ModelRegistry:
 
     Environment variables:
         ROUTEE_REGISTRY_BACKEND: "s3" (default) or "local"
-        ROUTEE_S3_BUCKET: S3 bucket name (default: routee-powertrain-models)
+        ROUTEE_S3_BUCKET: S3 bucket name (default: routeecore-bucket)
         ROUTEE_S3_REGION: AWS region (default: us-west-2)
         ROUTEE_S3_ROOT_PREFIX: Top-level folder in the S3 bucket
             (default: routee-powertrain-model-library)

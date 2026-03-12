@@ -178,7 +178,9 @@ def load_archive_bytes(data: bytes) -> Model:
     """
     with zipfile.ZipFile(BytesIO(data), "r") as zf:
         metadata_dict = json.loads(zf.read(METADATA_FILENAME))
-        model_filename = metadata_dict.get("model_file", "")
+        model_filename = metadata_dict.get("model_file")
+        if model_filename is None:
+            raise ValueError("Archive metadata must contain 'model_file'")
         model_bytes = zf.read(model_filename)
         return _model_from_metadata_and_bytes(metadata_dict, model_bytes)
 

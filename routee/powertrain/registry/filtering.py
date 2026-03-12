@@ -28,19 +28,7 @@ def filter_models(
 ) -> List[ModelInfo]:
     """
     Filter a list of ModelInfo by the given criteria.
-
-    When *fuzzy* is True, string fields (make, model_name, variant,
-    feature_set_id) are matched using ``rapidfuzz.fuzz.partial_ratio``
-    with the given *fuzzy_threshold* (0–100).  When False, exact
-    equality (after lowercasing) is required.
-
-    The fuzzy scorer is ``rapidfuzz.fuzz.WRatio`` which combines
-    multiple heuristics (ratio, partial ratio, token sort/set) and
-    picks the best one, providing robust matching for abbreviations,
-    substrings, and near-misspellings.
-
-    Year filtering always uses ``year_contains`` regardless of the
-    fuzzy flag.
+    Support for fuzzy string matching with configurable threshold.
     """
     results = models
     if make is not None:

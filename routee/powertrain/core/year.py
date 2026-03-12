@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Union
-
-Year = Union[int, tuple]
+Year = int | tuple[int, int]
 
 
 def parse_year(value) -> Year:

@@ -135,10 +135,6 @@ def load_model(
     if isinstance(name_or_path, str):
         try:
             mid = ModelId.from_path(name_or_path)
-            if registry is None:
-                from routee.powertrain.registry.default import get_default_registry
-
-                registry = get_default_registry()
             return registry.load(mid)
         except ValueError:
             pass
