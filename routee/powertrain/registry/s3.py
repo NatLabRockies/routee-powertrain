@@ -6,12 +6,12 @@ from typing import List, Optional, Union
 
 from routee.powertrain.core.metadata import SCHEMA_VERSION_STRING
 from routee.powertrain.core.model import Model
-from routee.powertrain.core.year import parse_year
+from routee.powertrain.core.year import parse_year, year_contains
 from routee.powertrain.io.archive import (
     _model_from_metadata_and_bytes,
     METADATA_FILENAME,
 )
-from routee.powertrain.registry.filtering import filter_models
+from routee.powertrain.registry.filtering import _matches
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
 
@@ -153,6 +153,77 @@ class S3Registry(ModelRegistry):
             return f"{self.root_prefix}/{self.schema_version}"
         return self.schema_version
 
+    def _list_children(self, prefix: str) -> List[str]:
+        """List immediate child directory names under an S3 prefix.
+
+        Uses ``Delimiter='/'`` so S3 returns ``CommonPrefixes`` without
+        downloading any objects.  Handles pagination.
+
+        Args:
+            prefix: S3 key prefix ending with ``/``
+
+        Returns:
+            List of child directory names (without trailing ``/``)
+        """
+        client = self._get_client()
+        children: List[str] = []
+        paginator = client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(
+            Bucket=self.bucket, Prefix=prefix, Delimiter="/"
+        ):
+            for cp in page.get("CommonPrefixes", []):
+                # cp["Prefix"] looks like "<prefix><child>/"
+                child = cp["Prefix"][len(prefix) :].rstrip("/")
+                if child:
+                    children.append(child)
+        return children
+
+    def _narrow_prefixes(
+        self,
+        prefixes: List[str],
+        query_value: Optional[str],
+        fuzzy: bool,
+        threshold: int,
+        is_year: bool = False,
+        year_query: Optional[int] = None,
+    ) -> List[str]:
+        """Expand prefixes by one hierarchy level, optionally filtering.
+
+        For each prefix, lists child directories via S3 and applies
+        fuzzy or exact matching against ``query_value`` to narrow the
+        result set.  For the year level, set ``is_year=True`` and pass
+        the numeric year as ``year_query`` to use ``year_contains``.
+
+        Args:
+            prefixes: S3 key prefixes to expand
+            query_value: string filter (make, model_name, etc.) or None
+            fuzzy: whether to use fuzzy string matching
+            threshold: fuzzy match threshold (0–100)
+            is_year: if True, filter using ``year_contains`` instead
+            year_query: numeric year used when ``is_year`` is True
+
+        Returns:
+            List of narrowed S3 prefixes (one level deeper)
+        """
+        next_prefixes: List[str] = []
+        for prefix in prefixes:
+            children = self._list_children(prefix)
+            for child in children:
+                child_prefix = f"{prefix}{child}/"
+                if is_year and year_query is not None:
+                    try:
+                        child_year = parse_year(child)
+                    except (ValueError, TypeError):
+                        continue
+                    if year_contains(child_year, year_query):
+                        next_prefixes.append(child_prefix)
+                elif query_value is not None:
+                    if _matches(query_value, child.lower(), fuzzy, threshold):
+                        next_prefixes.append(child_prefix)
+                else:
+                    next_prefixes.append(child_prefix)
+        return next_prefixes
+
     def _list_metadata_keys(self) -> List[str]:
         """List all metadata.json keys under the schema prefix using pagination."""
         client = self._get_client()
@@ -194,17 +265,54 @@ class S3Registry(ModelRegistry):
         fuzzy: bool = True,
         fuzzy_threshold: int = 80,
     ) -> List[ModelInfo]:
-        results = self._scan_models()
-        return filter_models(
-            results,
-            make=make,
-            model_name=model_name,
-            year=year,
-            variant=variant,
-            feature_set_id=feature_set_id,
-            fuzzy=fuzzy,
-            fuzzy_threshold=fuzzy_threshold,
+        has_filters = any(
+            v is not None for v in (make, model_name, year, variant, feature_set_id)
         )
+        if not has_filters:
+            return self._scan_models()
+
+        # Walk the S3 hierarchy level-by-level, narrowing at each step.
+        # Levels: make / model_name / year / variant / feature_set_id / version
+        prefixes = [f"{self._s3_prefix()}/"]
+
+        # Level 1: make
+        prefixes = self._narrow_prefixes(prefixes, make, fuzzy, fuzzy_threshold)
+        # Level 2: model_name
+        prefixes = self._narrow_prefixes(prefixes, model_name, fuzzy, fuzzy_threshold)
+        # Level 3: year
+        prefixes = self._narrow_prefixes(
+            prefixes,
+            None,
+            fuzzy,
+            fuzzy_threshold,
+            is_year=(year is not None),
+            year_query=year,
+        )
+        # Level 4: variant
+        prefixes = self._narrow_prefixes(prefixes, variant, fuzzy, fuzzy_threshold)
+        # Level 5: feature_set_id
+        prefixes = self._narrow_prefixes(
+            prefixes, feature_set_id, fuzzy, fuzzy_threshold
+        )
+        # Level 6: version (expand all)
+        prefixes = self._narrow_prefixes(prefixes, None, fuzzy, fuzzy_threshold)
+
+        # Fetch metadata for narrowed results
+        results: List[ModelInfo] = []
+        for prefix in prefixes:
+            meta_key = f"{prefix}{METADATA_FILENAME}"
+            try:
+                model_id = _parse_model_id_from_key(
+                    meta_key, self.schema_version, self.root_prefix
+                )
+                data = self._fetch_bytes(meta_key)
+                metadata_dict = json.loads(data)
+                dir_key = prefix.rstrip("/")
+                info = _model_info_from_metadata(metadata_dict, model_id, dir_key)
+                results.append(info)
+            except Exception:
+                continue
+        return results
 
     def load(self, model_id: Union[str, ModelId]) -> Model:
         model_id = _resolve_model_id(model_id)
