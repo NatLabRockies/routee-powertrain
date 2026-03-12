@@ -1,28 +1,30 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 
-from typing import Dict, List
-
-import numpy as np
+from typing import Dict, List, Optional
 
 
 @dataclass
 class Constraints:
-    lower: float = -np.inf
-    upper: float = np.inf
+    lower: Optional[float] = None
+    upper: Optional[float] = None
 
     def __post_init__(self):
-        if self.lower >= self.upper:
+        if (
+            self.lower is not None
+            and self.upper is not None
+            and self.lower >= self.upper
+        ):
             raise ValueError("lower bound must be less than upper bound")
 
     @classmethod
     def from_dict(cls, d: Dict[str, float]) -> Constraints:
-        lower = float(d.get("lower", -np.inf))
-        upper = float(d.get("upper", np.inf))
+        lower = float(d["lower"]) if "lower" in d and d["lower"] is not None else None
+        upper = float(d["upper"]) if "upper" in d and d["upper"] is not None else None
         return Constraints(lower=lower, upper=upper)
 
     def to_dict(self) -> dict:
-        return self.__dict__.copy()
+        return {"lower": self.lower, "upper": self.upper}
 
 
 @dataclass

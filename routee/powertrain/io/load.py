@@ -1,90 +1,148 @@
-import json
+import logging
 from pathlib import Path
 from typing import List, Optional, Union
 
 import pandas as pd
 
 from routee.powertrain.core.model import Model
-from routee.powertrain.resources.default_models import default_model_dir
+from routee.powertrain.registry.model_id import ModelId, ModelInfo
+from routee.powertrain.registry.registry import ModelRegistry
 from routee.powertrain.resources.sample_routes import sample_route_dir
 
-local_models = {
-    "2016_TOYOTA_Camry_4cyl_2WD": default_model_dir()
-    / "2016_TOYOTA_Camry_4cyl_2WD.json",
-    "2017_CHEVROLET_Bolt": default_model_dir() / "2017_CHEVROLET_Bolt.json",
-}
+log = logging.getLogger(__name__)
 
 
-def list_available_models(local: bool = True, external: bool = True) -> List[str]:
+def list_available_models(
+    registry: Optional[ModelRegistry] = None,
+) -> List[ModelId]:
     """
-    returns a list of all the available pretrained models
+    Returns a list of model identifiers available in the registry.
+
+    This is a lightweight operation that returns only the model paths
+    without fetching any metadata or binaries.
+
+    If no registry is provided, the default registry is used.
 
     Args:
-        local: include local models?
-        external: include external models?
+        registry: a ModelRegistry instance; defaults to get_default_registry()
 
-    Returns: a list of model keys
+    Returns: list of ModelId for every model in the registry
     """
-    model_names = []
-    if local:
-        model_names.extend(list(local_models.keys()))
+    if registry is None:
+        from routee.powertrain.registry.default import get_default_registry
 
-    if external:
-        with open(default_model_dir() / "external_model_links.json", "r") as jf:
-            external_models = json.load(jf)
+        registry = get_default_registry()
 
-            model_names.extend(list(external_models.keys()))
-
-    return model_names
+    return registry.list_models()
 
 
-def load_model(name: Union[str, Path]) -> Model:
+def query_available_models(
+    make: Optional[str] = None,
+    model_name: Optional[str] = None,
+    year: Optional[int] = None,
+    variant: Optional[str] = None,
+    registry: Optional[ModelRegistry] = None,
+    fuzzy: bool = True,
+    fuzzy_threshold: int = 80,
+) -> List[ModelInfo]:
     """
-    A helper function to load a pretrained model.
-    If the model is a file, it will be loaded from disk.
-    If the model is a name, it will be loaded from the default model catalog
-    (local or external).
+    Query available pretrained models from the registry with optional filters.
+
+    Returns full metadata and error metrics for each matching model.
+    If no registry is provided, the default registry is used.
 
     Args:
-        name: the name of the file or default model to load
+        make: filter by vehicle make
+        model_name: filter by model name
+        year: filter by model year
+        variant: filter by variant
+        registry: a ModelRegistry instance; defaults to get_default_registry()
+        fuzzy: if True, use fuzzy string matching for string fields (default True)
+        fuzzy_threshold: minimum score (0–100) for a fuzzy match (default 80)
 
-    Returns: a routee-powertrain model
+    Returns: list of ModelInfo with full metadata and error metrics
+    """
+    if registry is None:
+        from routee.powertrain.registry.default import get_default_registry
+
+        registry = get_default_registry()
+
+    return registry.query(
+        make=make,
+        model_name=model_name,
+        year=year,
+        variant=variant,
+        fuzzy=fuzzy,
+        fuzzy_threshold=fuzzy_threshold,
+    )
+
+
+def load_model(
+    name_or_path: Union[str, Path, ModelId],
+    registry: Optional[ModelRegistry] = None,
+) -> Model:
+    """
+    Load a pretrained model.
+
+    Supports two loading modes:
+
+    1. **File path** — pass a ``Path`` or string pointing to a model
+       directory (containing ``metadata.json``), ``.zip`` archive,
+       or ``.tar.gz`` archive on disk.
+    2. **Registry ModelId** — pass a ``ModelId`` object or model id path to fetch from a
+       registry (uses the default registry if none is provided).
+
+    Args:
+        name_or_path: file/directory path or ModelId
+        registry: optional ModelRegistry for remote loading
+
+    Returns: a routee-powertrain Model
 
     Examples:
 
     >>> import routee.powertrain as pt
     >>>
-    >>> # load a default model
-    >>> model = pt.load_model("2016_HYUNDAI_Elantra_4cyl_2WD")
+    >>> # load from a directory
+    >>> model = pt.load_model("path/to/my_model/")
     >>>
-    >>> # load a model from file
-    >>> model = pt.load_model("MyModel.json")
+    >>> # load from a zip
+    >>> model = pt.load_model("MyModel.zip")
+    >>>
+    >>> # load via registry
+    >>> from routee.powertrain.registry import ModelId
+    >>> mid = ModelId("toyota", "camry", 2016, "default", "grade_speed", 1)
+    >>> model = pt.load_model(mid)
+    >>>
+    >>> mid_str = "toyota/camry/2016/default/grade_speed/v1"
+    >>> model = pt.load_model(mid_str)
 
     """
-    path = Path(name)
-    if path.exists():
-        return Model.from_file(path)
+    # First assume the model is local
+    if isinstance(name_or_path, (str, Path)):
+        path = Path(name_or_path)
+        if path.exists():
+            return Model.from_file(path)
 
-    # otherwise, assume the name is a model name to be loaded from the default catalog
-    name = str(name)
+    # If not found locally, try loading from registry if it's a ModelId or a valid ModelId string
+    if registry is None:
+        from routee.powertrain.registry.default import get_default_registry
 
-    with open(default_model_dir() / "external_model_links.json", "r") as jf:
-        external_models = json.load(jf)
+        registry = get_default_registry()
 
-    if name in local_models:
-        fp = local_models[name]
-        model = Model.from_file(fp)
-        return model
-    elif name in external_models:
-        url = external_models[name]
-        model = Model.from_url(url)
-        return model
-    else:
-        raise ValueError(
-            f"Could not load model: {name}."
-            " try listing available models with pt.list_available_models()"
-            " or providing a path to a local model file."
-        )
+    if isinstance(name_or_path, ModelId):
+        return registry.load(name_or_path)
+
+    if isinstance(name_or_path, str):
+        try:
+            mid = ModelId.from_path(name_or_path)
+            return registry.load(mid)
+        except ValueError:
+            pass
+
+    raise ValueError(
+        f"Could not load model: {name_or_path}. "
+        "Provide a valid local file/directory or a valid ModelId/string with a registry."
+    )
 
 
 def load_sample_route(name: Optional[str] = None) -> pd.DataFrame:

@@ -9,6 +9,11 @@ from routee.powertrain.core.model_config import PredictMethod
 
 
 class Estimator(ABC):
+    """Abstract base class for all estimator backends."""
+
+    #: File extension used when serializing this estimator's binary in a ZIP archive.
+    file_extension: str
+
     @classmethod
     @abstractmethod
     def from_file(cls, filepath: str | Path) -> Estimator:
@@ -33,6 +38,19 @@ class Estimator(ABC):
     def to_dict(self) -> dict:
         """
         Serialize an estimator to a python dictionary
+        """
+
+    @abstractmethod
+    def to_bytes(self) -> bytes:
+        """
+        Serialize the estimator to raw bytes (native binary format).
+        """
+
+    @classmethod
+    @abstractmethod
+    def from_bytes(cls, data: bytes) -> Estimator:
+        """
+        Deserialize an estimator from raw bytes.
         """
 
     @abstractmethod

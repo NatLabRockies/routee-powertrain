@@ -16,6 +16,7 @@ ONNX_DTYPE = "float32"
 class ONNXEstimator(Estimator):
     onnx_model: onnx.ModelProto
     session: rt.InferenceSession
+    file_extension: str = ".onnx"
 
     def __init__(self, onnx_model: onnx.ModelProto) -> None:
         self.onnx_model = onnx_model
@@ -56,6 +57,14 @@ class ONNXEstimator(Estimator):
             raise ValueError("ONNX model must be saved as a .onnx file")
         with filepath.open("wb") as f:
             f.write(self.onnx_model.SerializeToString())
+
+    def to_bytes(self) -> bytes:
+        return self.onnx_model.SerializeToString()
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> ONNXEstimator:
+        onnx_model = onnx.load_from_string(data)
+        return cls(onnx_model)
 
     def predict(
         self,

@@ -56,11 +56,16 @@ class Trainer(ABC):
             features=sub_features, target=target, config=config
         )
 
-        metadata = Metadata(config=config)
-
         model_errors = compute_errors(test, estimator, feature_set, config)
 
-        vehicle_model = Model(estimator, metadata, model_errors)
+        metadata = Metadata(
+            config=config,
+            errors=model_errors,
+            estimator_type=estimator.__class__.__name__,
+            model_file="model" + estimator.file_extension,
+        )
+
+        vehicle_model = Model(estimator, metadata)
 
         return vehicle_model
 

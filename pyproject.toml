@@ -22,6 +22,8 @@ dependencies = [
     "numpy>=2.0,<3.0",
     "onnx>=1.20,<1.21",
     "onnxruntime>=1.23.2,<1.24",
+    "rapidfuzz>=3.0",
+    "boto3>=1.42,<2.0",
 ]
 requires-python = ">=3.10,<3.13"
 
@@ -62,6 +64,13 @@ exclude = ["scripts/", "tests/", "docs/"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["routee"]
+artifacts = [
+    "routee/powertrain/resources/bundled_registry/**/*.json",
+    "routee/powertrain/resources/bundled_registry/**/*.onnx",
+    "routee/powertrain/resources/bundled_registry/**/*.bin",
+    "routee/powertrain/resources/bundled_registry/**/*.joblib",
+    "routee/powertrain/resources/sample_routes/**/*.csv",
+]
 
 [tool.mypy]
 ignore_missing_imports = true
