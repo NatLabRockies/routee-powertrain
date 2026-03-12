@@ -1,5 +1,6 @@
 import logging as log
 import math
+import shutil
 from pathlib import Path
 from unittest import TestCase, skip
 
@@ -58,6 +59,9 @@ class TestTrainEstimatePipeline(TestCase):
             feature_set=feature_set,
             distance=distance,
             target=targets,
+            make="test",
+            model_name="model",
+            year=2024,
         )
         self.raw_config = pt.ModelConfig(
             vehicle_description="Test Model",
@@ -65,12 +69,15 @@ class TestTrainEstimatePipeline(TestCase):
             feature_set=feature_set,
             distance=distance,
             target=targets,
+            make="test",
+            model_name="model",
+            year=2024,
             predict_method=PredictMethod.RAW,
         )
 
     def tearDown(self) -> None:
-        pass
-        self.out_path.rmdir()
+        if self.out_path.exists():
+            shutil.rmtree(self.out_path)
 
     def test_sklearn_random_forest_rate(self):
         trainer = SklearnRandomForestTrainer()
@@ -80,11 +87,11 @@ class TestTrainEstimatePipeline(TestCase):
         r1 = vehicle_model.predict(self.df)
         energy1 = round(r1.gallons_fastsim.sum(), 2)
 
-        # test out writing and reading to file
-        outfile = self.out_path / "model_rate.json"
-        vehicle_model.to_file(outfile)
-        new_vehicle_model = pt.load_model(outfile)
-        outfile.unlink()
+        # test out writing and reading to file (directory format)
+        outdir = self.out_path / "model_rate"
+        vehicle_model.to_file(outdir)
+        new_vehicle_model = pt.load_model(outdir)
+        shutil.rmtree(outdir)
 
         # test writing inner estimator to file
         outfile = self.out_path / "estimator_rate.onnx"
@@ -105,11 +112,11 @@ class TestTrainEstimatePipeline(TestCase):
         r1 = vehicle_model.predict(self.df)
         energy1 = round(r1.gallons_fastsim.sum(), 2)
 
-        # test out writing and reading to file
-        outfile = self.out_path / "model_raw.json"
-        vehicle_model.to_file(outfile)
-        new_vehicle_model = pt.load_model(outfile)
-        outfile.unlink()
+        # test out writing and reading to file (directory format)
+        outdir = self.out_path / "model_raw"
+        vehicle_model.to_file(outdir)
+        new_vehicle_model = pt.load_model(outdir)
+        shutil.rmtree(outdir)
 
         # test writing inner estimator to file
         outfile = self.out_path / "estimator_raw.onnx"
@@ -131,11 +138,11 @@ class TestTrainEstimatePipeline(TestCase):
         r1 = vehicle_model.predict(self.df)
         energy1 = round(r1.gallons_fastsim.sum(), 2)
 
-        # test out writing and reading to file
-        outfile = self.out_path / "model.json"
-        vehicle_model.to_file(outfile)
-        new_vehicle_model = pt.load_model(outfile)
-        outfile.unlink()
+        # test out writing and reading to file (directory format)
+        outdir = self.out_path / "model_smartcore"
+        vehicle_model.to_file(outdir)
+        new_vehicle_model = pt.load_model(outdir)
+        shutil.rmtree(outdir)
 
         # test writing inner estimator to file
         outfile = self.out_path / "estimator.json"
@@ -161,11 +168,11 @@ class TestTrainEstimatePipeline(TestCase):
         r1 = vehicle_model.predict(self.df)
         energy1 = round(r1.gallons_fastsim.sum(), 2)
 
-        # test out writing and reading to file
-        outfile = self.out_path / "model_rate.json"
-        vehicle_model.to_file(outfile)
-        new_vehicle_model = pt.load_model(outfile)
-        outfile.unlink()
+        # test out writing and reading to file (directory format)
+        outdir = self.out_path / "model_ngboost_rate"
+        vehicle_model.to_file(outdir)
+        new_vehicle_model = pt.load_model(outdir)
+        shutil.rmtree(outdir)
 
         # test writing inner estimator to file
         outfile = self.out_path / "estimator_rate.json"
@@ -186,11 +193,11 @@ class TestTrainEstimatePipeline(TestCase):
         r1 = vehicle_model.predict(self.df)
         energy1 = round(r1.gallons_fastsim.sum(), 2)
 
-        # test out writing and reading to file
-        outfile = self.out_path / "model_raw.json"
-        vehicle_model.to_file(outfile)
-        new_vehicle_model = pt.load_model(outfile)
-        outfile.unlink()
+        # test out writing and reading to file (directory format)
+        outdir = self.out_path / "model_ngboost_raw"
+        vehicle_model.to_file(outdir)
+        new_vehicle_model = pt.load_model(outdir)
+        shutil.rmtree(outdir)
 
         # test writing inner estimator to file
         outfile = self.out_path / "estimator_raw.json"

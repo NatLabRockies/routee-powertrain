@@ -10,6 +10,8 @@ from routee.powertrain.estimators.estimator_interface import Estimator
 
 
 class SmartCoreEstimator(Estimator):
+    file_extension: str = ".bin"
+
     def __init__(self, smartcore_rf) -> None:
         self.model = smartcore_rf
 
@@ -72,6 +74,21 @@ class SmartCoreEstimator(Estimator):
                 smartcore_model = RustRandomForest.from_bincode(f.read())
         else:
             raise ValueError("Smartcore model must be loaded from a .json or .bin file")
+        return cls(smartcore_model)
+
+    def to_bytes(self) -> bytes:
+        return bytes(self.model.to_bincode())
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> SmartCoreEstimator:
+        try:
+            from powertrain_rust import RustRandomForest
+        except ImportError:
+            raise ImportError(
+                "Please install powertrain_rust to use "
+                "the SmartCoreRandomForest estimator."
+            )
+        smartcore_model = RustRandomForest.from_bincode(data)
         return cls(smartcore_model)
 
     def predict(

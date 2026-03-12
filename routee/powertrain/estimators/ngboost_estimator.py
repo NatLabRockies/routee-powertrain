@@ -14,6 +14,8 @@ from routee.powertrain.estimators.estimator_interface import Estimator
 
 
 class NGBoostEstimator(Estimator):
+    file_extension: str = ".joblib"
+
     def __init__(self, ngboost) -> None:
         self.model = ngboost
 
@@ -85,6 +87,32 @@ class NGBoostEstimator(Estimator):
         out_dict = dict({"ngboost_model": model_base64})
 
         return out_dict
+
+    def to_bytes(self) -> bytes:
+        try:
+            import joblib
+        except ImportError:
+            raise ImportError(
+                "The NGBoostEstimator estimator requires extra dependencies like joblib and ngboost. "
+                "To install, you can do pip install routee.powertrain[ngboost]"
+            )
+        byte_stream = io.BytesIO()
+        joblib.dump(self.model, byte_stream)
+        byte_stream.seek(0)
+        return byte_stream.read()
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> NGBoostEstimator:
+        if find_spec("joblib") is None:
+            raise ImportError(
+                "The NGBoostEstimator estimator requires extra dependencies like joblib and ngboost. "
+                "To install, you can do pip install routee.powertrain[ngboost]"
+            )
+        import joblib
+
+        byte_stream = io.BytesIO(data)
+        ngboost_model = joblib.load(byte_stream)
+        return cls(ngboost_model)
 
     def predict(
         self,

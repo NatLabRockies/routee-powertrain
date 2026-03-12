@@ -1,11 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import json
-from math import isinf
 from pathlib import Path
 from typing import Dict, List, Optional, TYPE_CHECKING, Union
-from urllib import request
 
 import pandas as pd
 
@@ -16,12 +13,17 @@ from routee.powertrain.estimators.onnx import ONNXEstimator
 from routee.powertrain.estimators.smart_core import SmartCoreEstimator
 from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
 
+from routee.powertrain.io.archive import (
+    load_model_from_path,
+    save_model_directory,
+    save_archive,
+    save_tar_archive,
+)
 from routee.powertrain.io.to_lookup_table import to_lookup_table
 from routee.powertrain.validation.feature_visualization import (
     contour_plot,
     visualize_features,
 )
-from routee.powertrain.validation.errors import ModelErrors
 
 if TYPE_CHECKING:
     from pandas import Series
@@ -31,11 +33,6 @@ REGISTERED_ESTIMATORS = {
     "SmartCoreEstimator": SmartCoreEstimator,
     "NGBoostEstimator": NGBoostEstimator,
 }
-
-METADATA_SERIALIZATION_KEY = "metadata"
-MODEL_ERRORS_SERIALIZATION_KEY = "errors"
-ESTIMATOR_SERIALIZATION_KEY = "estimator"
-CONSTRUCTOR_TYPE_SERIALIZATION_KEY = "estimator_type"
 
 
 @dataclass
@@ -47,7 +44,6 @@ class Model:
 
     estimator: Estimator
     metadata: Metadata
-    errors: ModelErrors
 
     @property
     def feature_set(self):
@@ -58,109 +54,41 @@ class Model:
         return self.metadata.config.feature_set.feature_name_list
 
     @classmethod
-    def from_dict(cls, input_dict: dict) -> Model:
-        """
-        Load a vehicle model from a python dictionary
-        """
-        metadata_dict = input_dict.get(METADATA_SERIALIZATION_KEY)
-        if metadata_dict is None:
-            raise ValueError(
-                "Model file must contain metadata at key: "
-                f"'{METADATA_SERIALIZATION_KEY}'"
-            )
-        metadata = Metadata.from_dict(metadata_dict)
-
-        model_errors_dict = input_dict.get(MODEL_ERRORS_SERIALIZATION_KEY)
-        if model_errors_dict is None:
-            raise ValueError(
-                "Model file must contain model errors at key: "
-                f"'{MODEL_ERRORS_SERIALIZATION_KEY}'"
-            )
-        model_errors = ModelErrors.from_dict(model_errors_dict)
-
-        constructor_type_str = input_dict.get(CONSTRUCTOR_TYPE_SERIALIZATION_KEY)
-        if constructor_type_str is None:
-            raise ValueError(
-                "Model file must contain estimator type at key: "
-                f"'{CONSTRUCTOR_TYPE_SERIALIZATION_KEY}'"
-            )
-
-        estimator_constructor = REGISTERED_ESTIMATORS.get(constructor_type_str)
-        if estimator_constructor is None:
-            raise ValueError(
-                f"Estimator type '{constructor_type_str}' is not registered. "
-                f"Available types: {list(REGISTERED_ESTIMATORS.keys())}"
-            )
-
-        estimator_dict = input_dict.get(ESTIMATOR_SERIALIZATION_KEY)
-        if estimator_dict is None:
-            raise ValueError(
-                "Model file must contain estimator data at key: "
-                f"'{ESTIMATOR_SERIALIZATION_KEY}'"
-            )
-
-        estimator = estimator_constructor.from_dict(estimator_dict)
-
-        return cls(estimator, metadata, model_errors)
-
-    def to_dict(self) -> dict:
-        """
-        Convert model to a dictionary
-        """
-        return {
-            METADATA_SERIALIZATION_KEY: self.metadata.to_dict(),
-            MODEL_ERRORS_SERIALIZATION_KEY: self.errors.to_dict(),
-            ESTIMATOR_SERIALIZATION_KEY: self.estimator.to_dict(),
-            CONSTRUCTOR_TYPE_SERIALIZATION_KEY: self.estimator.__class__.__name__,
-        }
-
-    @classmethod
     def from_file(cls, file: Union[str, Path]):
         """
-        Load a vehicle model from a file.
+        Load a vehicle model from a file or directory.
+
+        Supports directories (containing metadata.json + binary),
+        .zip archives, and .tar.gz archives.
 
         Args:
-            file: the path to the file to load
+            file: the path to the file or directory to load
 
         Returns: a powertrain vehicle
         """
-        path = Path(file)
-        if path.suffix != ".json":
-            raise ValueError("Model file must be a .json file")
-        with path.open("r") as f:
-            input_dict = json.load(f)
-        return cls.from_dict(input_dict)
-
-    @classmethod
-    def from_url(cls, url: str) -> Model:
-        """
-        Attempts to read a file from a url.
-
-        Args:
-            url: the url to download the file from
-
-        Returns: a powertrain vehicle
-        """
-        with request.urlopen(url) as u:
-            in_dict = json.load(u)
-            vehicle = cls.from_dict(in_dict)
-
-        return vehicle
+        return load_model_from_path(file)
 
     def to_file(self, file: Union[str, Path]):
         """
-        Save a vehicle model to a file.
+        Save a vehicle model to a file or directory.
+
+        If *file* has no suffix, saves as a flat directory.
+        If it ends with ``.zip``, saves as a ZIP archive.
+        If it ends with ``.tar.gz``, saves as a tar archive.
 
         Args:
-            file: the path to the file to save to
+            file: the path to save to
         """
         path = Path(file)
-        if path.suffix != ".json":
-            raise ValueError("Model file must be a .json file")
-
-        output_dict = self.to_dict()
-        with path.open("w") as f:
-            json.dump(output_dict, f)
+        if path.suffix == ".zip":
+            path.parent.mkdir(parents=True, exist_ok=True)
+            save_archive(self, path)
+        elif path.name.endswith(".tar.gz") or path.suffix == ".tar":
+            path.parent.mkdir(parents=True, exist_ok=True)
+            save_tar_archive(self, path)
+        else:
+            # No extension → flat directory
+            save_model_directory(self, path)
 
     def to_lookup_table(
         self,
@@ -192,9 +120,9 @@ class Model:
         feature_set = self.metadata.config.feature_set
         feature_ranges = {}
         for f in feature_set.features:
-            if isinf(f.constraints.upper) or isinf(f.constraints.lower):
+            if f.constraints.upper is None or f.constraints.lower is None:
                 raise ValueError(
-                    f"Feature: {f.name} has constraints with positive/negative infinity in the lower/upper bound. "
+                    f"Feature: {f.name} has constraints without a lower/upper bound. "
                     f"You can add constraints when training a model or set custom constraints during visualization using "
                     f"routee.powertrain.validation.feature_visualization.visualize_features"
                 )
@@ -232,9 +160,9 @@ class Model:
         feature_set = self.metadata.config.feature_set
         feature_ranges = {}
         for f in feature_set.features:
-            if isinf(f.constraints.upper) or isinf(f.constraints.lower):
+            if f.constraints.upper is None or f.constraints.lower is None:
                 raise ValueError(
-                    f"Feature: {f.name} has constraints with positive/negative infinity in the lower/upper bound. "
+                    f"Feature: {f.name} has constraints without a lower/upper bound. "
                     f"You can add constraints when training a model or set custom constraints during visualization using "
                     f"routee.powertrain.validation.feature_visualization.contour_plot"
                 )
@@ -339,7 +267,7 @@ class Model:
         summary_lines.append(f"Powertrain type: {config.powertrain_type.name}")
         summary_lines.append("=" * 40)
 
-        estimator_errors = self.errors.estimator_errors
+        estimator_errors = self.metadata.errors.estimator_errors
         summary_lines.append("Estimator Summary")
         summary_lines.append("-" * 20)
         feature_set = config.feature_set
@@ -386,7 +314,7 @@ class Model:
             f"<tr><td>Powertrain type</td><td>{config.powertrain_type.name}</td></tr>"
         )
 
-        estimator_errors = self.errors.estimator_errors
+        estimator_errors = self.metadata.errors.estimator_errors
 
         # Title: Estimator Summary
         html_lines.append(
