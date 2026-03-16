@@ -42,6 +42,7 @@ from routee.powertrain.registry.default import (
     DEFAULT_REGION,
     DEFAULT_ROOT_PREFIX,
 )
+from routee.powertrain.registry.s3 import build_index
 
 log = logging.getLogger(__name__)
 
@@ -129,6 +130,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Show what would be uploaded without actually uploading.",
     )
     parser.add_argument(
+        "--no-index",
+        action="store_true",
+        help="Do not rebuild the s3 index after upload.",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -207,6 +213,20 @@ def main(argv: list[str] | None = None) -> int:
     if failed:
         log.warning("%d model(s) failed to upload", failed)
         return 1
+
+    if not args.no_index:
+        log.info("Updating S3 index...")
+        try:
+            build_index(
+                bucket=args.bucket,
+                region=args.region,
+                schema_version=args.schema_version,
+                root_prefix=args.root_prefix,
+                dry_run=args.dry_run,
+            )
+        except Exception:
+            log.exception("Failed to rebuild S3 index")
+            return 1
 
     return 0
 

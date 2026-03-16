@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from typing import List, Optional, Union
 
@@ -11,7 +12,7 @@ from routee.powertrain.io.archive import (
     _model_from_metadata_and_bytes,
     METADATA_FILENAME,
 )
-from routee.powertrain.registry.filtering import _matches
+from routee.powertrain.registry.filtering import _matches, filter_models
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
 from routee.powertrain.registry.default import (
@@ -27,6 +28,7 @@ from botocore.config import Config
 
 # Pattern to extract version from path segment like "v1", "v2"
 VERSION_RE = re.compile(r"^v(\d+)$")
+INDEX_FILENAME = "index.json"
 
 
 def _parse_model_id_from_key(
@@ -75,13 +77,6 @@ def _model_info_from_metadata(
     """Convert an archive metadata dict + ModelId into a ModelInfo."""
     config = metadata_dict["config"]
 
-    est_errors = metadata_dict["errors"]["estimator_errors"]
-    error_summary = {}
-    for target_name, target_errors in est_errors["error_by_target"].items():
-        error_summary[target_name] = {
-            k: v for k, v in target_errors.items() if v is not None
-        }
-
     feature_names = [f["name"] for f in config["feature_set"]["features"]]
     target_names = [t["name"] for t in config["target"]["targets"]]
 
@@ -91,7 +86,6 @@ def _model_info_from_metadata(
         feature_names=feature_names,
         target_names=target_names,
         powertrain_type=config["powertrain_type"],
-        errors=error_summary,
         vehicle_description=config["vehicle_description"],
         path=path,
     )
@@ -239,8 +233,22 @@ class S3Registry(ModelRegistry):
                     keys.append(key)
         return keys
 
+    def _fetch_index(self) -> Optional[List[ModelInfo]]:
+        """Fetch the index.json from the bucket if it exists."""
+        key = f"{self._s3_prefix()}/{INDEX_FILENAME}"
+        try:
+            data = self._fetch_bytes(key)
+            index_dict = json.loads(data)
+            return [ModelInfo.from_dict(m) for m in index_dict.get("models", [])]
+        except Exception:
+            return None
+
     def _scan_models(self) -> List[ModelInfo]:
         """Scan the bucket for all models and return their metadata."""
+        index = self._fetch_index()
+        if index is not None:
+            return index
+
         results: List[ModelInfo] = []
         for key in self._list_metadata_keys():
             try:
@@ -258,6 +266,10 @@ class S3Registry(ModelRegistry):
         return results
 
     def list_models(self) -> List[ModelId]:
+        index = self._fetch_index()
+        if index is not None:
+            return [m.model_id for m in index]
+
         results: List[ModelId] = []
         for key in self._list_metadata_keys():
             try:
@@ -279,6 +291,19 @@ class S3Registry(ModelRegistry):
         fuzzy: bool = True,
         fuzzy_threshold: int = 80,
     ) -> List[ModelInfo]:
+        index = self._fetch_index()
+        if index is not None:
+            return filter_models(
+                index,
+                make=make,
+                model_name=model_name,
+                year=year,
+                variant=variant,
+                feature_set_id=feature_set_id,
+                fuzzy=fuzzy,
+                fuzzy_threshold=fuzzy_threshold,
+            )
+
         has_filters = any(
             v is not None for v in (make, model_name, year, variant, feature_set_id)
         )
@@ -350,3 +375,65 @@ class S3Registry(ModelRegistry):
         meta_key = f"{dir_key}/{METADATA_FILENAME}"
         data = self._fetch_bytes(meta_key)
         return json.loads(data)
+
+
+def build_index(
+    bucket: str = DEFAULT_BUCKET,
+    schema_version: str = SCHEMA_VERSION_STRING,
+    region: str = DEFAULT_REGION,
+    root_prefix: str = DEFAULT_ROOT_PREFIX,
+    dry_run: bool = False,
+) -> dict:
+    """
+    Scan the S3 bucket for all models and build a ModelInfo index.
+    """
+    registry = S3Registry(
+        bucket=bucket,
+        schema_version=schema_version,
+        region=region,
+        root_prefix=root_prefix,
+    )
+    client = registry._get_client()
+
+    log = logging.getLogger(__name__)
+    log.info("Scanning s3://%s/%s for models...", bucket, registry._s3_prefix())
+
+    # We use _list_metadata_keys directly to avoid using an old index if it exists
+    models = []
+    for key in registry._list_metadata_keys():
+        try:
+            model_id = _parse_model_id_from_key(key, schema_version, root_prefix)
+            data = registry._fetch_bytes(key)
+            metadata_dict = json.loads(data)
+            # path is the directory prefix (key without /metadata.json)
+            dir_key = key[: -len(f"/{METADATA_FILENAME}")]
+            info = _model_info_from_metadata(metadata_dict, model_id, dir_key)
+            models.append(info.to_dict())
+        except Exception:
+            continue
+
+    index = {
+        "schema_version": schema_version,
+        "models": models,
+    }
+
+    index_key = f"{registry._s3_prefix()}/{INDEX_FILENAME}"
+    if dry_run:
+        log.info(
+            "[dry-run] Would write index with %d models to s3://%s/%s",
+            len(models),
+            bucket,
+            index_key,
+        )
+    else:
+        log.info(
+            "Writing index with %d models to s3://%s/%s", len(models), bucket, index_key
+        )
+        client.put_object(
+            Bucket=bucket,
+            Key=index_key,
+            Body=json.dumps(index, indent=2),
+            ContentType="application/json",
+        )
+
+    return index

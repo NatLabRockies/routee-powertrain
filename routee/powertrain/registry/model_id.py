@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from routee.powertrain.core.year import Year, format_year, parse_year, serialize_year
 
@@ -109,7 +109,6 @@ class ModelInfo:
     feature_names: List[str]
     target_names: List[str]
     powertrain_type: str
-    errors: Dict[str, Dict[str, float]]
     vehicle_description: str
     path: Optional[str] = None
 
@@ -120,7 +119,6 @@ class ModelInfo:
             "feature_names": self.feature_names,
             "target_names": self.target_names,
             "powertrain_type": self.powertrain_type,
-            "errors": self.errors,
             "vehicle_description": self.vehicle_description,
             "path": self.path,
         }
