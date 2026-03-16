@@ -60,13 +60,6 @@ def _model_info_from_metadata(
     """Convert an archive metadata dict + ModelId into a ModelInfo."""
     config = metadata_dict["config"]
 
-    est_errors = metadata_dict["errors"]["estimator_errors"]
-    error_summary = {}
-    for target_name, target_errors in est_errors["error_by_target"].items():
-        error_summary[target_name] = {
-            k: v for k, v in target_errors.items() if v is not None
-        }
-
     feature_names = [f["name"] for f in config["feature_set"]["features"]]
     target_names = [t["name"] for t in config["target"]["targets"]]
 
@@ -76,7 +69,6 @@ def _model_info_from_metadata(
         feature_names=feature_names,
         target_names=target_names,
         powertrain_type=config["powertrain_type"],
-        errors=error_summary,
         vehicle_description=config["vehicle_description"],
         path=path,
     )
