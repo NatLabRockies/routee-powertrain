@@ -38,7 +38,7 @@ def list_available_models(
 
 def query_available_models(
     make: Optional[str] = None,
-    model_name: Optional[str] = None,
+    model: Optional[str] = None,
     year: Optional[int] = None,
     variant: Optional[str] = None,
     registry: Optional[ModelRegistry] = None,
@@ -53,7 +53,7 @@ def query_available_models(
 
     Args:
         make: filter by vehicle make
-        model_name: filter by model name
+        model: filter by model name
         year: filter by model year
         variant: filter by variant
         registry: a ModelRegistry instance; defaults to get_default_registry()
@@ -69,7 +69,7 @@ def query_available_models(
 
     return registry.query(
         make=make,
-        model_name=model_name,
+        model=model,
         year=year,
         variant=variant,
         fuzzy=fuzzy,

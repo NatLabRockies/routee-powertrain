@@ -60,7 +60,7 @@ class TestTrainEstimatePipeline(TestCase):
             distance=distance,
             target=targets,
             make="test",
-            model_name="model",
+            model="model",
             year=2024,
         )
         self.raw_config = pt.ModelConfig(
@@ -70,7 +70,7 @@ class TestTrainEstimatePipeline(TestCase):
             distance=distance,
             target=targets,
             make="test",
-            model_name="model",
+            model="model",
             year=2024,
             predict_method=PredictMethod.RAW,
         )

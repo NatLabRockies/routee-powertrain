@@ -13,7 +13,7 @@ BASE = f"{ROOT}/{SCHEMA}"
 
 def _fake_metadata(
     make: str = "toyota",
-    model_name: str = "camry_4cyl_fwd",
+    model: str = "camry_4cyl_fwd",
     year: int = 2016,
     variant: str = "default",
     powertrain: str = "ICE",
@@ -23,7 +23,7 @@ def _fake_metadata(
         "estimator_type": "ONNXEstimator",
         "model_file": "model.onnx",
         "config": {
-            "vehicle_description": f"{year} {make} {model_name}",
+            "vehicle_description": f"{year} {make} {model}",
             "powertrain_type": powertrain,
             "feature_set": {
                 "features": [
@@ -288,9 +288,9 @@ class TestQueryHierarchical(TestCase):
 
     def test_query_by_make_and_model(self):
         registry = self._build_full_registry()
-        results = registry.query(make="chevrolet", model_name="bolt_ev")
+        results = registry.query(make="chevrolet", model="bolt_ev")
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].model_id.model_name, "bolt_ev")
+        self.assertEqual(results[0].model_id.model, "bolt_ev")
 
     def test_query_by_year(self):
         registry = self._build_full_registry()

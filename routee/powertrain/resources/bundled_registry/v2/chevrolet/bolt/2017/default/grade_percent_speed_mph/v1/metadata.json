@@ -70,7 +70,7 @@
             ]
         },
         "make": "chevrolet",
-        "model_name": "bolt",
+        "model": "bolt",
         "year": 2017,
         "predict_method": "rate",
         "test_size": 0.2,

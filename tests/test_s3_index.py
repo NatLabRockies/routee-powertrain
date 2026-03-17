@@ -11,14 +11,14 @@ BASE = f"{ROOT}/{SCHEMA}"
 
 def _fake_metadata(
     make: str = "toyota",
-    model_name: str = "camry",
+    model: str = "camry",
     year: int = 2016,
 ) -> dict:
     return {
         "estimator_type": "some-type",
         "model_file": "model.onnx",
         "config": {
-            "vehicle_description": f"{year} {make} {model_name}",
+            "vehicle_description": f"{year} {make} {model}",
             "powertrain_type": "ICE",
             "feature_set": {"features": [{"name": "speed"}]},
             "target": {"targets": [{"name": "energy"}]},

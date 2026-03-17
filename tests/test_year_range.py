@@ -109,7 +109,7 @@ class TestModelConfigYearRange(TestCase):
             distance=pt.DataColumn(name="miles", units="miles"),
             target=pt.TargetSet(targets=[pt.DataColumn(name="energy", units="kwh")]),
             make="test",
-            model_name="model",
+            model="model",
             year=2020,
         )
         self.assertEqual(config.year, 2020)
@@ -126,7 +126,7 @@ class TestModelConfigYearRange(TestCase):
             distance=pt.DataColumn(name="miles", units="miles"),
             target=pt.TargetSet(targets=[pt.DataColumn(name="energy", units="kwh")]),
             make="test",
-            model_name="model",
+            model="model",
             year=(2020, 2026),
         )
         self.assertEqual(config.year, (2020, 2026))
@@ -143,7 +143,7 @@ class TestModelConfigYearRange(TestCase):
             distance=pt.DataColumn(name="miles", units="miles"),
             target=pt.TargetSet(targets=[pt.DataColumn(name="energy", units="kwh")]),
             make="test",
-            model_name="model",
+            model="model",
             year="2020-2026",
         )
         self.assertEqual(config.year, (2020, 2026))
@@ -158,7 +158,7 @@ class TestModelConfigYearRange(TestCase):
             distance=pt.DataColumn(name="miles", units="miles"),
             target=pt.TargetSet(targets=[pt.DataColumn(name="energy", units="kwh")]),
             make="test",
-            model_name="model",
+            model="model",
             year=(2020, 2026),
         )
         d = config.to_dict()
@@ -230,7 +230,7 @@ class TestLocalRegistryYearRange(TestCase):
                 ],
             ),
             make="Generic",
-            model_name="Sedan",
+            model="Sedan",
             year=(2020, 2026),
         )
         trainer = SklearnRandomForestTrainer()
@@ -313,7 +313,7 @@ class TestYearRangeArchiveRoundtrip(TestCase):
                 ],
             ),
             make="Generic",
-            model_name="Sedan",
+            model="Sedan",
             year=(2020, 2026),
         )
         trainer = SklearnRandomForestTrainer()

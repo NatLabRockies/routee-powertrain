@@ -27,7 +27,7 @@ class ModelRegistry(ABC):
     def query(
         self,
         make: Optional[str] = None,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         year: Optional[int] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
@@ -42,7 +42,7 @@ class ModelRegistry(ABC):
 
         Args:
             make: filter by vehicle make
-            model_name: filter by model name
+            model: filter by model name
             year: filter by model year
             variant: filter by variant
             feature_set_id: filter by feature set id

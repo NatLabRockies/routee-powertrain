@@ -16,7 +16,7 @@ Usage
 ::
 
     python scripts/convert_legacy_models.py path/to/model.json output_dir/ \\
-        --make toyota --model_name camry --year 2016 --trim 4cyl_2wd
+        --make toyota --model camry --year 2016 --trim 4cyl_2wd
 
 See also ``scripts/convert_nrel_library.py`` for batch-converting the bundled
 NREL model library.
@@ -45,7 +45,7 @@ class VehicleIdentity:
     """Vehicle identity fields to stamp into each converted model."""
 
     make: str
-    model_name: str
+    model: str
     year: int | str
     variant: str = "default"
 
@@ -133,7 +133,7 @@ def convert_legacy_json(
         Root directory under which model dirs will be created.  The directory
         layout follows the v2 registry convention::
 
-            {output_dir}/v{schema_version}/{make}/{model_name}/{year}/{trim}/{variant}/{feature_set_id}/v{version}/
+            {output_dir}/v{schema_version}/{make}/{model}/{year}/{trim}/{variant}/{feature_set_id}/v{version}/
 
     identity:
         Vehicle identification (make / model / year / trim / variant).
@@ -207,7 +207,7 @@ def convert_legacy_json(
             "distance": old_config["distance"],
             "target": old_config["target"],
             "make": identity.make,
-            "model_name": identity.model_name,
+            "model": identity.model,
             "year": identity.year,
             "predict_method": old_config.get("predict_method", "rate"),
             "test_size": old_config.get("test_size", 0.2),
@@ -250,7 +250,7 @@ def convert_legacy_json(
             output_dir
             / f"v{schema_version}"
             / identity.make
-            / identity.model_name
+            / identity.model
             / str(identity.year)
             / identity.variant
             / fs_dir_name
@@ -294,7 +294,7 @@ def main():
     parser.add_argument("output_dir", type=Path, help="Root output directory.")
     parser.add_argument("--make", required=True, help="Vehicle make (e.g. toyota).")
     parser.add_argument(
-        "--model_name", required=True, help="Vehicle model (e.g. camry_4cyl_2wd)."
+        "--model", required=True, help="Vehicle model (e.g. camry_4cyl_2wd)."
     )
     parser.add_argument("--year", type=int, required=True, help="Model year.")
     parser.add_argument(
@@ -306,7 +306,7 @@ def main():
 
     identity = VehicleIdentity(
         make=args.make,
-        model_name=args.model_name,
+        model=args.model,
         year=args.year,
         variant=args.variant,
     )
