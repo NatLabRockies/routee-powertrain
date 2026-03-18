@@ -14,7 +14,7 @@ class ModelId:
     """Uniquely identifies a model in the registry."""
 
     make: str
-    model_name: str
+    model: str
     year: Year
     variant: str
     feature_set_id: str
@@ -22,7 +22,7 @@ class ModelId:
 
     def __post_init__(self):
         self.make = self.make.lower()
-        self.model_name = self.model_name.lower()
+        self.model = self.model.lower()
         self.variant = self.variant.lower()
         self.feature_set_id = self.feature_set_id.lower()
         self.year = parse_year(self.year)
@@ -50,7 +50,7 @@ class ModelId:
                 f"got {len(parts)} segments."
             )
 
-        make, model_name, year_str, variant, feature_set_id, version_dir = parts
+        make, model, year_str, variant, feature_set_id, version_dir = parts
 
         match = _VERSION_RE.match(version_dir)
         if not match:
@@ -60,7 +60,7 @@ class ModelId:
 
         return cls(
             make=make,
-            model_name=model_name,
+            model=model,
             year=parse_year(year_str),
             variant=variant,
             feature_set_id=feature_set_id,
@@ -74,7 +74,7 @@ class ModelId:
         Returns: e.g. "toyota/camry_4cyl_fwd/2016/default/speed_grade/v1"
         """
         return (
-            f"{self.make}/{self.model_name}/"
+            f"{self.make}/{self.model}/"
             f"{format_year(self.year)}/{self.variant}/"
             f"{self.feature_set_id}/v{self.version}"
         )
@@ -82,7 +82,7 @@ class ModelId:
     def to_dict(self) -> dict:
         return {
             "make": self.make,
-            "model_name": self.model_name,
+            "model": self.model,
             "year": serialize_year(self.year),
             "variant": self.variant,
             "feature_set_id": self.feature_set_id,
@@ -91,11 +91,14 @@ class ModelId:
 
     @classmethod
     def from_dict(cls, d: dict) -> ModelId:
+        d = d.copy()
+        if "model_name" in d and "model" not in d:
+            d["model"] = d.pop("model_name")
         return cls(**d)
 
     def __str__(self) -> str:
         return (
-            f"{self.make}/{self.model_name}/{format_year(self.year)}/"
+            f"{self.make}/{self.model}/{format_year(self.year)}/"
             f"{self.variant}/{self.feature_set_id}/v{self.version}"
         )
 
@@ -131,12 +134,12 @@ class ModelInfo:
 
     def __repr__(self) -> str:
         lines = [
-            "ModelInfo:",
+            "\n\nModelInfo:",
             f"  model_id:       {self.model_id.to_path()}",
             f"  description:    {self.vehicle_description}",
             f"  year:           {format_year(self.model_id.year)}",
             f"  make:           {self.model_id.make}",
-            f"  model:          {self.model_id.model_name}",
+            f"  model:          {self.model_id.model}",
             f"  powertrain:     {self.powertrain_type}",
             f"  variant:        {self.model_id.variant}",
             f"  estimator:      {self.estimator_type}",

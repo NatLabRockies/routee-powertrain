@@ -24,7 +24,7 @@ class TestModelId(TestCase):
     def test_lowercase_normalization(self):
         mid = ModelId("Toyota", "Camry_4Cyl_FWD", 2016, "Default", "Grade_Speed", 1)
         self.assertEqual(mid.make, "toyota")
-        self.assertEqual(mid.model_name, "camry_4cyl_fwd")
+        self.assertEqual(mid.model, "camry_4cyl_fwd")
         self.assertEqual(mid.variant, "default")
         self.assertEqual(mid.feature_set_id, "grade_speed")
 
@@ -70,7 +70,7 @@ class TestLocalRegistry(TestCase):
                 ],
             ),
             make="Toyota",
-            model_name="Camry_4cyl_fwd",
+            model="Camry_4cyl_fwd",
             year=2016,
         )
         trainer = SklearnRandomForestTrainer()
@@ -97,7 +97,7 @@ class TestLocalRegistry(TestCase):
     def test_query(self):
         results = self.registry.query(make="toyota")
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].model_id.model_name, "camry_4cyl_fwd")
+        self.assertEqual(results[0].model_id.model, "camry_4cyl_fwd")
 
     def test_query_all(self):
         results = self.registry.query()
@@ -141,11 +141,11 @@ class TestLocalRegistry(TestCase):
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].model_id.make, "toyota")
 
-    def test_fuzzy_partial_model_name(self):
+    def test_fuzzy_partial_model(self):
         """Partial model name like 'camry' should match 'camry_4cyl_fwd'."""
-        results = self.registry.query(model_name="camry")
+        results = self.registry.query(model="camry")
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].model_id.model_name, "camry_4cyl_fwd")
+        self.assertEqual(results[0].model_id.model, "camry_4cyl_fwd")
 
     def test_fuzzy_disabled_exact_match(self):
         """With fuzzy=False, exact match is required."""

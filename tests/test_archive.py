@@ -63,7 +63,7 @@ class TestArchiveRoundTrip(TestCase):
             distance=distance,
             target=targets,
             make="test",
-            model_name="model",
+            model="model",
             year=2024,
         )
 
@@ -209,7 +209,7 @@ class TestArchiveRoundTrip(TestCase):
             distance=self.rate_config.distance,
             target=self.rate_config.target,
             make="Toyota",
-            model_name="Camry_4cyl_FWD",
+            model="Camry_4cyl_FWD",
             year=2016,
         )
         trainer = SklearnRandomForestTrainer()
@@ -221,7 +221,7 @@ class TestArchiveRoundTrip(TestCase):
 
         loaded = pt.load_model(outdir)
         self.assertEqual(loaded.metadata.config.make, "toyota")
-        self.assertEqual(loaded.metadata.config.model_name, "camry_4cyl_fwd")
+        self.assertEqual(loaded.metadata.config.model, "camry_4cyl_fwd")
         self.assertEqual(loaded.metadata.config.year, 2016)
 
         # Test with zip format
@@ -230,5 +230,5 @@ class TestArchiveRoundTrip(TestCase):
 
         loaded = pt.load_model(outfile)
         self.assertEqual(loaded.metadata.config.make, "toyota")
-        self.assertEqual(loaded.metadata.config.model_name, "camry_4cyl_fwd")
+        self.assertEqual(loaded.metadata.config.model, "camry_4cyl_fwd")
         self.assertEqual(loaded.metadata.config.year, 2016)

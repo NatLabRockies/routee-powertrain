@@ -36,7 +36,7 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
             f"got {'/'.join(parts)}"
         )
 
-    make, model_name, year_str, variant, feature_set_id, version_dir = parts
+    make, model, year_str, variant, feature_set_id, version_dir = parts
 
     match = VERSION_RE.match(version_dir)
     if not match:
@@ -46,7 +46,7 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
 
     return ModelId(
         make=make,
-        model_name=model_name,
+        model=model,
         year=parse_year(year_str),
         variant=variant,
         feature_set_id=feature_set_id,
@@ -142,7 +142,7 @@ class LocalRegistry(ModelRegistry):
     def query(
         self,
         make: Optional[str] = None,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         year: Optional[int] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
@@ -153,7 +153,7 @@ class LocalRegistry(ModelRegistry):
         return filter_models(
             results,
             make=make,
-            model_name=model_name,
+            model=model,
             year=year,
             variant=variant,
             feature_set_id=feature_set_id,

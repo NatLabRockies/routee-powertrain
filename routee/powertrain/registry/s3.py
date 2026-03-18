@@ -56,14 +56,14 @@ def _parse_model_id_from_key(
             f"Expected <schema>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/{METADATA_FILENAME}"
         )
 
-    make, model_name, year_str, variant, feature_set_id, version_dir, _ = parts
+    make, model, year_str, variant, feature_set_id, version_dir, _ = parts
     match = VERSION_RE.match(version_dir)
     if not match:
         raise ValueError(f"Version directory '{version_dir}' does not match v<N>")
 
     return ModelId(
         make=make,
-        model_name=model_name,
+        model=model,
         year=parse_year(year_str),
         variant=variant,
         feature_set_id=feature_set_id,
@@ -192,7 +192,7 @@ class S3Registry(ModelRegistry):
 
         Args:
             prefixes: S3 key prefixes to expand
-            query_value: string filter (make, model_name, etc.) or None
+            query_value: string filter (make, model, etc.) or None
             fuzzy: whether to use fuzzy string matching
             threshold: fuzzy match threshold (0–100)
             is_year: if True, filter using ``year_contains`` instead
@@ -284,7 +284,7 @@ class S3Registry(ModelRegistry):
     def query(
         self,
         make: Optional[str] = None,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         year: Optional[int] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
@@ -296,7 +296,7 @@ class S3Registry(ModelRegistry):
             return filter_models(
                 index,
                 make=make,
-                model_name=model_name,
+                model=model,
                 year=year,
                 variant=variant,
                 feature_set_id=feature_set_id,
@@ -305,19 +305,19 @@ class S3Registry(ModelRegistry):
             )
 
         has_filters = any(
-            v is not None for v in (make, model_name, year, variant, feature_set_id)
+            v is not None for v in (make, model, year, variant, feature_set_id)
         )
         if not has_filters:
             return self._scan_models()
 
         # Walk the S3 hierarchy level-by-level, narrowing at each step.
-        # Levels: make / model_name / year / variant / feature_set_id / version
+        # Levels: make / model / year / variant / feature_set_id / version
         prefixes = [f"{self._s3_prefix()}/"]
 
         # Level 1: make
         prefixes = self._narrow_prefixes(prefixes, make, fuzzy, fuzzy_threshold)
-        # Level 2: model_name
-        prefixes = self._narrow_prefixes(prefixes, model_name, fuzzy, fuzzy_threshold)
+        # Level 2: model
+        prefixes = self._narrow_prefixes(prefixes, model, fuzzy, fuzzy_threshold)
         # Level 3: year
         prefixes = self._narrow_prefixes(
             prefixes,

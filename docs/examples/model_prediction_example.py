@@ -5,14 +5,20 @@ RouteE models can be loaded from a large library of pre-trained models. Conventi
 
 __A note on PHEVs__: Plug-in hybrids have two general operating modes 1) "Charge Depleting" or "EV" mode, where the vehicle relies only on energy from the battery to power the motor and 2) "Charge Sustaining" or "Hybrid" mode, where the vehicle operates like a typical parallel hybrid, using a combination of the combustion energy and electric motor for tractive effort and regenerative braking. Since the operating mode depends on battery state-of-charge and driver decisions, pre-trained RouteE-Powertrain models for both operating modes are provided for all PHEVs and it is up to the user to decide which is most appropriate for a particular application.
 """
+
 import routee.powertrain as pt
+
+# list_available_models returns a list of ModelId objects
 pt.list_available_models()
-camry = pt.load_model("2016_TOYOTA_Camry_4cyl_2WD")
+
+# Use query_available_models for richer metadata with optional filters
+pt.query_available_models(make="toyota")
+
+camry = pt.load_model("toyota/camry_4cyl_2wd/2016/default/grade_percent_speed_mph/v1")
 """
-After loading a model, we can inspect it to see what features (and units) the model expects. 
-RouteE Powertrain models can have multiple estimators under the hood which have been trained on different feature sets.
-For example, there might be an estimator that takes just `speed` as a link feature and another that takes in `speed` and `grade`.
-This can be useful if you have sparse data for one feature (like grade) but still want to predict energy consumption.
+After loading a model, we can inspect it to see what features (and units) the model expects.
+Each model contains a single estimator trained on a specific feature set.
+The model summary shows the features, distance column, energy target, and predicted fuel economy.
 """
 camry
 """
@@ -23,13 +29,12 @@ There is a sample route included with the package that we'll use for demonstrati
 sample_route = pt.load_sample_route()
 sample_route
 """
-If we just pass in the links DataFrame without any other information, the model will assume we want to use all the features and in this case will look for an internal estimator with features to match all the columns.
-
-Based on the model summary shown above, we do have an estimator that takes in the link features `speed_mph` and `grade_percent` with a distance of `distance` and so it will automatically select that estimator when we predict.
+If we just pass in the links DataFrame without any other information, the model will use its configured feature set.
+The sample route has `speed_mph`, `grade_percent`, and `distance` columns which match the Camry model's expected inputs.
 """
 camry.predict(sample_route)
 """
-If we want to use a different estimator, we can tell the predict method to only use a subset of the features. In this case, we'll tell the model to only use speed.
+The `feature_columns` argument lets you pass in only a subset of feature columns from a larger DataFrame. In this case, we'll restrict prediction to only use speed (e.g. if grade data is unavailable).
 """
 camry.predict(sample_route, feature_columns=["speed_mph"])
 """
@@ -42,10 +47,15 @@ In order to use this we first have to define what ranges the features should be 
 """
 feature_ranges = {
     "speed_mph": {"lower": 2, "upper": 100, "n_samples": 50},
-    "grade_percent": {"lower": -20.0, "upper": 20.0, "n_samples": 50}
+    "grade_percent": {"lower": -20.0, "upper": 20.0, "n_samples": 50},
 }
 results = pt.visualize_features(camry, feature_ranges)
 """
 We can also look at two features simultaneously with the `contour_plot` function. 
 """
-pt.contour_plot(camry, x_feature="speed_mph", y_feature="grade_percent", feature_ranges=feature_ranges)
+pt.contour_plot(
+    camry,
+    x_feature="speed_mph",
+    y_feature="grade_percent",
+    feature_ranges=feature_ranges,
+)

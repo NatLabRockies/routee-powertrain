@@ -370,7 +370,7 @@ def train_model(model_name):
         distance=distance,
         target=energy_target,
         make=make_str,
-        model_name=name_str,
+        model=name_str,
         year=int(year_str),
         trim=trim_str if trim_str else "default",
         test_size=0.2,

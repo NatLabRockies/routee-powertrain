@@ -19,9 +19,13 @@ It's important to understand the distinction between steady-state and transient 
 - **Transient Temperature Models**: These models account for the period when the vehicle is still adjusting to the ambient temperature.
     For example, when a vehicle starts a trip in cold weather and has been sitting outside, it takes some time for the battery and cabin to warm up.
 """
-tesla = pt.load_model("2022_Tesla_Model_3_RWD")
-tesla_with_temp_steady = pt.load_model("2022_Tesla_Model_3_RWD_0F_110F_steady")
-tesla_with_temp_transient = pt.load_model("2022_Tesla_Model_3_RWD_0F_110F_transient")
+tesla = pt.load_model("tesla/model_3_rwd/2022/default/grade_percent_speed_mph/v1")
+tesla_with_temp_steady = pt.load_model(
+    "tesla/model_3_rwd/2022/steady/ambient_temp_f_grade_percent_speed_mph/v1"
+)
+tesla_with_temp_transient = pt.load_model(
+    "tesla/model_3_rwd/2022/transient/ambient_temp_f_grade_percent_speed_mph/v1"
+)
 
 """
 Load a sample route and prepare it for prediction.
@@ -108,12 +112,20 @@ We'll load the Nissan Leaf and Chevrolet Bolt models and compare their energy co
 """
 
 # Load Nissan Leaf models
-nissan_leaf_steady = pt.load_model("2016_Nissan_Leaf_30_kWh_0F_110F_steady")
-nissan_leaf_transient = pt.load_model("2016_Nissan_Leaf_30_kWh_0F_110F_transient")
+nissan_leaf_steady = pt.load_model(
+    "nissan/leaf_30_kwh/2016/steady/ambient_temp_f_grade_percent_speed_mph/v1"
+)
+nissan_leaf_transient = pt.load_model(
+    "nissan/leaf_30_kwh/2016/transient/ambient_temp_f_grade_percent_speed_mph/v1"
+)
 
 # Load Chevrolet Bolt models
-chevy_bolt_steady = pt.load_model("2020_Chevrolet_Bolt_EV_0F_110F_steady")
-chevy_bolt_transient = pt.load_model("2020_Chevrolet_Bolt_EV_0F_110F_transient")
+chevy_bolt_steady = pt.load_model(
+    "chevrolet/bolt_ev/2020/steady/ambient_temp_f_grade_percent_speed_mph/v1"
+)
+chevy_bolt_transient = pt.load_model(
+    "chevrolet/bolt_ev/2020/transient/ambient_temp_f_grade_percent_speed_mph/v1"
+)
 
 """
 ### Temperature Sensitivity Comparison

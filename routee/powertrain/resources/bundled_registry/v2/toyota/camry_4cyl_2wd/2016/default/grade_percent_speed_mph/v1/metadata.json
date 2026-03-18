@@ -70,7 +70,7 @@
             ]
         },
         "make": "toyota",
-        "model_name": "camry_4cyl_2wd",
+        "model": "camry_4cyl_2wd",
         "year": 2016,
         "predict_method": "rate",
         "test_size": 0.2,

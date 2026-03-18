@@ -19,7 +19,7 @@ def _matches(query: str, candidate: str, fuzzy: bool, threshold: int) -> bool:
 def filter_models(
     models: List[ModelInfo],
     make: Optional[str] = None,
-    model_name: Optional[str] = None,
+    model: Optional[str] = None,
     year: Optional[int] = None,
     variant: Optional[str] = None,
     feature_set_id: Optional[str] = None,
@@ -37,11 +37,11 @@ def filter_models(
             for m in results
             if _matches(make, m.model_id.make, fuzzy, fuzzy_threshold)
         ]
-    if model_name is not None:
+    if model is not None:
         results = [
             m
             for m in results
-            if _matches(model_name, m.model_id.model_name, fuzzy, fuzzy_threshold)
+            if _matches(model, m.model_id.model, fuzzy, fuzzy_threshold)
         ]
     if year is not None:
         results = [m for m in results if year_contains(m.model_id.year, year)]

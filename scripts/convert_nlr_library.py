@@ -81,12 +81,12 @@ def _parse_library_filename(filename: str) -> VehicleIdentity:
             year = "2010-2020"
         else:
             year = 0
-        model_name = f"class_8_{cab_type}"
+        model = f"class_8_{cab_type}"
         if power_rating:
-            model_name = f"{model_name}_{power_rating}"
+            model = f"{model}_{power_rating}"
         return VehicleIdentity(
             make="generic_heavy_duty",
-            model_name=model_name,
+            model=model,
             year=year,
             variant=variant,
         )
@@ -95,10 +95,10 @@ def _parse_library_filename(filename: str) -> VehicleIdentity:
     if stem.startswith("Transit_Bus_"):
         rest = stem.removeprefix("Transit_Bus_")
         bus_type = rest.lower().replace(" ", "_")
-        model_name = f"40_foot_{bus_type}" if bus_type != "default" else "40_foot"
+        model = f"40_foot_{bus_type}" if bus_type != "default" else "40_foot"
         return VehicleIdentity(
             make="generic_transit",
-            model_name=model_name,
+            model=model,
             year="2020-2025",
             variant=variant,
         )
@@ -116,19 +116,19 @@ def _parse_library_filename(filename: str) -> VehicleIdentity:
     remaining = "_".join(parts[start_idx:])
 
     # Parse make/model/trim from the remaining string
-    make, model_name, trim = _parse_vehicle_name(remaining)
+    make, model, trim = _parse_vehicle_name(remaining)
 
-    # Fold trim into model_name when it's not default
+    # Fold trim into model when it's not default
     if trim != "default":
-        model_name = f"{model_name}_{trim}"
+        model = f"{model}_{trim}"
 
     # Strip temperature range patterns (e.g. "_0f_110f") from model names
     # that appear in steady/transient variants
-    model_name = re.sub(r"_\d+f_\d+f$", "", model_name)
+    model = re.sub(r"_\d+f_\d+f$", "", model)
 
     return VehicleIdentity(
         make=make,
-        model_name=model_name,
+        model=model,
         year=year,
         variant=variant,
     )
@@ -207,7 +207,7 @@ _TRIM_PATTERNS = [
 
 def _parse_vehicle_name(name: str) -> tuple:
     """
-    Parse a vehicle name string into (make, model_name, trim).
+    Parse a vehicle name string into (make, model, trim).
 
     Examples::
 
@@ -254,7 +254,7 @@ def _parse_vehicle_name(name: str) -> tuple:
             else rest
         )
 
-    # Split rest into model_name and trim
+    # Split rest into model and trim
     trim = "default"
     model_str = rest
 
@@ -265,9 +265,9 @@ def _parse_vehicle_name(name: str) -> tuple:
             model_str = rest[: -len(suffix)]
             break
 
-    model_name = model_str.lower().strip("_")
+    model = model_str.lower().strip("_")
 
-    return make, model_name, trim
+    return make, model, trim
 
 
 # ---------------------------------------------------------------------------
@@ -308,7 +308,7 @@ def _resolve_year(identity: VehicleIdentity, original_stem: str) -> VehicleIdent
         log.info("Guessed year %d for %s", guessed, original_stem)
         return VehicleIdentity(
             make=identity.make,
-            model_name=identity.model_name,
+            model=identity.model,
             year=guessed,
             variant=identity.variant,
         )

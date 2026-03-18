@@ -42,7 +42,7 @@ class ModelConfig:
 
     ## structured vehicle identification
     make: str
-    model_name: str
+    model: str
     year: Year
 
     predict_method: PredictMethod = PredictMethod.RATE
@@ -57,7 +57,7 @@ class ModelConfig:
     def __post_init__(self):
         # normalize vehicle id fields to lowercase
         self.make = self.make.lower()
-        self.model_name = self.model_name.lower()
+        self.model = self.model.lower()
         # parse year (supports int, tuple, or "YYYY-YYYY" string)
         self.year = parse_year(self.year)
         # convert feature_set to the correct type
@@ -99,13 +99,16 @@ class ModelConfig:
         # provide defaults for legacy model files that lack vehicle id fields
         d = d.copy()
         d.setdefault("make", "unknown")
-        d.setdefault("model_name", "unknown")
+        # support legacy files that used "model_name" instead of "model"
+        if "model_name" in d and "model" not in d:
+            d["model"] = d.pop("model_name")
+        d.setdefault("model", "unknown")
         d.setdefault("year", 0)
-        # legacy files may still contain "trim" — fold it into model_name
+        # legacy files may still contain "trim" — fold it into model
         trim = d.pop("trim", None)
         if trim and trim not in ("unknown", "default"):
-            base = d.get("model_name", "unknown")
-            d["model_name"] = f"{base}_{trim}"
+            base = d.get("model", "unknown")
+            d["model"] = f"{base}_{trim}"
         return cls(**d)
 
     def to_dict(self) -> dict:
