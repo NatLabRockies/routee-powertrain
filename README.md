@@ -42,46 +42,14 @@ Then, you can import the package and use a pre-trained model from the RouteE mod
 import pandas as pd
 import routee.powertrain as pt
 
-# Print the available pre-trained models
-print(pt.list_available_models(local=True, external=True))
-
-# [
-#   '2016_TOYOTA_Camry_4cyl_2WD',
-#   '2017_CHEVROLET_Bolt',
-#   '2012_Ford_Focus',
-#   ...
-# ]
+# Query for a specific model
+print(pt.query_available_models(make="Chevy", model="Bolt", year=2017))
 
 # Load a pre-trained model
-model = pt.load_model("2016_TOYOTA_Camry_4cyl_2WD")
+model = pt.load_model("chevrolet/bolt_ev/2017/default/speed_mph/v1")
 
 # Inspect the model to see what it expects for input
 print(model)
-
-# ========================================
-# Model Summary
-# --------------------
-# Vehicle description: 2016_TOYOTA_Camry_4cyl_2WD
-# Powertrain type: ICE
-# Number of estimators: 2
-# ========================================
-# Estimator Summary
-# --------------------
-# Feature: speed_mph (mph)
-# Distance: miles (miles)
-# Target: gge (gallons_gasoline)
-# Raw Predicted Consumption: 29.856 (miles/gallons_gasoline)
-# Real World Predicted Consumption: 25.606 (miles/gallons_gasoline)
-# ========================================
-# Estimator Summary
-# --------------------
-# Feature: speed_mph (mph)
-# Feature: grade_dec (decimal)
-# Distance: miles (miles)
-# Target: gge (gallons_gasoline)
-# Raw Predicted Consumption: 29.845 (miles/gallons_gasoline)
-# Real World Predicted Consumption: 25.596 (miles/gallons_gasoline)
-# ========================================
 
 # Predict energy consumption for a set of road links
 links_df = pd.DataFrame(
