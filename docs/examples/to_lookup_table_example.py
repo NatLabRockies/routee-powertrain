@@ -17,13 +17,13 @@ We'll use models with different feature sets to show the flexibility of the appr
 """
 
 toyota_camry = pt.load_model(
-    "toyota/camry_4cyl_2wd/2016/default/grade_percent_speed_mph/v1"
+    "toyota/camry_4cyl_2wd/2016/default/speed_mph/v1"
 )
 tesla_model3 = pt.load_model(
     "tesla/model_3_rwd/2022/default/grade_percent_speed_mph/v1"
 )
 tesla_with_temp = pt.load_model(
-    "tesla/model_3_rwd/2022/temp_steady/grade_percent_speed_mph_ambient_temp_f/v1"
+    "tesla/model_3_rwd/2022/steady/ambient_temp_f_grade_percent_speed_mph/v1"
 )
 """
 Let's examine the available features and targets for each model.
