@@ -29,21 +29,16 @@ This dataframe represents a set of road network links (i.e. roads) in which we'v
 
 Ok, onto setting up the training pipeline.
 
-First, we need to tell the trainer what feature sets we want to use for the internal estimators (Random Forests in this case). We can provide one or many feature sets, depending on the different features we might expect to see when apply this model. In this case, we'll just use three different features sets. One with just `speed`, one with `speed` and `grade` and then another with `speed`, `grade`, and `road_class`. This will make it such that our model is flexible to cases where we might only have speed information for a link or we might have more feature resolution.  
+First, we need to tell the trainer what features we want to use for the internal estimator (a Random Forest in this case).
+We define a single `FeatureSet` that describes all the features the model will be trained on. In this case, we'll use `speed_mph` and `grade_dec`.
 """
-feature_set_1 = [pt.DataColumn(name="speed_mph", units="mph")]
-feature_set_2 = [
+feature_set = [
     pt.DataColumn(name="speed_mph", units="mph"),
     pt.DataColumn(name="grade_dec", units="decimal"),
 ]
-feature_set_3 = [
-    pt.DataColumn(name="speed_mph", units="mph"),
-    pt.DataColumn(name="grade_dec", units="decimal"),
-    pt.DataColumn(name="road_class", units="category"),
-]
-features = [feature_set_1, feature_set_2, feature_set_3]
+features = feature_set
 """
-Note that we didn't incude the distance column in any of our feature sets. That is because, RouteE Powertrain always requires distance information and so we have a special designation for distance in the training configuation whereas features can be any arbitrary link attribute. So, let's define our distance columns
+Note that we didn't include the distance column in the feature set. RouteE Powertrain always requires distance information, so we provide a separate designation for it in the training configuration. Let's define our distance column:
 """
 distance = pt.DataColumn(name="miles", units="miles")
 """
@@ -70,13 +65,12 @@ Finally, we can build a model configuration that we can pass to the trainer. Thi
 config = pt.ModelConfig(
     vehicle_description="Test Vehicle",
     powertrain_type=pt.PowertrainType.ICE,
-    feature_sets=features,
+    feature_set=features,
     distance=distance,
     target=energy_target,
     make="test",
     model="vehicle",
     year=2024,
-    trim="base",
     test_size=0.2,
     predict_method=predict_method,
 )
@@ -98,9 +92,9 @@ test_vehicle.metadata.errors
 While this training dataset is far too small to draw real conclusions, these metrics can give you an idea of how well the model performed on a holdout test set (20% of the training data as we specificed by the `test_size` parameter in the configuration. 
 """
 """
-Now, we can write the model to a json file that can be loaded later:
+Now, we can write the model to a zip or tar file that can be loaded later:
 
 ```python
-test_vehicle.to_file("Test_Vehicle.json")
+test_vehicle.to_file("Test_Vehicle.zip")
 ```
 """

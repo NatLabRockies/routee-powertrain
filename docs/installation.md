@@ -26,7 +26,7 @@ Each training pipeline has its own set of dependencies.
 
 ### Scikit-learn
 
-To install the depenecies the scikit learn training pipeline, use the following command:
+To install the dependencies for the scikit-learn training pipeline, use the following command:
 
 ```bash
 pip install routee.powertrain[scikit]
@@ -35,6 +35,18 @@ pip install routee.powertrain[scikit]
 This should support usage of the following trainers:
 
 - `SklearnRandomForestTrainer`
+
+### NGBoost
+
+To install the dependencies for the NGBoost training pipeline:
+
+```bash
+pip install routee.powertrain[ngboost]
+```
+
+This should support usage of the following trainers:
+
+- `NGBoostTrainer`
 
 ### Rust Smartcore
 

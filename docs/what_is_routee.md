@@ -12,23 +12,27 @@ Training new RouteE-Powertrain models requires a set of link aggregate driving d
 
 In application, trained RouteE-Powertrain models expect link features as inputs and return predicted energy consumption for a particular vehicle over a link with the particular feature set. The RouteE developers maintain a separate repository for previously trained RouteE-Powertrain models, available for prediction "off the shelf". To see which models are available you can use the `pt.list_available_models()` function.
 
-A couple of models are distributed with the package itself and you can list those like:
+A couple of models are distributed with the package itself and you can list them like:
 
 ```python
 import routee.powertrain as pt
 
-pt.list_available_models(external=False)
+pt.list_available_models()
 ```
 
-In addition, a larger number of models are available for download and can be listed like:
+This returns a list of `ModelId` objects. For more detail (including feature names, errors, and powertrain type), use `query_available_models`:
 
 ```python
-pt.list_available_models(local=False)
+# Query all available Toyota models
+results = pt.query_available_models(make="toyota")
+
+# Query with multiple filters
+results = pt.query_available_models(make="chevrolet", model_name="bolt", year=2017)
 ```
 
-To predict with any of these models you can use the `pt.load_model()` function. Here's an example of loading both a local model and an external model.
+To predict with any of these models you can use the `pt.load_model()` function. Pass the registry path string (or a `ModelId` object) to load a model:
 
 ```python
-camry = pt.load_model('2016_TOYOTA_Camry_4cyl_2WD')
-tesla = pt.load_model('2022_Tesla_Model_Y_RWD')
+camry = pt.load_model('toyota/camry_4cyl_2wd/2016/default/grade_percent_speed_mph/v1')
+bolt = pt.load_model('chevrolet/bolt/2017/default/grade_percent_speed_mph/v1')
 ```

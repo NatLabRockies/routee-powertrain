@@ -19,9 +19,13 @@ It's important to understand the distinction between steady-state and transient 
 - **Transient Temperature Models**: These models account for the period when the vehicle is still adjusting to the ambient temperature.
     For example, when a vehicle starts a trip in cold weather and has been sitting outside, it takes some time for the battery and cabin to warm up.
 """
-tesla = pt.load_model("2022_Tesla_Model_3_RWD")
-tesla_with_temp_steady = pt.load_model("2022_Tesla_Model_3_RWD_0F_110F_steady")
-tesla_with_temp_transient = pt.load_model("2022_Tesla_Model_3_RWD_0F_110F_transient")
+tesla = pt.load_model("tesla/model_3_rwd/2022/default/grade_percent_speed_mph/v1")
+tesla_with_temp_steady = pt.load_model(
+    "tesla/model_3_rwd/2022/temp_steady/grade_percent_speed_mph_ambient_temp_f/v1"
+)
+tesla_with_temp_transient = pt.load_model(
+    "tesla/model_3_rwd/2022/temp_transient/grade_percent_speed_mph_ambient_temp_f/v1"
+)
 
 """
 Load a sample route and prepare it for prediction.
