@@ -54,8 +54,7 @@ Package source lives under `nrel/routee/powertrain/`.
   - `ModelId` — Immutable identifier: `make/model/year/variant/feature_set_id/version` (e.g. `toyota/camry/2016/default/speed_grade/v1`)
   - `ModelInfo` — Lightweight summary returned by `query()` with metadata but no binary data
   - `get_default_registry()` — Factory that selects backend based on `ROUTEE_REGISTRY_BACKEND` env var (`"s3"` or `"local"`, default `"s3"`)
-  - `filter_models()` — Supports exact and fuzzy matching (via `rapidfuzz`) on make, model, year, variant, feature_set_id
-- **`rust/`** (top-level) — PyO3/maturin Rust extension (`powertrain_rust`) providing SmartCore random forest. Build with `cd rust && maturin develop --release`.
+  - `filter_models()` — Supports exact and fuzzy matching (via `rapidfuzz`) on make, model, year, variant, feature_set_id powertrain_type, fuel_type, drivetrain, engine, trim, and accepts additional `custom_filters` **`rust/`** (top-level) — PyO3/maturin Rust extension (`powertrain_rust`) providing SmartCore random forest. Build with `cd rust && maturin develop --release`.
 
 ### Registry
 
