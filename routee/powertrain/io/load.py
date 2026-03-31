@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Callable, List, Optional, Sequence, Union
 
 import pandas as pd
 
@@ -42,6 +42,7 @@ def query_available_models(
     year: Optional[int] = None,
     variant: Optional[str] = None,
     powertrain_type: Optional[str] = None,
+    custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
     registry: Optional[ModelRegistry] = None,
     fuzzy: bool = True,
     fuzzy_threshold: int = 80,
@@ -58,6 +59,9 @@ def query_available_models(
         year: filter by model year
         variant: filter by variant
         powertrain_type: filter by powertrain type (e.g. "ICE", "BEV", "HEV")
+        custom_filters: optional list of callables that accept a ModelInfo
+            and return True to keep the model or False to exclude it.
+            For example: ``[lambda m: m.mass_lbs is not None and m.mass_lbs > 10000]``
         registry: a ModelRegistry instance; defaults to get_default_registry()
         fuzzy: if True, use fuzzy string matching for string fields (default True)
         fuzzy_threshold: minimum score (0–100) for a fuzzy match (default 80)
@@ -75,6 +79,7 @@ def query_available_models(
         year=year,
         variant=variant,
         powertrain_type=powertrain_type,
+        custom_filters=custom_filters,
         fuzzy=fuzzy,
         fuzzy_threshold=fuzzy_threshold,
     )

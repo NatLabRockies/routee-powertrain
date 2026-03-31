@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Callable, List, Optional, Sequence
 
 from rapidfuzz import fuzz
 
@@ -24,6 +24,7 @@ def filter_models(
     variant: Optional[str] = None,
     feature_set_id: Optional[str] = None,
     powertrain_type: Optional[str] = None,
+    custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
     fuzzy: bool = True,
     fuzzy_threshold: int = 80,
 ) -> List[ModelInfo]:
@@ -68,4 +69,7 @@ def filter_models(
                 powertrain_type, m.powertrain_type.lower(), fuzzy, fuzzy_threshold
             )
         ]
+    if custom_filters is not None:
+        for fn in custom_filters:
+            results = [m for m in results if fn(m)]
     return results

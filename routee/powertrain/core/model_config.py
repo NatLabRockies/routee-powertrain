@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 from routee.powertrain.core.features import (
     DataColumn,
@@ -53,6 +53,8 @@ class ModelConfig:
     trip_column: str = "trip_id"
 
     apply_real_world_adjustment: bool = True
+
+    mass_lbs: Optional[float] = None
 
     def __post_init__(self):
         # normalize vehicle id fields to lowercase

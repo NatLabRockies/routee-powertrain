@@ -205,3 +205,164 @@ class TestLocalRegistry(TestCase):
 
         results = self.registry.query(make="toyota", powertrain_type="BEV")
         self.assertEqual(len(results), 0)
+
+    def test_mass_lbs_in_model_info(self):
+        """ModelInfo should include mass_lbs from the config."""
+        results = self.registry.query(make="toyota")
+        info = results[0]
+        # The test model config doesn't set mass_lbs, so it should be None
+        self.assertIsNone(info.mass_lbs)
+
+    def test_custom_filter_single(self):
+        """A single custom filter function should be applied."""
+        # Filter that accepts everything
+        results = self.registry.query(custom_filters=[lambda m: True])
+        self.assertEqual(len(results), 1)
+
+        # Filter that rejects everything
+        results = self.registry.query(custom_filters=[lambda m: False])
+        self.assertEqual(len(results), 0)
+
+    def test_custom_filter_on_feature_names(self):
+        """Custom filter can inspect ModelInfo fields like feature_names."""
+        results = self.registry.query(
+            custom_filters=[lambda m: "speed_mph" in m.feature_names]
+        )
+        self.assertEqual(len(results), 1)
+
+        results = self.registry.query(
+            custom_filters=[lambda m: "nonexistent_feature" in m.feature_names]
+        )
+        self.assertEqual(len(results), 0)
+
+    def test_custom_filter_multiple(self):
+        """Multiple custom filters are all applied (AND logic)."""
+        results = self.registry.query(
+            custom_filters=[
+                lambda m: m.powertrain_type == "ICE",
+                lambda m: "speed_mph" in m.feature_names,
+            ]
+        )
+        self.assertEqual(len(results), 1)
+
+        # Second filter rejects
+        results = self.registry.query(
+            custom_filters=[
+                lambda m: m.powertrain_type == "ICE",
+                lambda m: False,
+            ]
+        )
+        self.assertEqual(len(results), 0)
+
+    def test_custom_filter_combined_with_named_filters(self):
+        """Custom filters work alongside named filters like make."""
+        results = self.registry.query(
+            make="toyota",
+            custom_filters=[lambda m: m.powertrain_type == "ICE"],
+        )
+        self.assertEqual(len(results), 1)
+
+        results = self.registry.query(
+            make="ford",
+            custom_filters=[lambda m: m.powertrain_type == "ICE"],
+        )
+        self.assertEqual(len(results), 0)
+
+    def test_custom_filter_on_mass_lbs(self):
+        """Custom filter can filter by mass_lbs (None-safe)."""
+        # Our test model has no mass_lbs, so filtering for heavy vehicles returns nothing
+        results = self.registry.query(
+            custom_filters=[lambda m: m.mass_lbs is not None and m.mass_lbs > 10000]
+        )
+        self.assertEqual(len(results), 0)
+
+        # Filtering for None mass should return our model
+        results = self.registry.query(custom_filters=[lambda m: m.mass_lbs is None])
+        self.assertEqual(len(results), 1)
+
+
+class TestMassLbsModelConfig(TestCase):
+    def setUp(self):
+        import tempfile
+
+        self.tmp = tempfile.mkdtemp()
+        self.root = Path(self.tmp)
+        self.schema_version = "v2"
+
+        data_path = (
+            this_dir
+            / Path("routee-powertrain-test-data")
+            / Path("sample_train_data.csv")
+        )
+        df = pd.read_csv(data_path)
+        config = pt.ModelConfig(
+            vehicle_description="Heavy Duty Truck",
+            powertrain_type=pt.PowertrainType.HEAVY_DUTY,
+            feature_set=pt.FeatureSet(
+                features=[
+                    pt.DataColumn(name="speed_mph", units="mph"),
+                    pt.DataColumn(name="grade_dec", units="decimal"),
+                ],
+            ),
+            distance=pt.DataColumn(name="miles", units="miles"),
+            target=pt.TargetSet(
+                targets=[
+                    pt.DataColumn(
+                        name="gallons_fastsim",
+                        units="gallons_gasoline",
+                        constraints=pt.Constraints(lower=0.0, upper=100.0),
+                    )
+                ],
+            ),
+            make="Freightliner",
+            model="Cascadia",
+            year=2022,
+            mass_lbs=33000.0,
+        )
+        trainer = SklearnRandomForestTrainer()
+        model = trainer.train(df, config)
+
+        model_id = ModelId(
+            "freightliner", "cascadia", 2022, "default", "grade_dec_speed_mph", 1
+        )
+        rel_path = f"{self.schema_version}/{model_id.to_path()}"
+        full_path = self.root / rel_path
+        save_model_directory(model, full_path)
+
+        self.registry = LocalRegistry(
+            root=self.root, schema_version=self.schema_version
+        )
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmp)
+
+    def test_mass_lbs_populated(self):
+        """ModelInfo should have mass_lbs when set in ModelConfig."""
+        results = self.registry.query()
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].mass_lbs, 33000.0)
+
+    def test_custom_filter_mass_lbs_heavy(self):
+        """Custom filter for mass > 10000 should match heavy vehicle."""
+        results = self.registry.query(
+            custom_filters=[lambda m: m.mass_lbs is not None and m.mass_lbs > 10000]
+        )
+        self.assertEqual(len(results), 1)
+
+    def test_custom_filter_mass_lbs_light(self):
+        """Custom filter for mass < 5000 should not match heavy vehicle."""
+        results = self.registry.query(
+            custom_filters=[lambda m: m.mass_lbs is not None and m.mass_lbs < 5000]
+        )
+        self.assertEqual(len(results), 0)
+
+    def test_mass_lbs_in_model_info_dict(self):
+        """mass_lbs should roundtrip through to_dict/from_dict."""
+        results = self.registry.query()
+        info = results[0]
+        d = info.to_dict()
+        self.assertEqual(d["mass_lbs"], 33000.0)
+        restored = ModelInfo.from_dict(d)
+        self.assertEqual(restored.mass_lbs, 33000.0)

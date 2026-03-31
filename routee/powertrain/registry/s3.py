@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import List, Optional, Union
+from typing import Callable, List, Optional, Sequence, Union
 
 from routee.powertrain.core.metadata import SCHEMA_VERSION_STRING
 from routee.powertrain.core.model import Model
@@ -88,6 +88,7 @@ def _model_info_from_metadata(
         powertrain_type=config["powertrain_type"],
         vehicle_description=config["vehicle_description"],
         path=path,
+        mass_lbs=config.get("mass_lbs"),
     )
 
 
@@ -289,6 +290,7 @@ class S3Registry(ModelRegistry):
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
         powertrain_type: Optional[str] = None,
+        custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
         fuzzy: bool = True,
         fuzzy_threshold: int = 80,
     ) -> List[ModelInfo]:
@@ -302,6 +304,7 @@ class S3Registry(ModelRegistry):
                 variant=variant,
                 feature_set_id=feature_set_id,
                 powertrain_type=powertrain_type,
+                custom_filters=custom_filters,
                 fuzzy=fuzzy,
                 fuzzy_threshold=fuzzy_threshold,
             )
@@ -310,7 +313,8 @@ class S3Registry(ModelRegistry):
             v is not None
             for v in (make, model, year, variant, feature_set_id, powertrain_type)
         )
-        if not has_filters:
+        has_custom_filters = custom_filters is not None and len(custom_filters) > 0
+        if not has_filters and not has_custom_filters:
             return self._scan_models()
 
         # Walk the S3 hierarchy level-by-level, narrowing at each step.
@@ -357,6 +361,8 @@ class S3Registry(ModelRegistry):
                     fuzzy,
                     fuzzy_threshold,
                 ):
+                    continue
+                if custom_filters and not all(fn(info) for fn in custom_filters):
                     continue
                 results.append(info)
             except Exception:

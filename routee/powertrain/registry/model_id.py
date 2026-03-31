@@ -114,6 +114,7 @@ class ModelInfo:
     powertrain_type: str
     vehicle_description: str
     path: Optional[str] = None
+    mass_lbs: Optional[float] = None
 
     def to_dict(self) -> dict:
         return {
@@ -124,12 +125,14 @@ class ModelInfo:
             "powertrain_type": self.powertrain_type,
             "vehicle_description": self.vehicle_description,
             "path": self.path,
+            "mass_lbs": self.mass_lbs,
         }
 
     @classmethod
     def from_dict(cls, d: dict) -> ModelInfo:
         d = d.copy()
         d["model_id"] = ModelId.from_dict(d["model_id"])
+        d.setdefault("mass_lbs", None)
         return cls(**d)
 
     def __repr__(self) -> str:
@@ -145,5 +148,6 @@ class ModelInfo:
             f"  estimator:      {self.estimator_type}",
             f"  features:       {self.feature_names}",
             f"  targets:        {self.target_names}",
+            f"  mass_lbs:       {self.mass_lbs}",
         ]
         return "\n".join(lines)
