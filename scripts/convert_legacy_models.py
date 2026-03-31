@@ -18,8 +18,8 @@ Usage
     python scripts/convert_legacy_models.py path/to/model.json output_dir/ \\
         --make toyota --model camry --year 2016 --trim 4cyl_2wd
 
-See also ``scripts/convert_nrel_library.py`` for batch-converting the bundled
-NREL model library.
+See also ``scripts/convert_nlr_library.py`` for batch-converting the bundled
+NLR model library.
 """
 
 from __future__ import annotations
@@ -48,6 +48,10 @@ class VehicleIdentity:
     model: str
     year: int | str
     variant: str = "default"
+    fuel_type: Optional[str] = None
+    drivetrain: Optional[str] = None
+    engine: Optional[str] = None
+    trim: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -109,6 +113,41 @@ def _find_feature_set_for_id(
         if fs_id == feature_set_id:
             return fs
     return None
+
+
+_DIESEL_NAME_PATTERNS = {"diesel", "tdi", "dci", "328d", "vdi"}
+
+
+def _infer_fuel_type(
+    model_name: str, powertrain_type: str, target_names: List[str]
+) -> Optional[str]:
+    """Infer fuel type from powertrain type, model name, and target metrics."""
+    pt = powertrain_type.upper()
+    name = model_name.lower()
+    targets = " ".join(t.lower() for t in target_names)
+
+    if pt == "BEV":
+        return "ELECTRICITY"
+    if pt == "PHEV_EV_MODE":
+        return "ELECTRICITY"
+    if pt == "PHEV_HEV_MODE":
+        return "GASOLINE"
+
+    # Hydrogen fuel cell
+    if "kg_h2" in targets or "fuel_cell" in name or name == "mirai":
+        return "HYDROGEN"
+
+    # Diesel detection from target metric or model name keywords
+    if "gde" in targets:
+        return "DIESEL"
+    for pattern in _DIESEL_NAME_PATTERNS:
+        if pattern in name:
+            return "DIESEL"
+
+    if pt == "HEAVY_DUTY":
+        return "DIESEL"
+
+    return "GASOLINE"
 
 
 def convert_legacy_json(
@@ -200,12 +239,16 @@ def convert_legacy_json(
             }
 
         # Build new config
+        powertrain_type = old_config.get("powertrain_type", "UNDEFINED")
+        target_dict = old_config["target"]
+        target_names = [t["name"] for t in target_dict.get("targets", [])]
+
         new_config = {
             "vehicle_description": old_config.get("vehicle_description", ""),
-            "powertrain_type": old_config.get("powertrain_type", "UNDEFINED"),
+            "powertrain_type": powertrain_type,
             "feature_set": feature_set_dict,
             "distance": old_config["distance"],
-            "target": old_config["target"],
+            "target": target_dict,
             "make": identity.make,
             "model": identity.model,
             "year": identity.year,
@@ -217,6 +260,19 @@ def convert_legacy_json(
                 "apply_real_world_adjustment", True
             ),
         }
+
+        # Add vehicle attribute fields
+        fuel_type = identity.fuel_type
+        if fuel_type is None:
+            fuel_type = _infer_fuel_type(identity.model, powertrain_type, target_names)
+        if fuel_type is not None:
+            new_config["fuel_type"] = fuel_type
+        if identity.drivetrain is not None:
+            new_config["drivetrain"] = identity.drivetrain
+        if identity.engine is not None:
+            new_config["engine"] = identity.engine
+        if identity.trim is not None:
+            new_config["trim"] = identity.trim
 
         # Build errors for this estimator
         estimator_errors_dict = old_errors.get(fs_id)
@@ -301,6 +357,23 @@ def main():
         "--variant", default="default", help="Model variant (e.g. charge_depleting)."
     )
     parser.add_argument("--version", type=int, default=1, help="Model version number.")
+    parser.add_argument(
+        "--fuel-type",
+        default=None,
+        help="Fuel type (e.g. GASOLINE, DIESEL, ELECTRICITY, HYDROGEN). "
+        "Auto-inferred from powertrain type and model name if not provided.",
+    )
+    parser.add_argument(
+        "--drivetrain",
+        default=None,
+        help="Drivetrain (e.g. FWD, RWD, AWD, FOURWD).",
+    )
+    parser.add_argument(
+        "--engine", default=None, help="Engine spec (e.g. 4cyl, 2.0tdi, 300kw)."
+    )
+    parser.add_argument(
+        "--trim", default=None, help="Trim level (e.g. sport, le, active)."
+    )
 
     args = parser.parse_args()
 
@@ -309,6 +382,10 @@ def main():
         model=args.model,
         year=args.year,
         variant=args.variant,
+        fuel_type=args.fuel_type,
+        drivetrain=args.drivetrain,
+        engine=args.engine,
+        trim=args.trim,
     )
     created = convert_legacy_json(
         json_path=args.json_path,
