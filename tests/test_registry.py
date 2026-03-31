@@ -171,3 +171,37 @@ class TestLocalRegistry(TestCase):
         # With a lower threshold, the partial match is accepted
         results_relaxed = self.registry.query(make="toyta", fuzzy_threshold=80)
         self.assertEqual(len(results_relaxed), 1)
+
+    def test_query_by_powertrain_type_exact(self):
+        """Exact powertrain type match should work."""
+        results = self.registry.query(powertrain_type="ICE")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].powertrain_type, "ICE")
+
+    def test_query_by_powertrain_type_case_insensitive(self):
+        """Powertrain type filtering should be case insensitive."""
+        results = self.registry.query(powertrain_type="ice")
+        self.assertEqual(len(results), 1)
+
+    def test_query_by_powertrain_type_no_match(self):
+        """Non-matching powertrain type should return empty results."""
+        results = self.registry.query(powertrain_type="BEV")
+        self.assertEqual(len(results), 0)
+
+    def test_query_by_powertrain_type_fuzzy(self):
+        """Fuzzy matching should work for powertrain type."""
+        results = self.registry.query(powertrain_type="IC")
+        self.assertEqual(len(results), 1)
+
+    def test_query_by_powertrain_type_fuzzy_disabled(self):
+        """With fuzzy=False, partial powertrain type should not match."""
+        results = self.registry.query(powertrain_type="IC", fuzzy=False)
+        self.assertEqual(len(results), 0)
+
+    def test_query_by_powertrain_type_combined_with_make(self):
+        """Powertrain type filter should combine with other filters."""
+        results = self.registry.query(make="toyota", powertrain_type="ICE")
+        self.assertEqual(len(results), 1)
+
+        results = self.registry.query(make="toyota", powertrain_type="BEV")
+        self.assertEqual(len(results), 0)

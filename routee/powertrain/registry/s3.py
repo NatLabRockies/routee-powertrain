@@ -288,6 +288,7 @@ class S3Registry(ModelRegistry):
         year: Optional[int] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
+        powertrain_type: Optional[str] = None,
         fuzzy: bool = True,
         fuzzy_threshold: int = 80,
     ) -> List[ModelInfo]:
@@ -300,12 +301,14 @@ class S3Registry(ModelRegistry):
                 year=year,
                 variant=variant,
                 feature_set_id=feature_set_id,
+                powertrain_type=powertrain_type,
                 fuzzy=fuzzy,
                 fuzzy_threshold=fuzzy_threshold,
             )
 
         has_filters = any(
-            v is not None for v in (make, model, year, variant, feature_set_id)
+            v is not None
+            for v in (make, model, year, variant, feature_set_id, powertrain_type)
         )
         if not has_filters:
             return self._scan_models()
@@ -348,6 +351,13 @@ class S3Registry(ModelRegistry):
                 metadata_dict = json.loads(data)
                 dir_key = prefix.rstrip("/")
                 info = _model_info_from_metadata(metadata_dict, model_id, dir_key)
+                if powertrain_type is not None and not _matches(
+                    powertrain_type,
+                    info.powertrain_type.lower(),
+                    fuzzy,
+                    fuzzy_threshold,
+                ):
+                    continue
                 results.append(info)
             except Exception:
                 continue

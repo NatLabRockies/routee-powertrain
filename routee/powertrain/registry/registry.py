@@ -31,6 +31,7 @@ class ModelRegistry(ABC):
         year: Optional[int] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
+        powertrain_type: Optional[str] = None,
         fuzzy: bool = True,
         fuzzy_threshold: int = 80,
     ) -> List[ModelInfo]:
@@ -46,6 +47,7 @@ class ModelRegistry(ABC):
             year: filter by model year
             variant: filter by variant
             feature_set_id: filter by feature set id
+            powertrain_type: filter by powertrain type (e.g. "ICE", "BEV", "HEV")
             fuzzy: if True, use fuzzy string matching for string
                 fields (default True)
             fuzzy_threshold: minimum score (0–100) for a fuzzy match

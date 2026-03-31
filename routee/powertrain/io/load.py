@@ -41,6 +41,7 @@ def query_available_models(
     model: Optional[str] = None,
     year: Optional[int] = None,
     variant: Optional[str] = None,
+    powertrain_type: Optional[str] = None,
     registry: Optional[ModelRegistry] = None,
     fuzzy: bool = True,
     fuzzy_threshold: int = 80,
@@ -56,6 +57,7 @@ def query_available_models(
         model: filter by model name
         year: filter by model year
         variant: filter by variant
+        powertrain_type: filter by powertrain type (e.g. "ICE", "BEV", "HEV")
         registry: a ModelRegistry instance; defaults to get_default_registry()
         fuzzy: if True, use fuzzy string matching for string fields (default True)
         fuzzy_threshold: minimum score (0–100) for a fuzzy match (default 80)
@@ -72,6 +74,7 @@ def query_available_models(
         model=model,
         year=year,
         variant=variant,
+        powertrain_type=powertrain_type,
         fuzzy=fuzzy,
         fuzzy_threshold=fuzzy_threshold,
     )

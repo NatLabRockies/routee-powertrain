@@ -146,6 +146,7 @@ class LocalRegistry(ModelRegistry):
         year: Optional[int] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
+        powertrain_type: Optional[str] = None,
         fuzzy: bool = True,
         fuzzy_threshold: int = 80,
     ) -> List[ModelInfo]:
@@ -157,6 +158,7 @@ class LocalRegistry(ModelRegistry):
             year=year,
             variant=variant,
             feature_set_id=feature_set_id,
+            powertrain_type=powertrain_type,
             fuzzy=fuzzy,
             fuzzy_threshold=fuzzy_threshold,
         )

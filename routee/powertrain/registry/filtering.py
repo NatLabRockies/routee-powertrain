@@ -23,6 +23,7 @@ def filter_models(
     year: Optional[int] = None,
     variant: Optional[str] = None,
     feature_set_id: Optional[str] = None,
+    powertrain_type: Optional[str] = None,
     fuzzy: bool = True,
     fuzzy_threshold: int = 80,
 ) -> List[ModelInfo]:
@@ -57,6 +58,14 @@ def filter_models(
             for m in results
             if _matches(
                 feature_set_id, m.model_id.feature_set_id, fuzzy, fuzzy_threshold
+            )
+        ]
+    if powertrain_type is not None:
+        results = [
+            m
+            for m in results
+            if _matches(
+                powertrain_type, m.powertrain_type.lower(), fuzzy, fuzzy_threshold
             )
         ]
     return results
