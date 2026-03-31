@@ -51,6 +51,7 @@ dev = [
   "types-redis",
   "types-requests",
   "pandas-stubs",
+  "pre-commit",
 ]
 
 [project.urls]
@@ -163,6 +164,7 @@ test = "pytest tests/"
 docs = "jupyter-book build docs"
 check = { depends-on = ["fmt_fix", "dprint_fix", "lint_fix", "typing", "test"] }
 ci = { depends-on = ["fmt_check", "dprint_check", "lint_check", "typing", "test"] }
+precommit-install = "pre-commit install"
 
 [tool.pixi.pypi-dependencies]
 routee-powertrain = { path = ".", editable = true }

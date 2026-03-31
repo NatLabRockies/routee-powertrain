@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pixi-check
+        name: pixi check (fmt, lint, typing, test)
+        entry: pixi run ci
+        language: system
+        pass_filenames: false
+        always_run: true

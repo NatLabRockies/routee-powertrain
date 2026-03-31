@@ -22,8 +22,21 @@ This simple guide will walk you through the process of contributing to RouteE Po
 
 ## Installing the development environment
 
+### Using Pixi (recommended)
+
+1. Install [Pixi](https://pixi.sh) if you haven't already.
+1. Run `pixi install` from the project root. This will create an environment with Python, all dev dependencies, and tooling (ruff, dprint, mypy, etc.).
+1. Set up the pre-commit hooks by running `pixi run precommit-install`. This ensures formatting, linting, type checking, and tests run automatically before each commit.
+1. You can now run tasks with `pixi run <task>`:
+   - `pixi run check` — auto-fix formatting + lint, then run type checking and tests
+   - `pixi run ci` — same checks without auto-fix (mirrors CI)
+   - `pixi run test` — run tests only
+
+### Using pip
+
 1. Create and activate a new virtual environment with the tool of your choice (e.g. venv, conda, pipenv, etc.).
-1. Install the package and dependencies by running pip install -e ".[dev]". This will install the package in editable mode, so you can make changes to the code and see them reflected in your environment.
+1. Install the package and dependencies by running `pip install -e ".[dev]"`. This will install the package in editable mode, so you can make changes to the code and see them reflected in your environment.
+1. Set up the pre-commit hooks by running `pre-commit install`.
 
 ## Opening a Pull Request
 
