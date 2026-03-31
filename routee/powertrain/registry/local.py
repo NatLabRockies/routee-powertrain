@@ -72,6 +72,10 @@ def _model_info_from_metadata(
         vehicle_description=config["vehicle_description"],
         path=path,
         mass_lbs=config.get("mass_lbs"),
+        fuel_type=config.get("fuel_type"),
+        drivetrain=config.get("drivetrain"),
+        engine=config.get("engine"),
+        trim=config.get("trim"),
     )
 
 
@@ -148,6 +152,10 @@ class LocalRegistry(ModelRegistry):
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
         powertrain_type: Optional[str] = None,
+        fuel_type: Optional[str] = None,
+        drivetrain: Optional[str] = None,
+        engine: Optional[str] = None,
+        trim: Optional[str] = None,
         custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
         fuzzy: bool = True,
         fuzzy_threshold: int = 80,
@@ -161,6 +169,10 @@ class LocalRegistry(ModelRegistry):
             variant=variant,
             feature_set_id=feature_set_id,
             powertrain_type=powertrain_type,
+            fuel_type=fuel_type,
+            drivetrain=drivetrain,
+            engine=engine,
+            trim=trim,
             custom_filters=custom_filters,
             fuzzy=fuzzy,
             fuzzy_threshold=fuzzy_threshold,

@@ -42,6 +42,10 @@ def query_available_models(
     year: Optional[int] = None,
     variant: Optional[str] = None,
     powertrain_type: Optional[str] = None,
+    fuel_type: Optional[str] = None,
+    drivetrain: Optional[str] = None,
+    engine: Optional[str] = None,
+    trim: Optional[str] = None,
     custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
     registry: Optional[ModelRegistry] = None,
     fuzzy: bool = True,
@@ -59,6 +63,10 @@ def query_available_models(
         year: filter by model year
         variant: filter by variant
         powertrain_type: filter by powertrain type (e.g. "ICE", "BEV", "HEV")
+        fuel_type: filter by fuel type (e.g. "GASOLINE", "DIESEL", "ELECTRICITY")
+        drivetrain: filter by drivetrain (e.g. "FWD", "RWD", "AWD")
+        engine: filter by engine specification (e.g. "4cyl", "2.0tdi")
+        trim: filter by trim level (e.g. "sport", "active")
         custom_filters: optional list of callables that accept a ModelInfo
             and return True to keep the model or False to exclude it.
             For example: ``[lambda m: m.mass_lbs is not None and m.mass_lbs > 10000]``
@@ -79,6 +87,10 @@ def query_available_models(
         year=year,
         variant=variant,
         powertrain_type=powertrain_type,
+        fuel_type=fuel_type,
+        drivetrain=drivetrain,
+        engine=engine,
+        trim=trim,
         custom_filters=custom_filters,
         fuzzy=fuzzy,
         fuzzy_threshold=fuzzy_threshold,

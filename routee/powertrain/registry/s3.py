@@ -89,6 +89,10 @@ def _model_info_from_metadata(
         vehicle_description=config["vehicle_description"],
         path=path,
         mass_lbs=config.get("mass_lbs"),
+        fuel_type=config.get("fuel_type"),
+        drivetrain=config.get("drivetrain"),
+        engine=config.get("engine"),
+        trim=config.get("trim"),
     )
 
 
@@ -290,6 +294,10 @@ class S3Registry(ModelRegistry):
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
         powertrain_type: Optional[str] = None,
+        fuel_type: Optional[str] = None,
+        drivetrain: Optional[str] = None,
+        engine: Optional[str] = None,
+        trim: Optional[str] = None,
         custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
         fuzzy: bool = True,
         fuzzy_threshold: int = 80,
@@ -304,6 +312,10 @@ class S3Registry(ModelRegistry):
                 variant=variant,
                 feature_set_id=feature_set_id,
                 powertrain_type=powertrain_type,
+                fuel_type=fuel_type,
+                drivetrain=drivetrain,
+                engine=engine,
+                trim=trim,
                 custom_filters=custom_filters,
                 fuzzy=fuzzy,
                 fuzzy_threshold=fuzzy_threshold,
@@ -311,7 +323,18 @@ class S3Registry(ModelRegistry):
 
         has_filters = any(
             v is not None
-            for v in (make, model, year, variant, feature_set_id, powertrain_type)
+            for v in (
+                make,
+                model,
+                year,
+                variant,
+                feature_set_id,
+                powertrain_type,
+                fuel_type,
+                drivetrain,
+                engine,
+                trim,
+            )
         )
         has_custom_filters = custom_filters is not None and len(custom_filters) > 0
         if not has_filters and not has_custom_filters:
@@ -355,11 +378,40 @@ class S3Registry(ModelRegistry):
                 metadata_dict = json.loads(data)
                 dir_key = prefix.rstrip("/")
                 info = _model_info_from_metadata(metadata_dict, model_id, dir_key)
+                # Apply metadata-level filters that can't be narrowed
+                # via the S3 directory hierarchy.
                 if powertrain_type is not None and not _matches(
                     powertrain_type,
                     info.powertrain_type.lower(),
                     fuzzy,
                     fuzzy_threshold,
+                ):
+                    continue
+                if fuel_type is not None and (
+                    info.fuel_type is None
+                    or not _matches(
+                        fuel_type, info.fuel_type.lower(), fuzzy, fuzzy_threshold
+                    )
+                ):
+                    continue
+                if drivetrain is not None and (
+                    info.drivetrain is None
+                    or not _matches(
+                        drivetrain,
+                        info.drivetrain.lower(),
+                        fuzzy,
+                        fuzzy_threshold,
+                    )
+                ):
+                    continue
+                if engine is not None and (
+                    info.engine is None
+                    or not _matches(engine, info.engine.lower(), fuzzy, fuzzy_threshold)
+                ):
+                    continue
+                if trim is not None and (
+                    info.trim is None
+                    or not _matches(trim, info.trim.lower(), fuzzy, fuzzy_threshold)
                 ):
                     continue
                 if custom_filters and not all(fn(info) for fn in custom_filters):

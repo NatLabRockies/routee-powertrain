@@ -32,6 +32,10 @@ class ModelRegistry(ABC):
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
         powertrain_type: Optional[str] = None,
+        fuel_type: Optional[str] = None,
+        drivetrain: Optional[str] = None,
+        engine: Optional[str] = None,
+        trim: Optional[str] = None,
         custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
         fuzzy: bool = True,
         fuzzy_threshold: int = 80,
@@ -49,6 +53,10 @@ class ModelRegistry(ABC):
             variant: filter by variant
             feature_set_id: filter by feature set id
             powertrain_type: filter by powertrain type (e.g. "ICE", "BEV", "HEV")
+            fuel_type: filter by fuel type (e.g. "GASOLINE", "DIESEL", "ELECTRICITY")
+            drivetrain: filter by drivetrain (e.g. "FWD", "RWD", "AWD")
+            engine: filter by engine specification (e.g. "4cyl", "2.0tdi")
+            trim: filter by trim level (e.g. "sport", "active")
             custom_filters: optional list of callables that accept a ModelInfo
                 and return True to keep the model or False to exclude it
             fuzzy: if True, use fuzzy string matching for string

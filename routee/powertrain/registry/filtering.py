@@ -24,6 +24,10 @@ def filter_models(
     variant: Optional[str] = None,
     feature_set_id: Optional[str] = None,
     powertrain_type: Optional[str] = None,
+    fuel_type: Optional[str] = None,
+    drivetrain: Optional[str] = None,
+    engine: Optional[str] = None,
+    trim: Optional[str] = None,
     custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
     fuzzy: bool = True,
     fuzzy_threshold: int = 80,
@@ -68,6 +72,34 @@ def filter_models(
             if _matches(
                 powertrain_type, m.powertrain_type.lower(), fuzzy, fuzzy_threshold
             )
+        ]
+    if fuel_type is not None:
+        results = [
+            m
+            for m in results
+            if m.fuel_type is not None
+            and _matches(fuel_type, m.fuel_type.lower(), fuzzy, fuzzy_threshold)
+        ]
+    if drivetrain is not None:
+        results = [
+            m
+            for m in results
+            if m.drivetrain is not None
+            and _matches(drivetrain, m.drivetrain.lower(), fuzzy, fuzzy_threshold)
+        ]
+    if engine is not None:
+        results = [
+            m
+            for m in results
+            if m.engine is not None
+            and _matches(engine, m.engine.lower(), fuzzy, fuzzy_threshold)
+        ]
+    if trim is not None:
+        results = [
+            m
+            for m in results
+            if m.trim is not None
+            and _matches(trim, m.trim.lower(), fuzzy, fuzzy_threshold)
         ]
     if custom_filters is not None:
         for fn in custom_filters:

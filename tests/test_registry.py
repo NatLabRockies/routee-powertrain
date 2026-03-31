@@ -5,6 +5,8 @@ from unittest import TestCase
 import pandas as pd
 
 import routee.powertrain as pt
+from routee.powertrain.core.drivetrain import Drivetrain
+from routee.powertrain.core.fuel_type import FuelType
 from routee.powertrain.io.archive import save_model_directory
 from routee.powertrain.registry.local import LocalRegistry
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
@@ -366,3 +368,278 @@ class TestMassLbsModelConfig(TestCase):
         self.assertEqual(d["mass_lbs"], 33000.0)
         restored = ModelInfo.from_dict(d)
         self.assertEqual(restored.mass_lbs, 33000.0)
+
+
+class TestFuelTypeEnum(TestCase):
+    def test_from_string_roundtrip(self):
+        for member in FuelType:
+            self.assertEqual(FuelType.from_string(member.name), member)
+
+    def test_from_string_case_insensitive(self):
+        self.assertEqual(FuelType.from_string("diesel"), FuelType.DIESEL)
+        self.assertEqual(FuelType.from_string("Gasoline"), FuelType.GASOLINE)
+
+    def test_from_string_empty_returns_undefined(self):
+        self.assertEqual(FuelType.from_string(""), FuelType.UNDEFINED)
+        self.assertEqual(FuelType.from_string(None), FuelType.UNDEFINED)
+
+    def test_from_string_invalid_raises(self):
+        with self.assertRaises(TypeError):
+            FuelType.from_string("propane")
+
+
+class TestDrivetrainEnum(TestCase):
+    def test_from_string_roundtrip(self):
+        for member in Drivetrain:
+            self.assertEqual(Drivetrain.from_string(member.name), member)
+
+    def test_from_string_case_insensitive(self):
+        self.assertEqual(Drivetrain.from_string("fwd"), Drivetrain.FWD)
+        self.assertEqual(Drivetrain.from_string("Awd"), Drivetrain.AWD)
+
+    def test_from_string_empty_returns_undefined(self):
+        self.assertEqual(Drivetrain.from_string(""), Drivetrain.UNDEFINED)
+        self.assertEqual(Drivetrain.from_string(None), Drivetrain.UNDEFINED)
+
+    def test_from_string_invalid_raises(self):
+        with self.assertRaises(TypeError):
+            Drivetrain.from_string("6wd")
+
+
+class TestVehicleAttributeFields(TestCase):
+    def setUp(self):
+        import tempfile
+
+        self.tmp = tempfile.mkdtemp()
+        self.root = Path(self.tmp)
+        self.schema_version = "v2"
+
+        data_path = (
+            this_dir
+            / Path("routee-powertrain-test-data")
+            / Path("sample_train_data.csv")
+        )
+        df = pd.read_csv(data_path)
+        config = pt.ModelConfig(
+            vehicle_description="2020 Chevrolet Colorado 2WD Diesel",
+            powertrain_type=pt.PowertrainType.ICE,
+            feature_set=pt.FeatureSet(
+                features=[
+                    pt.DataColumn(name="speed_mph", units="mph"),
+                    pt.DataColumn(name="grade_dec", units="decimal"),
+                ],
+            ),
+            distance=pt.DataColumn(name="miles", units="miles"),
+            target=pt.TargetSet(
+                targets=[
+                    pt.DataColumn(
+                        name="gallons_fastsim",
+                        units="gallons_gasoline",
+                        constraints=pt.Constraints(lower=0.0, upper=100.0),
+                    )
+                ],
+            ),
+            make="Chevrolet",
+            model="colorado_2wd_diesel",
+            year=2020,
+            fuel_type=FuelType.DIESEL,
+            drivetrain=Drivetrain.FOURWD,
+            engine="4cyl",
+            trim="lt",
+        )
+        trainer = SklearnRandomForestTrainer()
+        model = trainer.train(df, config)
+
+        model_id = ModelId(
+            "chevrolet",
+            "colorado_2wd_diesel",
+            2020,
+            "default",
+            "grade_dec_speed_mph",
+            1,
+        )
+        rel_path = f"{self.schema_version}/{model_id.to_path()}"
+        full_path = self.root / rel_path
+        save_model_directory(model, full_path)
+
+        self.registry = LocalRegistry(
+            root=self.root, schema_version=self.schema_version
+        )
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmp)
+
+    def test_fuel_type_in_model_info(self):
+        results = self.registry.query()
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].fuel_type, "DIESEL")
+
+    def test_drivetrain_in_model_info(self):
+        results = self.registry.query()
+        self.assertEqual(results[0].drivetrain, "FOURWD")
+
+    def test_engine_in_model_info(self):
+        results = self.registry.query()
+        self.assertEqual(results[0].engine, "4cyl")
+
+    def test_trim_in_model_info(self):
+        results = self.registry.query()
+        self.assertEqual(results[0].trim, "lt")
+
+    def test_query_by_fuel_type(self):
+        results = self.registry.query(fuel_type="DIESEL")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].fuel_type, "DIESEL")
+
+    def test_query_by_fuel_type_no_match(self):
+        results = self.registry.query(fuel_type="GASOLINE")
+        self.assertEqual(len(results), 0)
+
+    def test_query_by_drivetrain(self):
+        results = self.registry.query(drivetrain="FOURWD")
+        self.assertEqual(len(results), 1)
+
+    def test_query_by_drivetrain_no_match(self):
+        results = self.registry.query(drivetrain="FWD")
+        self.assertEqual(len(results), 0)
+
+    def test_query_by_engine(self):
+        results = self.registry.query(engine="4cyl")
+        self.assertEqual(len(results), 1)
+
+    def test_query_by_trim(self):
+        results = self.registry.query(trim="lt")
+        self.assertEqual(len(results), 1)
+
+    def test_query_combined_filters(self):
+        results = self.registry.query(fuel_type="DIESEL", drivetrain="FOURWD")
+        self.assertEqual(len(results), 1)
+
+        results = self.registry.query(fuel_type="DIESEL", drivetrain="FWD")
+        self.assertEqual(len(results), 0)
+
+    def test_model_info_roundtrip_dict(self):
+        results = self.registry.query()
+        info = results[0]
+        d = info.to_dict()
+        self.assertEqual(d["fuel_type"], "DIESEL")
+        self.assertEqual(d["drivetrain"], "FOURWD")
+        self.assertEqual(d["engine"], "4cyl")
+        self.assertEqual(d["trim"], "lt")
+        restored = ModelInfo.from_dict(d)
+        self.assertEqual(restored.fuel_type, "DIESEL")
+        self.assertEqual(restored.drivetrain, "FOURWD")
+        self.assertEqual(restored.engine, "4cyl")
+        self.assertEqual(restored.trim, "lt")
+
+    def test_model_config_string_coercion(self):
+        """ModelConfig should coerce string fuel_type/drivetrain to enums."""
+        config = pt.ModelConfig(
+            vehicle_description="test",
+            powertrain_type=pt.PowertrainType.ICE,
+            feature_set=pt.FeatureSet(
+                features=[pt.DataColumn(name="speed_mph", units="mph")]
+            ),
+            distance=pt.DataColumn(name="miles", units="miles"),
+            target=pt.TargetSet(
+                targets=[pt.DataColumn(name="gallons", units="gallons")]
+            ),
+            make="test",
+            model="test",
+            year=2020,
+            fuel_type="DIESEL",
+            drivetrain="AWD",
+        )
+        self.assertEqual(config.fuel_type, FuelType.DIESEL)
+        self.assertEqual(config.drivetrain, Drivetrain.AWD)
+
+    def test_model_config_backwards_compat(self):
+        """ModelConfig.from_dict should handle missing new fields gracefully."""
+        d = {
+            "vehicle_description": "test",
+            "powertrain_type": "ICE",
+            "feature_set": {
+                "features": [
+                    {
+                        "name": "speed_mph",
+                        "units": "mph",
+                        "dtype": "float32",
+                        "constraints": {"lower": None, "upper": None},
+                    }
+                ]
+            },
+            "distance": {
+                "name": "miles",
+                "units": "miles",
+                "dtype": "float32",
+                "constraints": {"lower": None, "upper": None},
+            },
+            "target": {
+                "targets": [
+                    {
+                        "name": "gallons",
+                        "units": "gallons",
+                        "dtype": "float32",
+                        "constraints": {"lower": None, "upper": None},
+                    }
+                ]
+            },
+            "make": "test",
+            "model": "test",
+            "year": 2020,
+        }
+        config = pt.ModelConfig.from_dict(d)
+        self.assertIsNone(config.fuel_type)
+        self.assertIsNone(config.drivetrain)
+        self.assertIsNone(config.engine)
+        self.assertIsNone(config.trim)
+
+    def test_model_info_from_dict_backwards_compat(self):
+        """ModelInfo.from_dict should handle missing new fields gracefully."""
+        d = {
+            "model_id": {
+                "make": "test",
+                "model": "test",
+                "year": 2020,
+                "variant": "default",
+                "feature_set_id": "speed_mph",
+                "version": 1,
+            },
+            "estimator_type": "ONNXEstimator",
+            "feature_names": ["speed_mph"],
+            "target_names": ["gallons"],
+            "powertrain_type": "ICE",
+            "vehicle_description": "test",
+        }
+        info = ModelInfo.from_dict(d)
+        self.assertIsNone(info.fuel_type)
+        self.assertIsNone(info.drivetrain)
+        self.assertIsNone(info.engine)
+        self.assertIsNone(info.trim)
+
+    def test_none_fields_excluded_from_filter(self):
+        """Models with None fuel_type should not match a fuel_type filter."""
+        from routee.powertrain.registry.filtering import filter_models
+
+        info_with = ModelInfo(
+            model_id=ModelId("a", "b", 2020, "default", "speed", 1),
+            estimator_type="ONNXEstimator",
+            feature_names=["speed"],
+            target_names=["gal"],
+            powertrain_type="ICE",
+            vehicle_description="test",
+            fuel_type="DIESEL",
+        )
+        info_without = ModelInfo(
+            model_id=ModelId("a", "c", 2020, "default", "speed", 1),
+            estimator_type="ONNXEstimator",
+            feature_names=["speed"],
+            target_names=["gal"],
+            powertrain_type="ICE",
+            vehicle_description="test",
+        )
+        results = filter_models([info_with, info_without], fuel_type="DIESEL")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].fuel_type, "DIESEL")

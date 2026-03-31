@@ -115,6 +115,10 @@ class ModelInfo:
     vehicle_description: str
     path: Optional[str] = None
     mass_lbs: Optional[float] = None
+    fuel_type: Optional[str] = None
+    drivetrain: Optional[str] = None
+    engine: Optional[str] = None
+    trim: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -126,6 +130,10 @@ class ModelInfo:
             "vehicle_description": self.vehicle_description,
             "path": self.path,
             "mass_lbs": self.mass_lbs,
+            "fuel_type": self.fuel_type,
+            "drivetrain": self.drivetrain,
+            "engine": self.engine,
+            "trim": self.trim,
         }
 
     @classmethod
@@ -133,6 +141,10 @@ class ModelInfo:
         d = d.copy()
         d["model_id"] = ModelId.from_dict(d["model_id"])
         d.setdefault("mass_lbs", None)
+        d.setdefault("fuel_type", None)
+        d.setdefault("drivetrain", None)
+        d.setdefault("engine", None)
+        d.setdefault("trim", None)
         return cls(**d)
 
     def __repr__(self) -> str:
@@ -149,5 +161,9 @@ class ModelInfo:
             f"  features:       {self.feature_names}",
             f"  targets:        {self.target_names}",
             f"  mass_lbs:       {self.mass_lbs}",
+            f"  fuel_type:      {self.fuel_type}",
+            f"  drivetrain:     {self.drivetrain}",
+            f"  engine:         {self.engine}",
+            f"  trim:           {self.trim}",
         ]
         return "\n".join(lines)
