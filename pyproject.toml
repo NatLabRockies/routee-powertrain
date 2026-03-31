@@ -25,7 +25,7 @@ dependencies = [
     "rapidfuzz>=3.0",
     "boto3>=1.42,<2.0",
 ]
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10,<3.14"
 
 [project.optional-dependencies]
 scikit = ["scikit-learn==1.6.1", "skl2onnx>=1.20,<1.21"]
@@ -138,12 +138,17 @@ python = "3.10.*"
 python = "3.11.*"
 [tool.pixi.feature.py312.dependencies]
 python = "3.12.*"
+[tool.pixi.feature.py313.dependencies]
+python = "3.13.*"
 
 [tool.pixi.environments]
-default = { solve-group = "default" }
-py310 = { features = ["py310"] }
-py311 = { features = ["py311"] }
-py312 = { features = ["py312"] }
+default = { features = [
+    "py313",
+    "dev",
+    "scikit",
+    "plot",
+    "ngboost",
+], solve-group = "default" }
 dev-py310 = { features = [
     "py310",
     "dev",
@@ -165,6 +170,13 @@ dev-py312 = { features = [
     "plot",
     "ngboost",
 ], solve-group = "py312" }
+dev-py313 = { features = [
+    "py313",
+    "dev",
+    "scikit",
+    "plot",
+    "ngboost",
+], solve-group = "py313" }
 
 [tool.pixi.feature.dev.tasks]
 fmt_fix = "ruff format"
