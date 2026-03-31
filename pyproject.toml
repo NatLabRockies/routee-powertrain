@@ -10,20 +10,20 @@ readme = "README.md"
 authors = [{ name = "National Laboratory of the Rockies" }]
 license = { text = "BSD 3-Clause License Copyright (c) 2023, Alliance for Energy Innovation, LLC" }
 classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Science/Research",
-    "License :: Other/Proprietary License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Topic :: Scientific/Engineering",
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: Other/Proprietary License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "pandas>=2.2,<3.0",
-    "numpy>=2.0,<3.0",
-    "onnx>=1.20,<1.21",
-    "onnxruntime>=1.23.2,<1.24",
-    "rapidfuzz>=3.0",
-    "boto3>=1.42,<2.0",
+  "pandas>=2.2,<3.0",
+  "numpy>=2.0,<3.0",
+  "onnx>=1.20,<1.21",
+  "onnxruntime>=1.23.2,<1.24",
+  "rapidfuzz>=3.0",
+  "boto3>=1.42,<2.0",
 ]
 requires-python = ">=3.10,<3.14"
 
@@ -32,25 +32,25 @@ scikit = ["scikit-learn==1.6.1", "skl2onnx>=1.20,<1.21"]
 ngboost = ["ngboost==0.5.2", "scikit-learn==1.6.1"]
 plot = ["matplotlib"]
 dev = [
-    "routee.powertrain[scikit]",
-    "routee.powertrain[plot]",
-    "routee.powertrain[ngboost]",
-    "tqdm",
-    "pytest",
-    "mypy>=1.19.1,<1.20",
-    "maturin",
-    "ruff",
-    "hatch",
-    "shapely",
-    "boxsdk",
-    "jupyter-book<2.0",
-    "sphinx-book-theme",
-    "types-PyYAML",
-    "types-protobuf",
-    "types-python-dateutil",
-    "types-redis",
-    "types-requests",
-    "pandas-stubs",
+  "routee.powertrain[scikit]",
+  "routee.powertrain[plot]",
+  "routee.powertrain[ngboost]",
+  "tqdm",
+  "pytest",
+  "mypy>=1.19.1,<1.20",
+  "maturin",
+  "ruff",
+  "hatch",
+  "shapely",
+  "boxsdk",
+  "jupyter-book<2.0",
+  "sphinx-book-theme",
+  "types-PyYAML",
+  "types-protobuf",
+  "types-python-dateutil",
+  "types-redis",
+  "types-requests",
+  "pandas-stubs",
 ]
 
 [project.urls]
@@ -65,11 +65,11 @@ exclude = ["scripts/", "tests/", "docs/"]
 [tool.hatch.build.targets.wheel]
 packages = ["routee"]
 artifacts = [
-    "routee/powertrain/resources/bundled_registry/**/*.json",
-    "routee/powertrain/resources/bundled_registry/**/*.onnx",
-    "routee/powertrain/resources/bundled_registry/**/*.bin",
-    "routee/powertrain/resources/bundled_registry/**/*.joblib",
-    "routee/powertrain/resources/sample_routes/**/*.csv",
+  "routee/powertrain/resources/bundled_registry/**/*.json",
+  "routee/powertrain/resources/bundled_registry/**/*.onnx",
+  "routee/powertrain/resources/bundled_registry/**/*.bin",
+  "routee/powertrain/resources/bundled_registry/**/*.joblib",
+  "routee/powertrain/resources/sample_routes/**/*.csv",
 ]
 
 [tool.mypy]
@@ -82,32 +82,32 @@ exclude = ["docs/", "build/", "dist/", "py-notebooks/"]
 include = ["routee/**/*.py", "tests/*.py"]
 # Exclude a variety of commonly ignored directories.
 exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".ipynb_checkpoints",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pyenv",
-    ".pytest_cache",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    ".vscode",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "site-packages",
-    "venv",
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".hg",
+  ".ipynb_checkpoints",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pyenv",
+  ".pytest_cache",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  ".vscode",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "site-packages",
+  "venv",
 ]
 
 # Same as Black.
@@ -142,52 +142,27 @@ python = "3.12.*"
 python = "3.13.*"
 
 [tool.pixi.environments]
-default = { features = [
-    "py313",
-    "dev",
-    "scikit",
-    "plot",
-    "ngboost",
-], solve-group = "default" }
-dev-py310 = { features = [
-    "py310",
-    "dev",
-    "scikit",
-    "plot",
-    "ngboost",
-], solve-group = "py310" }
-dev-py311 = { features = [
-    "py311",
-    "dev",
-    "scikit",
-    "plot",
-    "ngboost",
-], solve-group = "py311" }
-dev-py312 = { features = [
-    "py312",
-    "dev",
-    "scikit",
-    "plot",
-    "ngboost",
-], solve-group = "py312" }
-dev-py313 = { features = [
-    "py313",
-    "dev",
-    "scikit",
-    "plot",
-    "ngboost",
-], solve-group = "py313" }
+default = { features = ["py313", "dev", "scikit", "plot", "ngboost"], solve-group = "default" }
+dev-py310 = { features = ["py310", "dev", "scikit", "plot", "ngboost"], solve-group = "py310" }
+dev-py311 = { features = ["py311", "dev", "scikit", "plot", "ngboost"], solve-group = "py311" }
+dev-py312 = { features = ["py312", "dev", "scikit", "plot", "ngboost"], solve-group = "py312" }
+dev-py313 = { features = ["py313", "dev", "scikit", "plot", "ngboost"], solve-group = "py313" }
+
+[tool.pixi.feature.dev.dependencies]
+dprint = "*"
 
 [tool.pixi.feature.dev.tasks]
 fmt_fix = "ruff format"
 fmt_check = "ruff format --check"
+dprint_fix = "dprint fmt"
+dprint_check = "dprint check"
 lint_check = "ruff check"
 lint_fix = "ruff check --fix"
 typing = "mypy ."
 test = "pytest tests/"
 docs = "jupyter-book build docs"
-check = { depends-on = ["fmt_fix", "lint_fix", "typing", "test"] }
-ci = { depends-on = ["fmt_check", "lint_check", "typing", "test"] }
+check = { depends-on = ["fmt_fix", "dprint_fix", "lint_fix", "typing", "test"] }
+ci = { depends-on = ["fmt_check", "dprint_check", "lint_check", "typing", "test"] }
 
 [tool.pixi.pypi-dependencies]
 routee-powertrain = { path = ".", editable = true }

@@ -4,7 +4,7 @@
 
 **routee.powertrain** is a Python package for predicting vehicle energy consumption over road network links. It ships pre-trained mesoscopic vehicle energy models (ICE, HEV, BEV, PHEV, heavy-duty) and supports training custom models from drive-cycle data.
 
-- **Maintainer**: National Laboratory of the Rockies 
+- **Maintainer**: National Laboratory of the Rockies
 - **License**: BSD 3-Clause
 - **Python**: >=3.10, <3.13
 - **Build system**: Hatchling (`hatch build`)

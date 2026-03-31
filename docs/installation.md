@@ -1,4 +1,5 @@
 # Installation
+
 (In case `pip` is unavailable, use `pip3`)
 
 ## From PyPI

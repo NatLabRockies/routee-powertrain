@@ -29,6 +29,7 @@ pip install routee.powertrain
 ```
 
 If `pip` is unavailable, use `pip3`:
+
 ```bash
 pip3 install pip --upgrade
 pip3 install routee.powertrain
