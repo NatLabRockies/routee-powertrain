@@ -47,7 +47,32 @@ Package source lives under `nrel/routee/powertrain/`.
 - **`io/`** — `load_model()`, `list_available_models()`, `load_sample_route()`, `to_lookup_table()`
 - **`validation/`** — `ModelErrors`, `compute_errors()`, `visualize_features()`, `contour_plot()`
 - **`resources/`** — Bundled pre-trained models and sample route data
-- **`rust/`** (top-level) — PyO3/maturin Rust extension (`powertrain_rust`) providing SmartCore random forest. Build with `cd rust && maturin develop --release`.
+- **`registry/`** — Pluggable model discovery and retrieval system with multiple backends:
+  - `ModelRegistry` (ABC) — Interface with `query()`, `load()`, `list_models()`, `get_metadata()`
+  - `S3Registry` — Fetches models from a public S3 bucket (`routeecore-bucket`). Uses optional `index.json` for fast queries and hierarchical prefix walking for filtered searches
+  - `LocalRegistry` — Reads models from a local directory tree using glob-based scanning
+  - `ModelId` — Immutable identifier: `make/model/year/variant/feature_set_id/version` (e.g. `toyota/camry/2016/default/speed_grade/v1`)
+  - `ModelInfo` — Lightweight summary returned by `query()` with metadata but no binary data
+  - `get_default_registry()` — Factory that selects backend based on `ROUTEE_REGISTRY_BACKEND` env var (`"s3"` or `"local"`, default `"s3"`)
+  - `filter_models()` — Supports exact and fuzzy matching (via `rapidfuzz`) on make, model, year, variant, feature_set_id powertrain_type, fuel_type, drivetrain, engine, trim, and accepts additional `custom_filters` **`rust/`** (top-level) — PyO3/maturin Rust extension (`powertrain_rust`) providing SmartCore random forest. Build with `cd rust && maturin develop --release`.
+
+### Registry
+
+The Registry system abstracts model discovery and retrieval, allowing pre-trained models to be served from S3 or the local filesystem with an identical API.
+
+- **Directory/bucket layout**: `<root>/<schema_version>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/` containing `metadata.json` + model binary
+- **Bundled models**: `routee/powertrain/resources/bundled_registry/`
+- **Public entry points** (in `io/load.py`):
+  - `list_available_models(registry=None)` — Returns all `ModelId`s
+  - `query_available_models(...)` — Filtered search returning `ModelInfo` objects
+  - `load_model(name_or_path, registry=None)` — Loads from local path if it exists, otherwise parses as `ModelId` and fetches from registry
+- **Environment variables**:
+  - `ROUTEE_REGISTRY_BACKEND` — `"s3"` (default) or `"local"`
+  - `ROUTEE_SCHEMA_VERSION` — default `"v2"`
+  - `ROUTEE_S3_BUCKET` — default `routeecore-bucket`
+  - `ROUTEE_S3_REGION` — default `us-west-2`
+  - `ROUTEE_S3_ROOT_PREFIX` — default `routee-powertrain-model-library`
+  - `ROUTEE_LOCAL_REGISTRY_ROOT` — local directory root (defaults to bundled registry)
 
 ### Key abstractions
 

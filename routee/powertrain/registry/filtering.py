@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Callable, List, Optional, Sequence
 
 from rapidfuzz import fuzz
 
@@ -23,6 +23,12 @@ def filter_models(
     year: Optional[int] = None,
     variant: Optional[str] = None,
     feature_set_id: Optional[str] = None,
+    powertrain_type: Optional[str] = None,
+    fuel_type: Optional[str] = None,
+    drivetrain: Optional[str] = None,
+    engine: Optional[str] = None,
+    trim: Optional[str] = None,
+    custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
     fuzzy: bool = True,
     fuzzy_threshold: int = 80,
 ) -> List[ModelInfo]:
@@ -59,4 +65,43 @@ def filter_models(
                 feature_set_id, m.model_id.feature_set_id, fuzzy, fuzzy_threshold
             )
         ]
+    if powertrain_type is not None:
+        results = [
+            m
+            for m in results
+            if _matches(
+                powertrain_type, m.powertrain_type.lower(), fuzzy, fuzzy_threshold
+            )
+        ]
+    if fuel_type is not None:
+        results = [
+            m
+            for m in results
+            if m.fuel_type is not None
+            and _matches(fuel_type, m.fuel_type.lower(), fuzzy, fuzzy_threshold)
+        ]
+    if drivetrain is not None:
+        results = [
+            m
+            for m in results
+            if m.drivetrain is not None
+            and _matches(drivetrain, m.drivetrain.lower(), fuzzy, fuzzy_threshold)
+        ]
+    if engine is not None:
+        results = [
+            m
+            for m in results
+            if m.engine is not None
+            and _matches(engine, m.engine.lower(), fuzzy, fuzzy_threshold)
+        ]
+    if trim is not None:
+        results = [
+            m
+            for m in results
+            if m.trim is not None
+            and _matches(trim, m.trim.lower(), fuzzy, fuzzy_threshold)
+        ]
+    if custom_filters is not None:
+        for fn in custom_filters:
+            results = [m for m in results if fn(m)]
     return results

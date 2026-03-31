@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Callable, List, Optional, Sequence, Union
 
 import pandas as pd
 
@@ -41,6 +41,12 @@ def query_available_models(
     model: Optional[str] = None,
     year: Optional[int] = None,
     variant: Optional[str] = None,
+    powertrain_type: Optional[str] = None,
+    fuel_type: Optional[str] = None,
+    drivetrain: Optional[str] = None,
+    engine: Optional[str] = None,
+    trim: Optional[str] = None,
+    custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
     registry: Optional[ModelRegistry] = None,
     fuzzy: bool = True,
     fuzzy_threshold: int = 80,
@@ -56,6 +62,14 @@ def query_available_models(
         model: filter by model name
         year: filter by model year
         variant: filter by variant
+        powertrain_type: filter by powertrain type (e.g. "ICE", "BEV", "HEV")
+        fuel_type: filter by fuel type (e.g. "GASOLINE", "DIESEL", "ELECTRICITY")
+        drivetrain: filter by drivetrain (e.g. "FWD", "RWD", "AWD")
+        engine: filter by engine specification (e.g. "4cyl", "2.0tdi")
+        trim: filter by trim level (e.g. "sport", "active")
+        custom_filters: optional list of callables that accept a ModelInfo
+            and return True to keep the model or False to exclude it.
+            For example: ``[lambda m: m.mass_lbs is not None and m.mass_lbs > 10000]``
         registry: a ModelRegistry instance; defaults to get_default_registry()
         fuzzy: if True, use fuzzy string matching for string fields (default True)
         fuzzy_threshold: minimum score (0–100) for a fuzzy match (default 80)
@@ -72,6 +86,12 @@ def query_available_models(
         model=model,
         year=year,
         variant=variant,
+        powertrain_type=powertrain_type,
+        fuel_type=fuel_type,
+        drivetrain=drivetrain,
+        engine=engine,
+        trim=trim,
+        custom_filters=custom_filters,
         fuzzy=fuzzy,
         fuzzy_threshold=fuzzy_threshold,
     )

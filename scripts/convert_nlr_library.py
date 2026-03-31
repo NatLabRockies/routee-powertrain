@@ -20,11 +20,145 @@ import argparse
 import logging
 import re
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from convert_legacy_models import VehicleIdentity, convert_legacy_json
 
 log = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Vehicle attribute extraction
+# ---------------------------------------------------------------------------
+
+# Maps (make, base_model) → drivetrain for models that use "2wd" in their name.
+# 2WD is ambiguous (could be FWD or RWD), so we resolve per vehicle.
+_2WD_DRIVETRAIN_MAP: Dict[tuple, str] = {
+    ("audi", "a3"): "FWD",
+    ("bmw", "328d"): "RWD",
+    ("chevrolet", "colorado"): "RWD",
+    ("chevrolet", "malibu"): "FWD",
+    ("ford", "escape"): "FWD",
+    ("ford", "explorer"): "RWD",
+    ("hyundai", "elantra"): "FWD",
+    ("maruti", "swift"): "FWD",
+    ("tesla", "model_s60"): "RWD",
+    ("toyota", "camry"): "FWD",
+    ("toyota", "corolla"): "FWD",
+}
+
+# Engine spec patterns to search for in model names (order matters: longest first)
+_ENGINE_PATTERNS = [
+    re.compile(r"(\d+\.\d+_dci)"),  # 1.5_dci
+    re.compile(r"(\d+\.\d+_mpi)"),  # 1.0_mpi
+    re.compile(r"(\d+\.\d+tsi)"),  # 1.5tsi
+    re.compile(r"(\d+\.\d+tdi)"),  # 2.0tdi
+    re.compile(r"(\d+\.\d+_l)"),  # 3.5_l
+    # Note: kwh values (24_kwh, 30_kwh) are treated as trim, not engine
+    re.compile(r"(\d+kw)\b"),  # 300kw, 400kw
+    re.compile(r"(\d+cyl)"),  # 4cyl
+]
+
+# Known trim values that appear as suffixes in model names
+_KNOWN_TRIMS = {
+    "active",
+    "sport",
+    "le",
+    "mid",
+    "g",
+    "vdi",
+    "i-stop",
+    "authentique",
+    "e_j_mt",
+    "hardtop_2_door",
+    "double_cab",
+    "daycab",
+    "sleeper",
+    "24_kwh",
+    "30_kwh",
+}
+
+
+def _extract_drivetrain(make: str, model: str) -> Optional[str]:
+    """Extract drivetrain from the model name.
+
+    Returns a Drivetrain enum name string or None.
+    """
+    name = model.lower()
+
+    # Explicit drivetrain patterns
+    if "_rwd" in name or name.endswith("_rwd"):
+        return "RWD"
+    if "_fwd" in name or name.endswith("_fwd"):
+        return "FWD"
+    if "_4wd" in name or name.endswith("_4wd"):
+        return "FOURWD"
+    if "xdrive" in name:
+        return "AWD"
+    if "dual_motor" in name:
+        return "AWD"
+    if name.endswith("_twin"):
+        return "AWD"
+
+    # 2WD: resolve per vehicle using lookup table
+    if "_2wd" in name or name.endswith("_2wd"):
+        # Find the base model by stripping everything after common suffixes
+        for (m, base), dt in _2WD_DRIVETRAIN_MAP.items():
+            if make.lower() == m and base in name:
+                return dt
+        log.warning(
+            "Could not resolve 2wd drivetrain for %s/%s; leaving as None",
+            make,
+            model,
+        )
+        return None
+
+    return None
+
+
+def _extract_engine(model: str) -> Optional[str]:
+    """Extract engine/motor specification from the model name."""
+    name = model.lower()
+    for pattern in _ENGINE_PATTERNS:
+        m = pattern.search(name)
+        if m:
+            return m.group(1)
+
+    # Special case: vios_1.5_g → engine is "1.5", trim is "g"
+    if "vios" in name:
+        m = re.search(r"(\d+\.\d+)", name)
+        if m:
+            return m.group(1)
+
+    return None
+
+
+def _extract_trim(make: str, model: str) -> Optional[str]:
+    """Extract trim level from the model name using known trim values."""
+    name = model.lower()
+
+    # Heavy duty: cab type is trim
+    if make.lower() == "generic_heavy_duty":
+        if "daycab" in name:
+            return "daycab"
+        if "sleeper" in name:
+            return "sleeper"
+
+    # Check for known trim values anywhere in the model name as a
+    # delimited segment (not just at the end, since drivetrain suffixes
+    # like _4wd may follow the trim, e.g. "hilux_double_cab_4wd").
+    # Try multi-word trims first (longest match).
+    for trim in sorted(_KNOWN_TRIMS, key=len, reverse=True):
+        # Match as _trim_ in middle, or _trim at end
+        needle = f"_{trim}"
+        pos = name.find(needle)
+        if pos != -1:
+            after = pos + len(needle)
+            # Ensure it's a full segment (followed by _ or end of string)
+            if after == len(name) or name[after] == "_":
+                return trim
+
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -317,6 +451,31 @@ def _resolve_year(identity: VehicleIdentity, original_stem: str) -> VehicleIdent
 
 
 # ---------------------------------------------------------------------------
+# Enrich identity with vehicle attributes
+# ---------------------------------------------------------------------------
+
+
+def _enrich_vehicle_attributes(identity: VehicleIdentity) -> VehicleIdentity:
+    """Populate fuel_type, drivetrain, engine, and trim on the identity.
+
+    fuel_type is left as None here — it is auto-inferred inside
+    ``convert_legacy_json`` from the powertrain_type and target metrics
+    in the actual model JSON (which has more information than the filename).
+    """
+    return VehicleIdentity(
+        make=identity.make,
+        model=identity.model,
+        year=identity.year,
+        variant=identity.variant,
+        # fuel_type is inferred later in convert_legacy_json
+        fuel_type=None,
+        drivetrain=_extract_drivetrain(identity.make, identity.model),
+        engine=_extract_engine(identity.model),
+        trim=_extract_trim(identity.make, identity.model),
+    )
+
+
+# ---------------------------------------------------------------------------
 # Batch conversion
 # ---------------------------------------------------------------------------
 
@@ -342,6 +501,7 @@ def convert_library(
         try:
             identity = _parse_library_filename(json_path.name)
             identity = _resolve_year(identity, json_path.name)
+            identity = _enrich_vehicle_attributes(identity)
 
             created = convert_legacy_json(
                 json_path=json_path,

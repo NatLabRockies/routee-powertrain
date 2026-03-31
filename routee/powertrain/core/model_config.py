@@ -2,13 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
+from routee.powertrain.core.drivetrain import Drivetrain
 from routee.powertrain.core.features import (
     DataColumn,
     FeatureSet,
     TargetSet,
 )
+from routee.powertrain.core.fuel_type import FuelType
 from routee.powertrain.core.powertrain_type import PowertrainType
 from routee.powertrain.core.year import Year, parse_year, serialize_year
 
@@ -54,6 +56,13 @@ class ModelConfig:
 
     apply_real_world_adjustment: bool = True
 
+    mass_lbs: Optional[float] = None
+
+    fuel_type: Optional[FuelType] = None
+    drivetrain: Optional[Drivetrain] = None
+    engine: Optional[str] = None
+    trim: Optional[str] = None
+
     def __post_init__(self):
         # normalize vehicle id fields to lowercase
         self.make = self.make.lower()
@@ -81,6 +90,12 @@ class ModelConfig:
 
         if isinstance(self.predict_method, str):
             self.predict_method = PredictMethod.from_string(self.predict_method)
+
+        if isinstance(self.fuel_type, str):
+            self.fuel_type = FuelType.from_string(self.fuel_type)
+
+        if isinstance(self.drivetrain, str):
+            self.drivetrain = Drivetrain.from_string(self.drivetrain)
 
         # now check all the types
         if not isinstance(self.feature_set, FeatureSet):
@@ -119,6 +134,11 @@ class ModelConfig:
         d["target"] = self.target.to_dict()
         d["predict_method"] = self.predict_method.value
         d["year"] = serialize_year(self.year)
+
+        if self.fuel_type is not None:
+            d["fuel_type"] = self.fuel_type.name
+        if self.drivetrain is not None:
+            d["drivetrain"] = self.drivetrain.name
 
         return d
 

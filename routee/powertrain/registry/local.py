@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Callable, List, Optional, Sequence, Union
 
 from routee.powertrain.core.model import Model
 from routee.powertrain.core.year import parse_year
@@ -71,6 +71,11 @@ def _model_info_from_metadata(
         powertrain_type=config["powertrain_type"],
         vehicle_description=config["vehicle_description"],
         path=path,
+        mass_lbs=config.get("mass_lbs"),
+        fuel_type=config.get("fuel_type"),
+        drivetrain=config.get("drivetrain"),
+        engine=config.get("engine"),
+        trim=config.get("trim"),
     )
 
 
@@ -146,6 +151,12 @@ class LocalRegistry(ModelRegistry):
         year: Optional[int] = None,
         variant: Optional[str] = None,
         feature_set_id: Optional[str] = None,
+        powertrain_type: Optional[str] = None,
+        fuel_type: Optional[str] = None,
+        drivetrain: Optional[str] = None,
+        engine: Optional[str] = None,
+        trim: Optional[str] = None,
+        custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
         fuzzy: bool = True,
         fuzzy_threshold: int = 80,
     ) -> List[ModelInfo]:
@@ -157,6 +168,12 @@ class LocalRegistry(ModelRegistry):
             year=year,
             variant=variant,
             feature_set_id=feature_set_id,
+            powertrain_type=powertrain_type,
+            fuel_type=fuel_type,
+            drivetrain=drivetrain,
+            engine=engine,
+            trim=trim,
+            custom_filters=custom_filters,
             fuzzy=fuzzy,
             fuzzy_threshold=fuzzy_threshold,
         )

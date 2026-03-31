@@ -3,7 +3,9 @@ from pathlib import Path
 
 __all__ = [
     "DataColumn",
+    "Drivetrain",
     "FeatureSet",
+    "FuelType",
     "Constraints",
     "TargetSet",
     "Model",
@@ -20,7 +22,9 @@ __all__ = [
     "contour_plot",
 ]
 
+from .core.drivetrain import Drivetrain
 from .core.features import DataColumn, FeatureSet, Constraints, TargetSet
+from .core.fuel_type import FuelType
 from .core.model import Model
 from .core.model_config import ModelConfig
 from .core.powertrain_type import PowertrainType
