@@ -185,7 +185,6 @@ class Model:
     def predict(
         self,
         links_df: pd.DataFrame,
-        distance_column: Optional[str] = None,
     ) -> pd.DataFrame:
         """
         Predict absolute energy consumption for each link
@@ -195,21 +194,10 @@ class Model:
                 every column in ``self.feature_set`` plus the distance column, and
                 (if the estimator's ``input_spec`` declares a grouping column) that
                 grouping column.
-            distance_column: optional rename hook; if provided, this column is
-                renamed to the model's configured distance column before prediction.
 
         Returns: a dataframe containing the predicted energy consumption for each link
         """
         config = self.metadata.config
-
-        if distance_column is None:
-            distance_column = config.distance.name
-            if distance_column not in links_df.columns:
-                raise ValueError(
-                    f"links_df must contain a distance column named: '{distance_column}'"
-                )
-        else:
-            links_df = links_df.rename(columns={distance_column: config.distance.name})
 
         feature_set = config.feature_set
         missing = [

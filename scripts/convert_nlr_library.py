@@ -2,16 +2,21 @@
 """
 Batch-convert the NREL legacy model library to v2 format.
 
-This script applies NREL-specific naming conventions to resolve
-make / model / year / trim / variant from the legacy JSON filenames,
-then delegates to ``convert_legacy_models.convert_legacy_json`` for the
-actual conversion.
+This script applies NREL-specific naming conventions to parse
+make / model / year / trim / variant / drivetrain / engine from the legacy
+JSON filenames, then delegates to ``convert_legacy_models.convert_legacy_json``
+for the actual conversion.
+
+The v2 on-disk layout is
+``v2/<make>/<model>/<year>/<config_slug>/v<N>/`` — ``variant`` is now folded
+into ``config_slug`` (e.g. ``rf_charge_depleting``) rather than being its own
+path segment. See ``convert_legacy_models.py`` for the slug construction rule.
 
 Usage
 -----
 ::
 
-    python scripts/convert_nrel_library.py old-json-models.ignore/ output_dir/
+    python scripts/convert_nlr_library.py old-json-models.ignore/ output_dir/
 """
 
 from __future__ import annotations
@@ -196,10 +201,10 @@ def _parse_library_filename(filename: str) -> VehicleIdentity:
     # Steady/transient are detected by checking for the pattern before temp range
     # e.g. "2016_Nissan_Leaf_30_kWh_0F_110F_steady"
     if stem.endswith("_steady"):
-        variant = "steady"
+        variant = "steady_thermal"
         stem = stem.removesuffix("_steady")
     elif stem.endswith("_transient"):
-        variant = "transient"
+        variant = "transient_thermal"
         stem = stem.removesuffix("_transient")
 
     # --- Heavy-duty: Sleeper / Daycab ---
