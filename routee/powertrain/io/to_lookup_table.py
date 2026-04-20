@@ -93,13 +93,7 @@ def to_lookup_table(
 
     pred_df[model.metadata.config.distance.name] = 1
 
-    predictions = estimator.predict(
-        pred_df,
-        feature_set,
-        model.metadata.config.distance,
-        model.metadata.config.target,
-        model.metadata.config.predict_method,
-    )
+    predictions = estimator.predict(pred_df, model.metadata.config)
 
     lookup = pred_df[feature_names_list].copy()
 

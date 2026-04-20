@@ -38,7 +38,7 @@ def _parse_model_id_from_key(
     Derive a ModelId from an S3 key.
 
     Expected key format:
-        [<root_prefix>/]<schema_version>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/metadata.json
+        [<root_prefix>/]<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/metadata.json
     """
     if root_prefix:
         full_prefix = root_prefix + "/" + schema_version + "/"
@@ -49,14 +49,14 @@ def _parse_model_id_from_key(
 
     rel = key[len(full_prefix) :]
     parts = rel.split("/")
-    # parts: [make, model, year, variant, feature_set_id, vN, metadata.json]
-    if len(parts) != 7 or parts[-1] != METADATA_FILENAME:
+    # parts: [make, model, year, config_slug, vN, metadata.json]
+    if len(parts) != 6 or parts[-1] != METADATA_FILENAME:
         raise ValueError(
             f"Unexpected S3 key structure: {key}. "
-            f"Expected <schema>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/{METADATA_FILENAME}"
+            f"Expected <schema>/<make>/<model>/<year>/<config_slug>/v<N>/{METADATA_FILENAME}"
         )
 
-    make, model, year_str, variant, feature_set_id, version_dir, _ = parts
+    make, model, year_str, config_slug, version_dir, _ = parts
     match = VERSION_RE.match(version_dir)
     if not match:
         raise ValueError(f"Version directory '{version_dir}' does not match v<N>")
@@ -65,8 +65,7 @@ def _parse_model_id_from_key(
         make=make,
         model=model,
         year=parse_year(year_str),
-        variant=variant,
-        feature_set_id=feature_set_id,
+        config_slug=config_slug,
         version=int(match.group(1)),
     )
 
@@ -83,6 +82,8 @@ def _model_info_from_metadata(
     return ModelInfo(
         model_id=model_id,
         estimator_type=metadata_dict["estimator_type"],
+        architecture_tag=metadata_dict.get("architecture_tag", "unknown"),
+        input_spec=metadata_dict.get("input_spec"),
         feature_names=feature_names,
         target_names=target_names,
         powertrain_type=config["powertrain_type"],
@@ -106,7 +107,7 @@ class S3Registry(ModelRegistry):
 
     Bucket layout::
 
-        s3://<bucket>/<root_prefix>/<schema_version>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/
+        s3://<bucket>/<root_prefix>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/
             metadata.json
             model.onnx
     Args:
@@ -291,8 +292,8 @@ class S3Registry(ModelRegistry):
         make: Optional[str] = None,
         model: Optional[str] = None,
         year: Optional[int] = None,
-        variant: Optional[str] = None,
-        feature_set_id: Optional[str] = None,
+        config_slug: Optional[str] = None,
+        feature_names: Optional[Sequence[str]] = None,
         powertrain_type: Optional[str] = None,
         fuel_type: Optional[str] = None,
         drivetrain: Optional[str] = None,
@@ -309,8 +310,8 @@ class S3Registry(ModelRegistry):
                 make=make,
                 model=model,
                 year=year,
-                variant=variant,
-                feature_set_id=feature_set_id,
+                config_slug=config_slug,
+                feature_names=feature_names,
                 powertrain_type=powertrain_type,
                 fuel_type=fuel_type,
                 drivetrain=drivetrain,
@@ -327,8 +328,8 @@ class S3Registry(ModelRegistry):
                 make,
                 model,
                 year,
-                variant,
-                feature_set_id,
+                config_slug,
+                feature_names,
                 powertrain_type,
                 fuel_type,
                 drivetrain,
@@ -341,7 +342,7 @@ class S3Registry(ModelRegistry):
             return self._scan_models()
 
         # Walk the S3 hierarchy level-by-level, narrowing at each step.
-        # Levels: make / model / year / variant / feature_set_id / version
+        # Levels: make / model / year / config_slug / version
         prefixes = [f"{self._s3_prefix()}/"]
 
         # Level 1: make
@@ -357,14 +358,14 @@ class S3Registry(ModelRegistry):
             is_year=(year is not None),
             year_query=year,
         )
-        # Level 4: variant
-        prefixes = self._narrow_prefixes(prefixes, variant, fuzzy, fuzzy_threshold)
-        # Level 5: feature_set_id
-        prefixes = self._narrow_prefixes(
-            prefixes, feature_set_id, fuzzy, fuzzy_threshold
-        )
-        # Level 6: version (expand all)
+        # Level 4: config_slug
+        prefixes = self._narrow_prefixes(prefixes, config_slug, fuzzy, fuzzy_threshold)
+        # Level 5: version (expand all)
         prefixes = self._narrow_prefixes(prefixes, None, fuzzy, fuzzy_threshold)
+
+        required_features = (
+            {n.lower() for n in feature_names} if feature_names else None
+        )
 
         # Fetch metadata for narrowed results
         results: List[ModelInfo] = []
@@ -380,6 +381,10 @@ class S3Registry(ModelRegistry):
                 info = _model_info_from_metadata(metadata_dict, model_id, dir_key)
                 # Apply metadata-level filters that can't be narrowed
                 # via the S3 directory hierarchy.
+                if required_features is not None and not required_features.issubset(
+                    {fn.lower() for fn in info.feature_names}
+                ):
+                    continue
                 if powertrain_type is not None and not _matches(
                     powertrain_type,
                     info.powertrain_type.lower(),

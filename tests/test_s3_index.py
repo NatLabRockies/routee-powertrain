@@ -29,7 +29,7 @@ def _fake_metadata(
 class TestS3Index(TestCase):
     def test_query_uses_index(self):
         # Create a mock index
-        model_id = ModelId("toyota", "camry", 2016, "default", "speed", 1)
+        model_id = ModelId("toyota", "camry", 2016, "rf_default", 1)
         info = ModelInfo(
             model_id=model_id,
             estimator_type="some-type",
@@ -37,7 +37,7 @@ class TestS3Index(TestCase):
             target_names=["energy"],
             powertrain_type="ICE",
             vehicle_description="2016 toyota camry",
-            path=f"{BASE}/toyota/camry/2016/default/speed/v1",
+            path=f"{BASE}/toyota/camry/2016/rf_default/v1",
         )
         index = {"schema_version": SCHEMA, "models": [info.to_dict()]}
 
@@ -64,7 +64,7 @@ class TestS3Index(TestCase):
         registry_mock._s3_prefix.return_value = BASE
 
         # Mock metadata listing
-        metadata_key = f"{BASE}/toyota/camry/2016/default/speed/v1/metadata.json"
+        metadata_key = f"{BASE}/toyota/camry/2016/rf_default/v1/metadata.json"
         registry_mock._list_metadata_keys.return_value = [metadata_key]
 
         # Mock metadata fetching

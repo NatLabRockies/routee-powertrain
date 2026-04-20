@@ -8,6 +8,8 @@ from routee.powertrain.trainers.trainer import Trainer
 
 
 class SmartcoreRandomForestTrainer(Trainer):
+    architecture_tag: str = "random_forest"
+
     def inner_train(
         self, features: pd.DataFrame, target: pd.DataFrame, config: ModelConfig
     ) -> Estimator:

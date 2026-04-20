@@ -24,19 +24,19 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
     """
     Derive a ModelId from the directory path relative to the schema root.
 
-    Expected structure: <make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/
+    Expected structure: <make>/<model>/<year>/<config_slug>/v<N>/
     """
     rel = model_dir.relative_to(schema_root)
     parts = list(rel.parts)
 
-    if len(parts) != 6:
+    if len(parts) != 5:
         raise ValueError(
             f"Unexpected path depth for {model_dir}. "
-            f"Expected <make>/<model>/<year>/<variant>/<feature_set_id>/v<N>, "
+            f"Expected <make>/<model>/<year>/<config_slug>/v<N>, "
             f"got {'/'.join(parts)}"
         )
 
-    make, model, year_str, variant, feature_set_id, version_dir = parts
+    make, model, year_str, config_slug, version_dir = parts
 
     match = VERSION_RE.match(version_dir)
     if not match:
@@ -48,8 +48,7 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
         make=make,
         model=model,
         year=parse_year(year_str),
-        variant=variant,
-        feature_set_id=feature_set_id,
+        config_slug=config_slug,
         version=int(match.group(1)),
     )
 
@@ -66,6 +65,8 @@ def _model_info_from_metadata(
     return ModelInfo(
         model_id=model_id,
         estimator_type=metadata_dict["estimator_type"],
+        architecture_tag=metadata_dict.get("architecture_tag", "unknown"),
+        input_spec=metadata_dict.get("input_spec"),
         feature_names=feature_names,
         target_names=target_names,
         powertrain_type=config["powertrain_type"],
@@ -89,7 +90,7 @@ class LocalRegistry(ModelRegistry):
 
     Directory layout::
 
-        <root>/<schema_version>/<make>/<model>/<year>/<variant>/<feature_set_id>/v<N>/
+        <root>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/
             metadata.json
             model.onnx  (or other binary)
 
@@ -149,8 +150,8 @@ class LocalRegistry(ModelRegistry):
         make: Optional[str] = None,
         model: Optional[str] = None,
         year: Optional[int] = None,
-        variant: Optional[str] = None,
-        feature_set_id: Optional[str] = None,
+        config_slug: Optional[str] = None,
+        feature_names: Optional[Sequence[str]] = None,
         powertrain_type: Optional[str] = None,
         fuel_type: Optional[str] = None,
         drivetrain: Optional[str] = None,
@@ -166,8 +167,8 @@ class LocalRegistry(ModelRegistry):
             make=make,
             model=model,
             year=year,
-            variant=variant,
-            feature_set_id=feature_set_id,
+            config_slug=config_slug,
+            feature_names=feature_names,
             powertrain_type=powertrain_type,
             fuel_type=fuel_type,
             drivetrain=drivetrain,

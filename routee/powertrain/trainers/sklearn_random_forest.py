@@ -17,6 +17,8 @@ class RandomForestTrainerOutput(Enum):
 
 
 class SklearnRandomForestTrainer(Trainer):
+    architecture_tag: str = "random_forest"
+
     def __init__(
         self,
         max_depth: int = 10,

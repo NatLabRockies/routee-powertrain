@@ -6,14 +6,12 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-from routee.powertrain.core.features import FeatureSet, FeatureSetId
 from routee.powertrain.core.model_config import ModelConfig
 from routee.powertrain.estimators.estimator_interface import Estimator
 from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
 from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
 
 REPR_ROWS = {
-    "feature_set_id": "Feature Set ID",
     "target": "Target",
     "link_root_mean_squared_error": "Link RMSE",
     "link_norm_root_mean_squared_error": "Link Norm RMSE",
@@ -195,9 +193,6 @@ def estimator_errors_to_html_lines(estimator_errors: EstimatorErrors) -> List[st
         "<tr><td colspan='2' style='border-bottom: 2px solid black;"
         "text-align: center;'><b>Estimator Errors</b></td></tr>"
     )
-    html_lines.append(
-        f"<tr><td>Feature Set ID</td><td>{estimator_errors.feature_set_id}</td></tr>"
-    )
     for target, errors in estimator_errors.error_by_target.items():
         html_lines.append(f"<tr><td>Target</td><td>{target}</td></tr>")
         html_lines.extend(errors_to_html_lines(errors))
@@ -207,7 +202,6 @@ def estimator_errors_to_html_lines(estimator_errors: EstimatorErrors) -> List[st
 
 @dataclass
 class EstimatorErrors:
-    feature_set_id: FeatureSetId
     error_by_target: Dict[str, Errors]
 
     @classmethod
@@ -263,9 +257,6 @@ class ModelErrors:
         summary_lines.append("=" * (max_key_length + 20))
         estimator_error = self.estimator_errors
         for target, errors in estimator_error.error_by_target.items():
-            summary_lines.append(
-                f"{'Feature Set ID:':<{max_key_length}} {estimator_error.feature_set_id}"
-            )
             summary_lines.append(f"{'Target:':<{max_key_length}} {target}")
             for error_name, error_value in errors.to_dict().items():
                 if error_value is None:
@@ -281,7 +272,6 @@ class ModelErrors:
 def compute_errors(
     test_df: pd.DataFrame,
     estimator: Estimator,
-    feature_set: FeatureSet,
     config: ModelConfig,
 ) -> ModelErrors:
     """
@@ -291,7 +281,6 @@ def compute_errors(
     Args:
         test_df: the test dataframe
         estimator: the estimator to evaluate
-        feature_set: the feature set used by the estimator
         config: The model configuration
 
     Returns: a ModelErrors object with all error values
@@ -299,18 +288,10 @@ def compute_errors(
     """
     test_df = test_df.copy()
 
-    feature_set_id = feature_set.features_id
     target_set = config.target
     distance = config.distance
-    predict_method = config.predict_method
 
-    predictions = estimator.predict(
-        test_df,
-        feature_set=feature_set,
-        distance=distance,
-        target_set=target_set,
-        predict_method=predict_method,
-    )
+    predictions = estimator.predict(test_df, config)
 
     estimator_errors = {}
 
@@ -413,7 +394,7 @@ def compute_errors(
 
         estimator_errors[energy_name] = errors_obj
 
-    estimator_errors_obj = EstimatorErrors(feature_set_id, estimator_errors)
+    estimator_errors_obj = EstimatorErrors(estimator_errors)
 
     model_errors_obj = ModelErrors(estimator_errors_obj)
 

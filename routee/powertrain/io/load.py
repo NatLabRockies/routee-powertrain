@@ -40,7 +40,8 @@ def query_available_models(
     make: Optional[str] = None,
     model: Optional[str] = None,
     year: Optional[int] = None,
-    variant: Optional[str] = None,
+    config_slug: Optional[str] = None,
+    feature_names: Optional[Sequence[str]] = None,
     powertrain_type: Optional[str] = None,
     fuel_type: Optional[str] = None,
     drivetrain: Optional[str] = None,
@@ -61,7 +62,9 @@ def query_available_models(
         make: filter by vehicle make
         model: filter by model name
         year: filter by model year
-        variant: filter by variant
+        config_slug: filter by config slug (e.g. "rf_default", "cnn_5link")
+        feature_names: filter to models whose feature set contains every listed
+            feature column (subset match, exact names)
         powertrain_type: filter by powertrain type (e.g. "ICE", "BEV", "HEV")
         fuel_type: filter by fuel type (e.g. "GASOLINE", "DIESEL", "ELECTRICITY")
         drivetrain: filter by drivetrain (e.g. "FWD", "RWD", "AWD")
@@ -85,7 +88,8 @@ def query_available_models(
         make=make,
         model=model,
         year=year,
-        variant=variant,
+        config_slug=config_slug,
+        feature_names=feature_names,
         powertrain_type=powertrain_type,
         fuel_type=fuel_type,
         drivetrain=drivetrain,
@@ -130,10 +134,10 @@ def load_model(
     >>>
     >>> # load via registry
     >>> from routee.powertrain.registry import ModelId
-    >>> mid = ModelId("toyota", "camry", 2016, "default", "grade_speed", 1)
+    >>> mid = ModelId("toyota", "camry", 2016, "rf_default", 1)
     >>> model = pt.load_model(mid)
     >>>
-    >>> mid_str = "toyota/camry/2016/default/grade_speed/v1"
+    >>> mid_str = "toyota/camry/2016/rf_default/v1"
     >>> model = pt.load_model(mid_str)
 
     """

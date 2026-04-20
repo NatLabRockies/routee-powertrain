@@ -21,8 +21,8 @@ def filter_models(
     make: Optional[str] = None,
     model: Optional[str] = None,
     year: Optional[int] = None,
-    variant: Optional[str] = None,
-    feature_set_id: Optional[str] = None,
+    config_slug: Optional[str] = None,
+    feature_names: Optional[Sequence[str]] = None,
     powertrain_type: Optional[str] = None,
     fuel_type: Optional[str] = None,
     drivetrain: Optional[str] = None,
@@ -35,6 +35,9 @@ def filter_models(
     """
     Filter a list of ModelInfo by the given criteria.
     Support for fuzzy string matching with configurable threshold.
+
+    ``feature_names`` filters to models whose ``feature_names`` contains every
+    listed name (subset match, exact column name).
     """
     results = models
     if make is not None:
@@ -51,19 +54,18 @@ def filter_models(
         ]
     if year is not None:
         results = [m for m in results if year_contains(m.model_id.year, year)]
-    if variant is not None:
+    if config_slug is not None:
         results = [
             m
             for m in results
-            if _matches(variant, m.model_id.variant, fuzzy, fuzzy_threshold)
+            if _matches(config_slug, m.model_id.config_slug, fuzzy, fuzzy_threshold)
         ]
-    if feature_set_id is not None:
+    if feature_names:
+        required = {n.lower() for n in feature_names}
         results = [
             m
             for m in results
-            if _matches(
-                feature_set_id, m.model_id.feature_set_id, fuzzy, fuzzy_threshold
-            )
+            if required.issubset({fn.lower() for fn in m.feature_names})
         ]
     if powertrain_type is not None:
         results = [
