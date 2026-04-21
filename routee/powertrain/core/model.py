@@ -8,7 +8,6 @@ import pandas as pd
 
 from routee.powertrain.core.metadata import Metadata
 from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
-from routee.powertrain.estimators.cnn import CNNEstimator
 from routee.powertrain.estimators.estimator_interface import Estimator
 from routee.powertrain.estimators.onnx import ONNXEstimator
 from routee.powertrain.estimators.smart_core import SmartCoreEstimator
@@ -33,7 +32,6 @@ REGISTERED_ESTIMATORS = {
     "ONNXEstimator": ONNXEstimator,
     "SmartCoreEstimator": SmartCoreEstimator,
     "NGBoostEstimator": NGBoostEstimator,
-    "CNNEstimator": CNNEstimator,
 }
 
 
