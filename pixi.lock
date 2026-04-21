@@ -12004,7 +12004,7 @@ packages:
 - pypi: ./
   name: routee-powertrain
   version: 1.4.0
-  sha256: 10e487623fd5cce076c1ca4c0f0b64d2925092648d21aa6228e41f3a55a8c4ea
+  sha256: df87ffec832178fb30fe67101813e37107b9213ef5407bbb83e876a7e201cab4
   requires_dist:
   - boto3>=1.42,<2.0
   - numpy>=2.0,<3.0
@@ -12018,13 +12018,13 @@ packages:
   - matplotlib ; extra == 'dev'
   - maturin ; extra == 'dev'
   - mypy>=1.19.1,<1.20 ; extra == 'dev'
-  - ngboost==0.5.2 ; extra == 'dev'
+  - ngboost>=0.5.2,<0.6 ; extra == 'dev'
   - pandas-stubs ; extra == 'dev'
   - pre-commit ; extra == 'dev'
   - pyarrow ; extra == 'dev'
   - pytest ; extra == 'dev'
   - ruff ; extra == 'dev'
-  - scikit-learn==1.6.1 ; extra == 'dev'
+  - scikit-learn>=1.6.1,<1.7 ; extra == 'dev'
   - shapely ; extra == 'dev'
   - skl2onnx>=1.20,<1.21 ; extra == 'dev'
   - sphinx-book-theme ; extra == 'dev'
@@ -12034,12 +12034,12 @@ packages:
   - types-pyyaml ; extra == 'dev'
   - types-redis ; extra == 'dev'
   - types-requests ; extra == 'dev'
-  - ngboost==0.5.2 ; extra == 'ngboost'
-  - scikit-learn==1.6.1 ; extra == 'ngboost'
+  - ngboost>=0.5.2,<0.6 ; extra == 'ngboost'
+  - scikit-learn>=1.6.1,<1.7 ; extra == 'ngboost'
   - matplotlib ; extra == 'plot'
   - onnxscript>=0.1 ; extra == 'pytorch'
   - torch>=2.5,<3.0 ; extra == 'pytorch'
-  - scikit-learn==1.6.1 ; extra == 'scikit'
+  - scikit-learn>=1.6.1,<1.7 ; extra == 'scikit'
   - skl2onnx>=1.20,<1.21 ; extra == 'scikit'
   requires_python: '>=3.10,<3.14'
   editable: true
