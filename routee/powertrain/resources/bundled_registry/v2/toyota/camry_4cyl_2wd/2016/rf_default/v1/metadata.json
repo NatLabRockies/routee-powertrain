@@ -1,10 +1,15 @@
 {
   "schema_version": 2,
   "estimator_type": "ONNXEstimator",
+  "architecture_tag": "random_forest",
+  "input_spec": {
+    "lookback": 0,
+    "grouping_column": null,
+    "pad_strategy": "zero"
+  },
   "model_file": "model.onnx",
   "errors": {
     "estimator_errors": {
-      "feature_set_id": "grade_percent&speed_mph",
       "error_by_target": {
         "gge": {
           "link_root_mean_squared_error": 0.0012698840872346134,

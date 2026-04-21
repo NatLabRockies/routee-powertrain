@@ -19,19 +19,18 @@ this_dir = Path(__file__).parent
 
 class TestModelId(TestCase):
     def test_to_path(self):
-        mid = ModelId("toyota", "camry_4cyl_fwd", 2016, "default", "grade_speed", 1)
+        mid = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", 1)
         path = mid.to_path()
-        self.assertEqual(path, "toyota/camry_4cyl_fwd/2016/default/grade_speed/v1")
+        self.assertEqual(path, "toyota/camry_4cyl_fwd/2016/rf_default/v1")
 
     def test_lowercase_normalization(self):
-        mid = ModelId("Toyota", "Camry_4Cyl_FWD", 2016, "Default", "Grade_Speed", 1)
+        mid = ModelId("Toyota", "Camry_4Cyl_FWD", 2016, "RF_Default", 1)
         self.assertEqual(mid.make, "toyota")
         self.assertEqual(mid.model, "camry_4cyl_fwd")
-        self.assertEqual(mid.variant, "default")
-        self.assertEqual(mid.feature_set_id, "grade_speed")
+        self.assertEqual(mid.config_slug, "rf_default")
 
     def test_roundtrip_dict(self):
-        mid = ModelId("toyota", "camry_4cyl_fwd", 2016, "default", "grade_speed", 1)
+        mid = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", 1)
         d = mid.to_dict()
         mid2 = ModelId.from_dict(d)
         self.assertEqual(mid, mid2)
@@ -80,9 +79,7 @@ class TestLocalRegistry(TestCase):
         self.df = df
 
         # Save to registry path as a flat directory
-        model_id = ModelId(
-            "toyota", "camry_4cyl_fwd", 2016, "default", "grade_dec_speed_mph", 1
-        )
+        model_id = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", 1)
         rel_path = f"{self.schema_version}/{model_id.to_path()}"
         full_path = self.root / rel_path
         save_model_directory(self.model, full_path)
@@ -110,9 +107,7 @@ class TestLocalRegistry(TestCase):
         self.assertEqual(len(results), 0)
 
     def test_load(self):
-        model_id = ModelId(
-            "toyota", "camry_4cyl_fwd", 2016, "default", "grade_dec_speed_mph", 1
-        )
+        model_id = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", 1)
         loaded = self.registry.load(model_id)
 
         r1 = self.model.predict(self.df)
@@ -122,9 +117,7 @@ class TestLocalRegistry(TestCase):
         )
 
     def test_get_metadata(self):
-        model_id = ModelId(
-            "toyota", "camry_4cyl_fwd", 2016, "default", "grade_dec_speed_mph", 1
-        )
+        model_id = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", 1)
         meta = self.registry.get_metadata(model_id)
         self.assertIn("config", meta)
         self.assertIn("estimator_type", meta)
@@ -324,9 +317,7 @@ class TestMassLbsModelConfig(TestCase):
         trainer = SklearnRandomForestTrainer()
         model = trainer.train(df, config)
 
-        model_id = ModelId(
-            "freightliner", "cascadia", 2022, "default", "grade_dec_speed_mph", 1
-        )
+        model_id = ModelId("freightliner", "cascadia", 2022, "rf_default", 1)
         rel_path = f"{self.schema_version}/{model_id.to_path()}"
         full_path = self.root / rel_path
         save_model_directory(model, full_path)
@@ -454,8 +445,7 @@ class TestVehicleAttributeFields(TestCase):
             "chevrolet",
             "colorado_2wd_diesel",
             2020,
-            "default",
-            "grade_dec_speed_mph",
+            "rf_default",
             1,
         )
         rel_path = f"{self.schema_version}/{model_id.to_path()}"
@@ -603,8 +593,7 @@ class TestVehicleAttributeFields(TestCase):
                 "make": "test",
                 "model": "test",
                 "year": 2020,
-                "variant": "default",
-                "feature_set_id": "speed_mph",
+                "config_slug": "rf_default",
                 "version": 1,
             },
             "estimator_type": "ONNXEstimator",
@@ -624,7 +613,7 @@ class TestVehicleAttributeFields(TestCase):
         from routee.powertrain.registry.filtering import filter_models
 
         info_with = ModelInfo(
-            model_id=ModelId("a", "b", 2020, "default", "speed", 1),
+            model_id=ModelId("a", "b", 2020, "rf_default", 1),
             estimator_type="ONNXEstimator",
             feature_names=["speed"],
             target_names=["gal"],
@@ -633,7 +622,7 @@ class TestVehicleAttributeFields(TestCase):
             fuel_type="DIESEL",
         )
         info_without = ModelInfo(
-            model_id=ModelId("a", "c", 2020, "default", "speed", 1),
+            model_id=ModelId("a", "c", 2020, "rf_default", 1),
             estimator_type="ONNXEstimator",
             feature_names=["speed"],
             target_names=["gal"],

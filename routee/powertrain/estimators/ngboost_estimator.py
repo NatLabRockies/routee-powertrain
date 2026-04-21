@@ -8,8 +8,7 @@ import pandas as pd
 
 from importlib.util import find_spec
 
-from routee.powertrain.core.features import DataColumn, FeatureSet, TargetSet
-from routee.powertrain.core.model_config import PredictMethod
+from routee.powertrain.core.model_config import ModelConfig, PredictMethod
 from routee.powertrain.estimators.estimator_interface import Estimator
 
 
@@ -117,11 +116,13 @@ class NGBoostEstimator(Estimator):
     def predict(
         self,
         links_df: pd.DataFrame,
-        feature_set: FeatureSet,
-        distance: DataColumn,
-        target_set: TargetSet,
-        predict_method: PredictMethod = PredictMethod.RATE,
+        config: ModelConfig,
     ) -> pd.DataFrame:
+        feature_set = config.feature_set
+        distance = config.distance
+        target_set = config.target
+        predict_method = config.predict_method
+
         if len(target_set.targets) != 1:
             raise ValueError(
                 "NGBoost only supports a single energy target. "

@@ -170,25 +170,25 @@ class TestModelIdYearRange(TestCase):
     """Test that ModelId works with year ranges."""
 
     def test_single_year_path(self):
-        mid = ModelId("toyota", "camry", 2016, "default", "grade_speed", 1)
+        mid = ModelId("toyota", "camry", 2016, "rf_default", 1)
         self.assertIn("/2016/", mid.to_path())
 
     def test_year_range_path(self):
-        mid = ModelId("generic", "sedan", (2020, 2026), "default", "grade_speed", 1)
+        mid = ModelId("generic", "sedan", (2020, 2026), "rf_default", 1)
         self.assertIn("/2020-2026/", mid.to_path())
 
     def test_year_range_str(self):
-        mid = ModelId("generic", "sedan", (2020, 2026), "default", "grade_speed", 1)
+        mid = ModelId("generic", "sedan", (2020, 2026), "rf_default", 1)
         self.assertIn("2020-2026", str(mid))
 
     def test_year_range_dict_roundtrip(self):
-        mid = ModelId("generic", "sedan", (2020, 2026), "default", "grade_speed", 1)
+        mid = ModelId("generic", "sedan", (2020, 2026), "rf_default", 1)
         d = mid.to_dict()
         restored = ModelId.from_dict(d)
         self.assertEqual(restored.year, (2020, 2026))
 
     def test_single_year_dict_roundtrip(self):
-        mid = ModelId("toyota", "camry", 2016, "default", "grade_speed", 1)
+        mid = ModelId("toyota", "camry", 2016, "rf_default", 1)
         d = mid.to_dict()
         restored = ModelId.from_dict(d)
         self.assertEqual(restored.year, 2016)
@@ -240,8 +240,7 @@ class TestLocalRegistryYearRange(TestCase):
             "generic",
             "sedan",
             (2020, 2026),
-            "default",
-            "grade_dec_speed_mph",
+            "rf_default",
             1,
         )
         rel_path = f"{self.schema_version}/{model_id.to_path()}"

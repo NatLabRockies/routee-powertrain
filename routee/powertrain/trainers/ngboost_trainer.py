@@ -12,6 +12,8 @@ from routee.powertrain.trainers.trainer import Trainer
 
 
 class NGBoostTrainer(Trainer):
+    architecture_tag: str = "ngboost"
+
     def __init__(
         self,
         n_estimators: int = 100,

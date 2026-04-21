@@ -11,27 +11,32 @@ _VERSION_RE = re.compile(r"^v(\d+)$")
 
 @dataclass
 class ModelId:
-    """Uniquely identifies a model in the registry."""
+    """Uniquely identifies a model in the registry.
+
+    A ``config_slug`` disambiguates multiple models for the same vehicle/year —
+    e.g. ``rf_default``, ``cnn_5link``, ``rf_speed_grade``. The slug is a
+    user-chosen identifier; the full feature composition and estimator
+    architecture live in the archive's ``metadata.json`` (and in ``index.json``
+    for registry-level search).
+    """
 
     make: str
     model: str
     year: Year
-    variant: str
-    feature_set_id: str
+    config_slug: str
     version: int
 
     def __post_init__(self):
         self.make = self.make.lower()
         self.model = self.model.lower()
-        self.variant = self.variant.lower()
-        self.feature_set_id = self.feature_set_id.lower()
+        self.config_slug = self.config_slug.lower()
         self.year = parse_year(self.year)
 
     @classmethod
     def from_path(cls, path: str) -> ModelId:
         """Parse a ModelId from a path string.
 
-        Expected format: ``make/model/year/variant/feature_set/v<N>``
+        Expected format: ``make/model/year/config_slug/v<N>``
 
         Args:
             path: a ``/``-separated path string
@@ -43,14 +48,14 @@ class ModelId:
         """
         parts = [p for p in path.strip("/").split("/") if p]
 
-        if len(parts) != 6:
+        if len(parts) != 5:
             raise ValueError(
                 f"Cannot parse model id from path '{path}'. "
-                f"Expected <make>/<model>/<year>/<variant>/<feature_set_id>/v<N>, "
+                f"Expected <make>/<model>/<year>/<config_slug>/v<N>, "
                 f"got {len(parts)} segments."
             )
 
-        make, model, year_str, variant, feature_set_id, version_dir = parts
+        make, model, year_str, config_slug, version_dir = parts
 
         match = _VERSION_RE.match(version_dir)
         if not match:
@@ -62,8 +67,7 @@ class ModelId:
             make=make,
             model=model,
             year=parse_year(year_str),
-            variant=variant,
-            feature_set_id=feature_set_id,
+            config_slug=config_slug,
             version=int(match.group(1)),
         )
 
@@ -71,12 +75,11 @@ class ModelId:
         """
         Build the registry path for this model.
 
-        Returns: e.g. "toyota/camry_4cyl_fwd/2016/default/speed_grade/v1"
+        Returns: e.g. "toyota/camry_4cyl_fwd/2016/rf_default/v1"
         """
         return (
             f"{self.make}/{self.model}/"
-            f"{format_year(self.year)}/{self.variant}/"
-            f"{self.feature_set_id}/v{self.version}"
+            f"{format_year(self.year)}/{self.config_slug}/v{self.version}"
         )
 
     def to_dict(self) -> dict:
@@ -84,8 +87,7 @@ class ModelId:
             "make": self.make,
             "model": self.model,
             "year": serialize_year(self.year),
-            "variant": self.variant,
-            "feature_set_id": self.feature_set_id,
+            "config_slug": self.config_slug,
             "version": self.version,
         }
 
@@ -99,7 +101,7 @@ class ModelId:
     def __str__(self) -> str:
         return (
             f"{self.make}/{self.model}/{format_year(self.year)}/"
-            f"{self.variant}/{self.feature_set_id}/v{self.version}"
+            f"{self.config_slug}/v{self.version}"
         )
 
 
@@ -113,6 +115,8 @@ class ModelInfo:
     target_names: List[str]
     powertrain_type: str
     vehicle_description: str
+    architecture_tag: str = "unknown"
+    input_spec: Optional[dict] = None
     path: Optional[str] = None
     mass_lbs: Optional[float] = None
     fuel_type: Optional[str] = None
@@ -124,6 +128,8 @@ class ModelInfo:
         return {
             "model_id": self.model_id.to_dict(),
             "estimator_type": self.estimator_type,
+            "architecture_tag": self.architecture_tag,
+            "input_spec": self.input_spec,
             "feature_names": self.feature_names,
             "target_names": self.target_names,
             "powertrain_type": self.powertrain_type,
@@ -140,6 +146,8 @@ class ModelInfo:
     def from_dict(cls, d: dict) -> ModelInfo:
         d = d.copy()
         d["model_id"] = ModelId.from_dict(d["model_id"])
+        d.setdefault("architecture_tag", "unknown")
+        d.setdefault("input_spec", None)
         d.setdefault("mass_lbs", None)
         d.setdefault("fuel_type", None)
         d.setdefault("drivetrain", None)
@@ -156,7 +164,8 @@ class ModelInfo:
             f"  make:           {self.model_id.make}",
             f"  model:          {self.model_id.model}",
             f"  powertrain:     {self.powertrain_type}",
-            f"  variant:        {self.model_id.variant}",
+            f"  config_slug:    {self.model_id.config_slug}",
+            f"  architecture:   {self.architecture_tag}",
             f"  estimator:      {self.estimator_type}",
             f"  features:       {self.feature_names}",
             f"  targets:        {self.target_names}",

@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import logging
 import math
@@ -76,6 +77,30 @@ ESTIMATOR_FILE_MAP = {
     "SmartCoreEstimator": ("model.bin", "smartcore_model"),
     "SKLearnEstimator": ("model.pickle", "rf_regressor"),
 }
+
+# Legacy estimator class name -> v2 architecture_tag (matches values emitted by
+# routee/powertrain/trainers/*.py).
+ARCHITECTURE_TAG_MAP = {
+    "ONNXEstimator": "random_forest",  # legacy ONNX exports are all sklearn RFs
+    "SKLearnEstimator": "random_forest",
+    "SmartCoreEstimator": "random_forest",
+    "NGBoostEstimator": "ngboost",
+}
+
+# architecture_tag -> short prefix used when building a config_slug. Mirrors the
+# "rf_default" pattern used by the bundled v2 models.
+ARCHITECTURE_SLUG_PREFIX = {
+    "random_forest": "rf",
+    "ngboost": "ngb",
+    "cnn": "cnn",
+}
+
+
+def _feature_hash(feature_names: List[str]) -> str:
+    """Short deterministic hash used to disambiguate config_slugs when a single
+    legacy JSON carries multiple feature sets for the same estimator type."""
+    joined = "&".join(sorted(feature_names)).encode("utf-8")
+    return hashlib.blake2b(joined, digest_size=4).hexdigest()
 
 
 def _extract_binary(estimator_dict: dict, estimator_type: str) -> bytes:
@@ -172,10 +197,17 @@ def convert_legacy_json(
         Root directory under which model dirs will be created.  The directory
         layout follows the v2 registry convention::
 
-            {output_dir}/v{schema_version}/{make}/{model}/{year}/{trim}/{variant}/{feature_set_id}/v{version}/
+            {output_dir}/v{schema_version}/{make}/{model}/{year}/{config_slug}/v{version}/
+
+        ``config_slug`` is derived as ``{short_arch}_{variant}`` (e.g.
+        ``rf_default``). If the legacy JSON carries multiple feature sets for
+        the same estimator type, a short feature-name hash is appended to keep
+        the slugs unique.
 
     identity:
         Vehicle identification (make / model / year / trim / variant).
+        ``variant`` is now folded into ``config_slug`` rather than being its
+        own path segment.
     version:
         Model version number (default 1).
     schema_version:
@@ -195,6 +227,19 @@ def convert_legacy_json(
 
     feature_sets: list = old_config["feature_sets"]
 
+    # Pre-compute how many valid estimator entries will land on the same
+    # base config_slug. When >1 share a base, all of them need a hash suffix
+    # to stay unique within (make, model, year).
+    base_slug_counts: dict = {}
+    for fs_id, est_entry in all_estimators.items():
+        et = est_entry["estimator_constructor_type"]
+        if et not in ESTIMATOR_FILE_MAP:
+            continue
+        arch = ARCHITECTURE_TAG_MAP[et]
+        prefix = ARCHITECTURE_SLUG_PREFIX[arch]
+        base = f"{prefix}_{identity.variant}"
+        base_slug_counts[base] = base_slug_counts.get(base, 0) + 1
+
     created: List[Path] = []
 
     for fs_id, est_entry in all_estimators.items():
@@ -211,6 +256,9 @@ def convert_legacy_json(
             continue
 
         model_filename, _ = ESTIMATOR_FILE_MAP[estimator_type]
+        arch_tag = ARCHITECTURE_TAG_MAP[estimator_type]
+        slug_prefix = ARCHITECTURE_SLUG_PREFIX[arch_tag]
+        base_slug = f"{slug_prefix}_{identity.variant}"
 
         # Extract binary
         model_bytes = _extract_binary(estimator_dict, estimator_type)
@@ -274,7 +322,8 @@ def convert_legacy_json(
         if identity.trim is not None:
             new_config["trim"] = identity.trim
 
-        # Build errors for this estimator
+        # Build errors for this estimator. EstimatorErrors in v2 only holds
+        # error_by_target; the old feature_set_id key is stripped.
         estimator_errors_dict = old_errors.get(fs_id)
         if estimator_errors_dict is None:
             log.warning(
@@ -282,34 +331,45 @@ def convert_legacy_json(
                 fs_id,
                 json_path.name,
             )
-            estimator_errors_dict = {
-                "feature_set_id": fs_id,
-                "error_by_target": {},
-            }
+            estimator_errors_dict = {"error_by_target": {}}
+        else:
+            estimator_errors_dict = dict(estimator_errors_dict)
+            estimator_errors_dict.pop("feature_set_id", None)
 
         new_errors = {"estimator_errors": estimator_errors_dict}
 
-        # Build metadata.json
+        # Build metadata.json. Legacy models are all pointwise (no lookback),
+        # so input_spec is the default.
         metadata = {
             "schema_version": schema_version,
             "estimator_type": estimator_type,
+            "architecture_tag": arch_tag,
+            "input_spec": {
+                "lookback": 0,
+                "grouping_column": None,
+                "pad_strategy": "zero",
+            },
             "model_file": model_filename,
             "config": new_config,
             "routee_version": old_routee_version,
             "errors": new_errors,
         }
 
-        # Determine output path
-        # Sanitize the feature_set_id for use as a directory name
-        fs_dir_name = fs_id.replace("&", "_")
+        # Compute config_slug. Append a feature-name hash only when multiple
+        # estimators in this JSON share the same base slug.
+        feature_names = [f["name"] for f in feature_set_dict["features"]]
+        if base_slug_counts[base_slug] > 1:
+            config_slug = f"{base_slug}_{_feature_hash(feature_names)}"
+        else:
+            config_slug = base_slug
+
         model_dir = (
             output_dir
             / f"v{schema_version}"
             / identity.make
             / identity.model
             / str(identity.year)
-            / identity.variant
-            / fs_dir_name
+            / config_slug
             / f"v{version}"
         )
 
@@ -354,7 +414,12 @@ def main():
     )
     parser.add_argument("--year", type=int, required=True, help="Model year.")
     parser.add_argument(
-        "--variant", default="default", help="Model variant (e.g. charge_depleting)."
+        "--variant",
+        default="default",
+        help=(
+            "Model variant (e.g. charge_depleting). Folded into config_slug "
+            "as '{rf,ngb,cnn}_{variant}'; not a separate path segment."
+        ),
     )
     parser.add_argument("--version", type=int, default=1, help="Model version number.")
     parser.add_argument(

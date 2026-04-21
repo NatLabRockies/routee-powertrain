@@ -28,8 +28,9 @@ dependencies = [
 requires-python = ">=3.10,<3.14"
 
 [project.optional-dependencies]
-scikit = ["scikit-learn==1.6.1", "skl2onnx>=1.20,<1.21"]
-ngboost = ["ngboost==0.5.2", "scikit-learn==1.6.1"]
+scikit = ["scikit-learn>=1.6.1,<1.7", "skl2onnx>=1.20,<1.21"]
+ngboost = ["ngboost>=0.5.2,<0.6", "scikit-learn>=1.6.1,<1.7"]
+pytorch = ["torch>=2.5,<3.0", "onnxscript>=0.1"]
 plot = ["matplotlib"]
 dev = [
   "routee.powertrain[scikit]",
@@ -43,6 +44,7 @@ dev = [
   "hatch",
   "shapely",
   "boxsdk",
+  "pyarrow",
   "jupyter-book<2.0",
   "sphinx-book-theme",
   "types-PyYAML",
@@ -131,7 +133,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.pixi.project]
 channels = ["conda-forge"]
-platforms = ["osx-64", "osx-arm64", "linux-64", "win-64"]
+platforms = ["osx-arm64", "linux-64", "win-64"]
 
 [tool.pixi.feature.py310.dependencies]
 python = "3.10.*"
@@ -143,11 +145,11 @@ python = "3.12.*"
 python = "3.13.*"
 
 [tool.pixi.environments]
-default = { features = ["py313", "dev", "scikit", "plot", "ngboost"], solve-group = "default" }
-dev-py310 = { features = ["py310", "dev", "scikit", "plot", "ngboost"], solve-group = "py310" }
-dev-py311 = { features = ["py311", "dev", "scikit", "plot", "ngboost"], solve-group = "py311" }
-dev-py312 = { features = ["py312", "dev", "scikit", "plot", "ngboost"], solve-group = "py312" }
-dev-py313 = { features = ["py313", "dev", "scikit", "plot", "ngboost"], solve-group = "py313" }
+default = { features = ["py313", "dev", "scikit", "plot", "ngboost", "pytorch"], solve-group = "default" }
+dev-py310 = { features = ["py310", "dev", "scikit", "plot", "ngboost", "pytorch"], solve-group = "py310" }
+dev-py311 = { features = ["py311", "dev", "scikit", "plot", "ngboost", "pytorch"], solve-group = "py311" }
+dev-py312 = { features = ["py312", "dev", "scikit", "plot", "ngboost", "pytorch"], solve-group = "py312" }
+dev-py313 = { features = ["py313", "dev", "scikit", "plot", "ngboost", "pytorch"], solve-group = "py313" }
 
 [tool.pixi.feature.dev.dependencies]
 dprint = "*"

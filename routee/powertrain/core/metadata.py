@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import warnings
 from dataclasses import dataclass, field
+from typing import Optional
 
 from routee.powertrain.core.model_config import ModelConfig
 from routee.powertrain.utils.fs import get_version
@@ -24,6 +25,12 @@ class Metadata:
     errors: ModelErrors
     estimator_type: str
     model_file: str
+    #: Coarse architecture family (``"random_forest"``, ``"cnn"``, ``"ngboost"`` …).
+    #: Used for registry-level filtering without parsing ``estimator_type`` strings.
+    architecture_tag: str = "unknown"
+    #: Serialized ``Estimator.input_spec`` (lookback, grouping_column, pad_strategy).
+    #: Allows a registry consumer to see lookback requirements before loading the binary.
+    input_spec: Optional[dict] = None
     routee_version: str = field(default_factory=get_version)
     schema_version: int = SCHEMA_VERSION
 
@@ -31,6 +38,8 @@ class Metadata:
         return {
             "schema_version": self.schema_version,
             "estimator_type": self.estimator_type,
+            "architecture_tag": self.architecture_tag,
+            "input_spec": self.input_spec,
             "model_file": self.model_file,
             "config": self.config.to_dict(),
             "routee_version": self.routee_version,
@@ -61,6 +70,8 @@ class Metadata:
             errors=ModelErrors.from_dict(d["errors"]),
             estimator_type=d["estimator_type"],
             model_file=d["model_file"],
+            architecture_tag=d.get("architecture_tag", "unknown"),
+            input_spec=d.get("input_spec"),
             routee_version=d["routee_version"],
             schema_version=d.get("schema_version", SCHEMA_VERSION),
         )

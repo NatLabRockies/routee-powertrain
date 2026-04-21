@@ -5,8 +5,7 @@ from pathlib import Path
 import onnx
 import onnxruntime as rt
 import pandas as pd
-from routee.powertrain.core.features import DataColumn, FeatureSet, TargetSet
-from routee.powertrain.core.model_config import PredictMethod
+from routee.powertrain.core.model_config import ModelConfig, PredictMethod
 from routee.powertrain.estimators.estimator_interface import Estimator
 
 ONNX_INPUT_NAME = "input"
@@ -69,11 +68,13 @@ class ONNXEstimator(Estimator):
     def predict(
         self,
         links_df: pd.DataFrame,
-        feature_set: FeatureSet,
-        distance: DataColumn,
-        target_set: TargetSet,
-        predict_method: PredictMethod = PredictMethod.RATE,
+        config: ModelConfig,
     ) -> pd.DataFrame:
+        feature_set = config.feature_set
+        distance = config.distance
+        target_set = config.target
+        predict_method = config.predict_method
+
         if predict_method == PredictMethod.RATE:
             feature_name_list = feature_set.feature_name_list
         elif predict_method == PredictMethod.RAW:

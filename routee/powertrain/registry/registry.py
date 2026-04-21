@@ -29,8 +29,8 @@ class ModelRegistry(ABC):
         make: Optional[str] = None,
         model: Optional[str] = None,
         year: Optional[int] = None,
-        variant: Optional[str] = None,
-        feature_set_id: Optional[str] = None,
+        config_slug: Optional[str] = None,
+        feature_names: Optional[Sequence[str]] = None,
         powertrain_type: Optional[str] = None,
         fuel_type: Optional[str] = None,
         drivetrain: Optional[str] = None,
@@ -50,8 +50,9 @@ class ModelRegistry(ABC):
             make: filter by vehicle make
             model: filter by model name
             year: filter by model year
-            variant: filter by variant
-            feature_set_id: filter by feature set id
+            config_slug: filter by config slug (e.g. "rf_default", "cnn_5link")
+            feature_names: filter to models whose feature set contains every
+                listed feature column (subset match, exact names)
             powertrain_type: filter by powertrain type (e.g. "ICE", "BEV", "HEV")
             fuel_type: filter by fuel type (e.g. "GASOLINE", "DIESEL", "ELECTRICITY")
             drivetrain: filter by drivetrain (e.g. "FWD", "RWD", "AWD")

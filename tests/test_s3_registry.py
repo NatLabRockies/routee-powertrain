@@ -15,7 +15,6 @@ def _fake_metadata(
     make: str = "toyota",
     model: str = "camry_4cyl_fwd",
     year: int = 2016,
-    variant: str = "default",
     powertrain: str = "ICE",
 ) -> dict:
     """Return a minimal metadata dict that _model_info_from_metadata can parse."""
@@ -212,16 +211,14 @@ class TestQueryHierarchical(TestCase):
 
     def _build_full_registry(self):
         """Build a registry with two models:
-        - toyota/camry/2016/default/grade_dec_speed_mph/v1
-        - chevrolet/bolt_ev/2020/transient/ambient_temp_f_speed_mph/v1
+        - toyota/camry/2016/rf_default/v1
+        - chevrolet/bolt_ev/2020/rf_transient/v1
         """
         toyota_meta = _fake_metadata("toyota", "camry", 2016)
-        chevy_meta = _fake_metadata("chevrolet", "bolt_ev", 2020, "transient")
+        chevy_meta = _fake_metadata("chevrolet", "bolt_ev", 2020)
 
-        toyota_dir = f"{BASE}/toyota/camry/2016/default/grade_dec_speed_mph/v1"
-        chevy_dir = (
-            f"{BASE}/chevrolet/bolt_ev/2020/transient/ambient_temp_f_speed_mph/v1"
-        )
+        toyota_dir = f"{BASE}/toyota/camry/2016/rf_default/v1"
+        chevy_dir = f"{BASE}/chevrolet/bolt_ev/2020/rf_transient/v1"
 
         pages = {
             # Level 0: makes
@@ -238,37 +235,23 @@ class TestQueryHierarchical(TestCase):
             f"{BASE}/chevrolet/bolt_ev/": [
                 _common_prefixes("2020", prefix=f"{BASE}/chevrolet/bolt_ev/")
             ],
-            # Level 3: variants
+            # Level 3: config slugs
             f"{BASE}/toyota/camry/2016/": [
-                _common_prefixes("default", prefix=f"{BASE}/toyota/camry/2016/")
+                _common_prefixes("rf_default", prefix=f"{BASE}/toyota/camry/2016/")
             ],
             f"{BASE}/chevrolet/bolt_ev/2020/": [
-                _common_prefixes("transient", prefix=f"{BASE}/chevrolet/bolt_ev/2020/")
-            ],
-            # Level 4: feature sets
-            f"{BASE}/toyota/camry/2016/default/": [
                 _common_prefixes(
-                    "grade_dec_speed_mph",
-                    prefix=f"{BASE}/toyota/camry/2016/default/",
+                    "rf_transient", prefix=f"{BASE}/chevrolet/bolt_ev/2020/"
                 )
             ],
-            f"{BASE}/chevrolet/bolt_ev/2020/transient/": [
-                _common_prefixes(
-                    "ambient_temp_f_speed_mph",
-                    prefix=f"{BASE}/chevrolet/bolt_ev/2020/transient/",
-                )
+            # Level 4: versions
+            f"{BASE}/toyota/camry/2016/rf_default/": [
+                _common_prefixes("v1", prefix=f"{BASE}/toyota/camry/2016/rf_default/")
             ],
-            # Level 5: versions
-            f"{BASE}/toyota/camry/2016/default/grade_dec_speed_mph/": [
+            f"{BASE}/chevrolet/bolt_ev/2020/rf_transient/": [
                 _common_prefixes(
                     "v1",
-                    prefix=f"{BASE}/toyota/camry/2016/default/grade_dec_speed_mph/",
-                )
-            ],
-            f"{BASE}/chevrolet/bolt_ev/2020/transient/ambient_temp_f_speed_mph/": [
-                _common_prefixes(
-                    "v1",
-                    prefix=f"{BASE}/chevrolet/bolt_ev/2020/transient/ambient_temp_f_speed_mph/",
+                    prefix=f"{BASE}/chevrolet/bolt_ev/2020/rf_transient/",
                 )
             ],
         }
@@ -298,17 +281,19 @@ class TestQueryHierarchical(TestCase):
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].model_id.make, "toyota")
 
-    def test_query_by_variant(self):
+    def test_query_by_config_slug(self):
         registry = self._build_full_registry()
-        results = registry.query(variant="transient")
+        results = registry.query(config_slug="rf_transient")
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].model_id.make, "chevrolet")
 
-    def test_query_by_feature_set(self):
+    def test_query_by_feature_names(self):
         registry = self._build_full_registry()
-        results = registry.query(feature_set_id="grade_dec_speed_mph")
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].model_id.make, "toyota")
+        # both fake models have speed_mph+grade_dec in their feature set
+        results = registry.query(feature_names=["speed_mph"])
+        self.assertEqual(len(results), 2)
+        results = registry.query(feature_names=["speed_mph", "nonexistent"])
+        self.assertEqual(len(results), 0)
 
     def test_query_fuzzy_make(self):
         registry = self._build_full_registry()
@@ -344,12 +329,10 @@ class TestQueryHierarchical(TestCase):
 
         # _scan_models needs _list_metadata_keys which expects
         # a full listing without Delimiter. Add the needed pages.
-        toyota_dir = f"{BASE}/toyota/camry/2016/default/grade_dec_speed_mph/v1"
-        chevy_dir = (
-            f"{BASE}/chevrolet/bolt_ev/2020/transient/ambient_temp_f_speed_mph/v1"
-        )
+        toyota_dir = f"{BASE}/toyota/camry/2016/rf_default/v1"
+        chevy_dir = f"{BASE}/chevrolet/bolt_ev/2020/rf_transient/v1"
         toyota_meta = _fake_metadata("toyota", "camry", 2016)
-        chevy_meta = _fake_metadata("chevrolet", "bolt_ev", 2020, "transient")
+        chevy_meta = _fake_metadata("chevrolet", "bolt_ev", 2020)
 
         # Override page data for non-Delimiter listing
         registry._client._paginator.pages_by_prefix[f"{BASE}/"] = [

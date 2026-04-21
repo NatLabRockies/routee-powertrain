@@ -8,6 +8,7 @@ import pandas as pd
 
 from routee.powertrain.core.metadata import Metadata
 from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
+from routee.powertrain.estimators.cnn import CNNEstimator
 from routee.powertrain.estimators.estimator_interface import Estimator
 from routee.powertrain.estimators.onnx import ONNXEstimator
 from routee.powertrain.estimators.smart_core import SmartCoreEstimator
@@ -32,6 +33,7 @@ REGISTERED_ESTIMATORS = {
     "ONNXEstimator": ONNXEstimator,
     "SmartCoreEstimator": SmartCoreEstimator,
     "NGBoostEstimator": NGBoostEstimator,
+    "CNNEstimator": CNNEstimator,
 }
 
 
@@ -183,58 +185,39 @@ class Model:
     def predict(
         self,
         links_df: pd.DataFrame,
-        feature_columns: Optional[List[str]] = None,
-        distance_column: Optional[str] = None,
     ) -> pd.DataFrame:
         """
         Predict absolute energy consumption for each link
 
         Args:
-            links_df: a dataframe containing the links to predict on
-            feature_columns: optional subset of feature columns to use from the dataframe.
-                If not provided, uses the model's configured feature set.
-            distance_column: the column to use for distance
+            links_df: a dataframe containing the links to predict on. Must contain
+                every column in ``self.feature_set`` plus the distance column, and
+                (if the estimator's ``input_spec`` declares a grouping column) that
+                grouping column.
 
         Returns: a dataframe containing the predicted energy consumption for each link
         """
         config = self.metadata.config
 
-        if distance_column is None:
-            distance_column = config.distance.name
-            if distance_column not in links_df.columns:
-                raise ValueError(
-                    f"links_df must contain a distance column named: '{distance_column}'"
-                )
-        else:
-            links_df = links_df.rename(columns={distance_column: config.distance.name})
-
         feature_set = config.feature_set
+        missing = [
+            f.name for f in feature_set.features if f.name not in links_df.columns
+        ]
+        if missing:
+            raise ValueError(
+                f"links_df is missing the following required features: {missing}. "
+                f"Expected features: {feature_set.feature_name_list}"
+            )
 
-        # Validate that required feature columns exist in the dataframe
-        if feature_columns is not None:
-            missing = [c for c in feature_columns if c not in links_df.columns]
-            if missing:
+        input_spec = self.estimator.input_spec
+        if input_spec.grouping_column is not None:
+            if input_spec.grouping_column not in links_df.columns:
                 raise ValueError(
-                    f"The following feature columns are missing from links_df: {missing}"
-                )
-        else:
-            # Check that all configured features are in the dataframe
-            missing = [
-                f.name for f in feature_set.features if f.name not in links_df.columns
-            ]
-            if missing:
-                raise ValueError(
-                    f"links_df is missing the following required features: {missing}. "
-                    f"Expected features: {feature_set.feature_name_list}"
+                    f"Estimator requires a grouping column '{input_spec.grouping_column}' "
+                    f"(lookback={input_spec.lookback}) but it was not found in links_df."
                 )
 
-        pred_energy_df = self.estimator.predict(
-            links_df,
-            feature_set,
-            config.distance,
-            config.target,
-            config.predict_method,
-        )
+        pred_energy_df = self.estimator.predict(links_df, config)
 
         for energy in config.target.targets:
             if config.apply_real_world_adjustment:

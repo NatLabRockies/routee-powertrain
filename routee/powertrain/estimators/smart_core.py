@@ -3,8 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import pandas as pd
-from routee.powertrain.core.features import DataColumn, FeatureSet, TargetSet
-from routee.powertrain.core.model_config import PredictMethod
+from routee.powertrain.core.model_config import ModelConfig, PredictMethod
 
 from routee.powertrain.estimators.estimator_interface import Estimator
 
@@ -94,11 +93,13 @@ class SmartCoreEstimator(Estimator):
     def predict(
         self,
         links_df: pd.DataFrame,
-        feature_set: FeatureSet,
-        distance: DataColumn,
-        target_set: TargetSet,
-        predict_method: PredictMethod = PredictMethod.RATE,
+        config: ModelConfig,
     ) -> pd.DataFrame:
+        feature_set = config.feature_set
+        distance = config.distance
+        target_set = config.target
+        predict_method = config.predict_method
+
         if len(target_set.targets) != 1:
             raise ValueError(
                 "SmartCore only supports a single energy target. "
@@ -113,7 +114,7 @@ class SmartCoreEstimator(Estimator):
             feature_name_list = feature_set.feature_name_list + [distance.name]
         else:
             raise ValueError(
-                f"Predict method {predict_method} is not supported by ONNXEstimator"
+                f"Predict method {predict_method} is not supported by SmartCoreEstimator"
             )
         x = links_df[feature_name_list].values
 
