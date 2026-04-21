@@ -36,7 +36,7 @@ class InputSpec:
         return cls(
             lookback=int(d.get("lookback", 0)),
             grouping_column=d.get("grouping_column"),
-            pad_strategy=d.get("pad_strategy", "zero"),
+            pad_strategy=d.get("pad_strategy", "repeat_first"),
         )
 
 
