@@ -10,7 +10,6 @@ from routee.powertrain.core.metadata import Metadata
 from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
 from routee.powertrain.estimators.estimator_interface import Estimator
 from routee.powertrain.estimators.onnx import ONNXEstimator
-from routee.powertrain.estimators.smart_core import SmartCoreEstimator
 from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
 
 from routee.powertrain.io.archive import (
@@ -30,7 +29,6 @@ if TYPE_CHECKING:
 
 REGISTERED_ESTIMATORS = {
     "ONNXEstimator": ONNXEstimator,
-    "SmartCoreEstimator": SmartCoreEstimator,
     "NGBoostEstimator": NGBoostEstimator,
 }
 

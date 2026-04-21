@@ -74,16 +74,12 @@ def _sanitize_infinities(obj):
 ESTIMATOR_FILE_MAP = {
     "ONNXEstimator": ("model.onnx", "onnx_model"),
     "NGBoostEstimator": ("model.joblib", "ngboost_model"),
-    "SmartCoreEstimator": ("model.bin", "smartcore_model"),
-    "SKLearnEstimator": ("model.pickle", "rf_regressor"),
 }
 
 # Legacy estimator class name -> v2 architecture_tag (matches values emitted by
 # routee/powertrain/trainers/*.py).
 ARCHITECTURE_TAG_MAP = {
     "ONNXEstimator": "random_forest",  # legacy ONNX exports are all sklearn RFs
-    "SKLearnEstimator": "random_forest",
-    "SmartCoreEstimator": "random_forest",
     "NGBoostEstimator": "ngboost",
 }
 
@@ -115,9 +111,6 @@ def _extract_binary(estimator_dict: dict, estimator_type: str) -> bytes:
 
     if isinstance(raw, str):
         return base64.b64decode(raw)
-    elif isinstance(raw, dict):
-        # SmartCore stores a JSON dict — serialize it to bytes
-        return json.dumps(raw).encode("utf-8")
     else:
         raise ValueError(f"Unexpected type for '{key}': {type(raw)}")
 
