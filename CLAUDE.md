@@ -26,7 +26,6 @@
 | Docs              | `jupyter-book build docs`                               |
 | All checks (Pixi) | `pixi run check` (fmt + lint + typing + test)           |
 | CI checks (Pixi)  | `pixi run ci` (fmt_check + lint_check + typing + test)  |
-| Rust component    | `cd rust && maturin develop --release`                  |
 
 ## Architecture
 
@@ -36,13 +35,11 @@ Package source lives under `nrel/routee/powertrain/`.
 
 - **`core/`** — Central data types: `Model`, `ModelConfig`, `FeatureSet`, `DataColumn`, `TargetSet`, `Constraints`, `PowertrainType` (enum), `Metadata`
 - **`estimators/`** — `Estimator` ABC with implementations:
-  - `ONNXEstimator` — wraps ONNX models via onnxruntime
-  - `SmartCoreEstimator` — wraps Rust SmartCore random forest (PyO3)
+  - `ONNXEstimator` — wraps any ONNX model via onnxruntime. Handles both plain tabular input (`(N, F)`) and windowed sequence input (`(N, lookback, F)`) driven by an `InputSpec` embedded in the model's ONNX `metadata_props`.
   - `NGBoostEstimator` — wraps NGBoost models (joblib + base64)
-  - `SKLearnEstimator` — wraps sklearn RandomForestRegressor (legacy, JSON/pickle)
 - **`trainers/`** — `Trainer` ABC with implementations:
   - `SklearnRandomForestTrainer` → produces `ONNXEstimator` (converts via skl2onnx)
-  - `SmartcoreRandomForestTrainer` → produces `SmartCoreEstimator`
+  - `CNNTrainer` → produces `ONNXEstimator` with a non-default `InputSpec` (1D CNN exported via `torch.onnx.export`)
   - `NGBoostTrainer` → produces `NGBoostEstimator`
 - **`io/`** — `load_model()`, `list_available_models()`, `load_sample_route()`, `to_lookup_table()`
 - **`validation/`** — `ModelErrors`, `compute_errors()`, `visualize_features()`, `contour_plot()`
@@ -54,7 +51,7 @@ Package source lives under `nrel/routee/powertrain/`.
   - `ModelId` — Immutable identifier: `make/model/year/variant/feature_set_id/version` (e.g. `toyota/camry/2016/default/speed_grade/v1`)
   - `ModelInfo` — Lightweight summary returned by `query()` with metadata but no binary data
   - `get_default_registry()` — Factory that selects backend based on `ROUTEE_REGISTRY_BACKEND` env var (`"s3"` or `"local"`, default `"s3"`)
-  - `filter_models()` — Supports exact and fuzzy matching (via `rapidfuzz`) on make, model, year, variant, feature_set_id powertrain_type, fuel_type, drivetrain, engine, trim, and accepts additional `custom_filters` **`rust/`** (top-level) — PyO3/maturin Rust extension (`powertrain_rust`) providing SmartCore random forest. Build with `cd rust && maturin develop --release`.
+  - `filter_models()` — Supports exact and fuzzy matching (via `rapidfuzz`) on make, model, year, variant, feature_set_id powertrain_type, fuel_type, drivetrain, engine, trim, and accepts additional `custom_filters`
 
 ### Registry
 
@@ -109,12 +106,13 @@ The Registry system abstracts model discovery and retrieval, allowing pre-traine
 
 - **Framework**: `unittest.TestCase` (not pytest-style assertions, though pytest can run them)
 - **Files**:
-  - `tests/test_train_estimate_pipeline.py` — Train → predict → serialize → deserialize round-trip for sklearn, NGBoost, SmartCore
+  - `tests/test_train_estimate_pipeline.py` — Train → predict → serialize → deserialize round-trip for sklearn → ONNX and NGBoost
+  - `tests/test_cnn_pipeline.py` — CNN → ONNX round-trip (requires torch; skipped otherwise)
   - `tests/test_model_library.py` — Loads all catalog models (marked slow, skipped by default)
   - `tests/test_to_lookup.py` — Lookup table generation with varying feature counts
   - `tests/mock_resources.py` — Helper functions for mock data generation
 - **Test data**: `tests/routee-powertrain-test-data/sample_train_data.csv`
-- **Notes**: SmartCore tests are `@skip`-ped (require Rust build). Tests write temp files to `tmp/` and clean up.
+- **Notes**: Tests write temp files to `tmp/` and clean up.
 
 ## CI/CD
 
@@ -124,11 +122,12 @@ The Registry system abstracts model discovery and retrieval, allowing pre-traine
 
 ## Optional Dependency Groups
 
-| Extra     | Purpose                                                            |
-| --------- | ------------------------------------------------------------------ |
-| `scikit`  | sklearn + skl2onnx for training                                    |
-| `ngboost` | NGBoost for probabilistic training                                 |
-| `plot`    | matplotlib for visualization                                       |
-| `dev`     | All of the above + pytest, mypy, ruff, maturin, jupyter-book, etc. |
+| Extra     | Purpose                                                   |
+| --------- | --------------------------------------------------------- |
+| `scikit`  | sklearn + skl2onnx for training                           |
+| `ngboost` | NGBoost for probabilistic training                        |
+| `pytorch` | torch + onnxscript for the CNN trainer                    |
+| `plot`    | matplotlib for visualization                              |
+| `dev`     | All of the above + pytest, mypy, ruff, jupyter-book, etc. |
 
 Install with: `pip install -e ".[scikit]"`, `pip install -e ".[ngboost,plot]"`, etc.

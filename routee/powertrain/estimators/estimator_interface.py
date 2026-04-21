@@ -22,7 +22,7 @@ class InputSpec:
     #: Required whenever ``lookback > 0`` so windows don't cross sequence boundaries.
     grouping_column: Optional[str] = None
     #: how to pad the lookback window at the start of a group (first rows lack prior context).
-    pad_strategy: PadStrategy = "zero"
+    pad_strategy: PadStrategy = "repeat_first"
 
     def to_dict(self) -> dict:
         return {
@@ -36,7 +36,7 @@ class InputSpec:
         return cls(
             lookback=int(d.get("lookback", 0)),
             grouping_column=d.get("grouping_column"),
-            pad_strategy=d.get("pad_strategy", "zero"),
+            pad_strategy=d.get("pad_strategy", "repeat_first"),
         )
 
 

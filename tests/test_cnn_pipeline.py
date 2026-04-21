@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 import routee.powertrain as pt
-from routee.powertrain.estimators.cnn import CNNEstimator
+from routee.powertrain.estimators.onnx import ONNXEstimator
 
 this_dir = Path(__file__).parent
 
@@ -137,7 +137,7 @@ class TestCNNPipeline(TestCase):
         )
         model = trainer.train(self.df, self.config)
 
-        restored = CNNEstimator.from_bytes(model.estimator.to_bytes())
+        restored = ONNXEstimator.from_bytes(model.estimator.to_bytes())
         self.assertEqual(restored.input_spec.lookback, 4)
         self.assertEqual(restored.input_spec.grouping_column, "route_id")
         self.assertEqual(restored.input_spec.pad_strategy, "repeat_first")

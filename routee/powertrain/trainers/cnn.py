@@ -11,16 +11,14 @@ import onnx
 import pandas as pd
 
 from routee.powertrain.core.model_config import ModelConfig
-from routee.powertrain.estimators.cnn import (
-    CNN_INPUT_NAME,
-    DEFAULT_GROUPING_COLUMN,
-    DEFAULT_LOOKBACK,
-    CNNEstimator,
-)
-from routee.powertrain.estimators.estimator_interface import Estimator
+from routee.powertrain.estimators.estimator_interface import Estimator, InputSpec
+from routee.powertrain.estimators.onnx import ONNX_INPUT_NAME, ONNXEstimator
 from routee.powertrain.trainers.trainer import Trainer
 
 log = logging.getLogger(__name__)
+
+DEFAULT_LOOKBACK = 5
+DEFAULT_GROUPING_COLUMN = "route_id"
 
 
 class CNNTrainer(Trainer):
@@ -248,9 +246,9 @@ class CNNTrainer(Trainer):
                 model,
                 (dummy,),
                 onnx_path,
-                input_names=[CNN_INPUT_NAME],
+                input_names=[ONNX_INPUT_NAME],
                 output_names=["output"],
-                dynamic_axes={CNN_INPUT_NAME: {0: "batch"}, "output": {0: "batch"}},
+                dynamic_axes={ONNX_INPUT_NAME: {0: "batch"}, "output": {0: "batch"}},
                 opset_version=17,
                 dynamo=False,
             )
@@ -267,18 +265,20 @@ class CNNTrainer(Trainer):
         onnx_sess = _rt.InferenceSession(
             onnx_proto.SerializeToString(), providers=["CPUExecutionProvider"]
         )
-        onnx_out = onnx_sess.run(None, {CNN_INPUT_NAME: sanity_x})[0]
+        onnx_out = onnx_sess.run(None, {ONNX_INPUT_NAME: sanity_x})[0]
         max_abs = float(np.max(np.abs(torch_out - onnx_out)))
         if max_abs > 1e-4:
             raise RuntimeError(
                 f"ONNX export drift exceeded tolerance: max|Δ|={max_abs:.2e}"
             )
 
-        return CNNEstimator(
+        return ONNXEstimator(
             onnx_proto,
-            lookback=self.lookback,
-            grouping_column=self.grouping_column,
-            pad_strategy=self.pad_strategy,
+            input_spec=InputSpec(
+                lookback=self.lookback,
+                grouping_column=self.grouping_column,
+                pad_strategy=self.pad_strategy,
+            ),
         )
 
 
