@@ -7,12 +7,16 @@ from typing import Callable, List, Optional, Sequence, Union
 
 from routee.powertrain.core.metadata import SCHEMA_VERSION_STRING
 from routee.powertrain.core.model import Model
-from routee.powertrain.core.year import parse_year, year_contains
+from routee.powertrain.core.year import parse_year
 from routee.powertrain.io.archive import (
     _model_from_metadata_and_bytes,
     METADATA_FILENAME,
 )
-from routee.powertrain.registry.filtering import _matches, filter_models
+from routee.powertrain.registry.filtering import (
+    VersionStrategy,
+    filter_models,
+    latest_model_ids,
+)
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
 from routee.powertrain.registry.default import (
@@ -97,19 +101,26 @@ def _model_info_from_metadata(
     )
 
 
+class IndexMissingError(RuntimeError):
+    """Raised when ``index.json`` is missing or unreadable at the schema root."""
+
+
 class S3Registry(ModelRegistry):
     """
     A model registry backed by a public S3 bucket.
 
     Models are stored as directories containing ``metadata.json`` and a
-    binary model file.  Discovery uses ``ListObjectsV2`` to scan for
-    ``metadata.json`` keys under the schema prefix.
+    binary model file. Discovery requires an ``index.json`` at the schema
+    root; build it with :func:`build_index`.
 
     Bucket layout::
 
-        s3://<bucket>/<root_prefix>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/
-            metadata.json
-            model.onnx
+        s3://<bucket>/<root_prefix>/<schema_version>/
+            index.json
+            <make>/<model>/<year>/<config_slug>/v<N>/
+                metadata.json
+                model.onnx
+
     Args:
         bucket: S3 bucket name
         schema_version: schema version to use (default "v2")
@@ -155,79 +166,8 @@ class S3Registry(ModelRegistry):
             return f"{self.root_prefix}/{self.schema_version}"
         return self.schema_version
 
-    def _list_children(self, prefix: str) -> List[str]:
-        """List immediate child directory names under an S3 prefix.
-
-        Uses ``Delimiter='/'`` so S3 returns ``CommonPrefixes`` without
-        downloading any objects.  Handles pagination.
-
-        Args:
-            prefix: S3 key prefix ending with ``/``
-
-        Returns:
-            List of child directory names (without trailing ``/``)
-        """
-        client = self._get_client()
-        children: List[str] = []
-        paginator = client.get_paginator("list_objects_v2")
-        for page in paginator.paginate(
-            Bucket=self.bucket, Prefix=prefix, Delimiter="/"
-        ):
-            for cp in page.get("CommonPrefixes", []):
-                # cp["Prefix"] looks like "<prefix><child>/"
-                child = cp["Prefix"][len(prefix) :].rstrip("/")
-                if child:
-                    children.append(child)
-        return children
-
-    def _narrow_prefixes(
-        self,
-        prefixes: List[str],
-        query_value: Optional[str],
-        fuzzy: bool,
-        threshold: int,
-        is_year: bool = False,
-        year_query: Optional[int] = None,
-    ) -> List[str]:
-        """Expand prefixes by one hierarchy level, optionally filtering.
-
-        For each prefix, lists child directories via S3 and applies
-        fuzzy or exact matching against ``query_value`` to narrow the
-        result set.  For the year level, set ``is_year=True`` and pass
-        the numeric year as ``year_query`` to use ``year_contains``.
-
-        Args:
-            prefixes: S3 key prefixes to expand
-            query_value: string filter (make, model, etc.) or None
-            fuzzy: whether to use fuzzy string matching
-            threshold: fuzzy match threshold (0–100)
-            is_year: if True, filter using ``year_contains`` instead
-            year_query: numeric year used when ``is_year`` is True
-
-        Returns:
-            List of narrowed S3 prefixes (one level deeper)
-        """
-        next_prefixes: List[str] = []
-        for prefix in prefixes:
-            children = self._list_children(prefix)
-            for child in children:
-                child_prefix = f"{prefix}{child}/"
-                if is_year and year_query is not None:
-                    try:
-                        child_year = parse_year(child)
-                    except (ValueError, TypeError):
-                        continue
-                    if year_contains(child_year, year_query):
-                        next_prefixes.append(child_prefix)
-                elif query_value is not None:
-                    if _matches(query_value, child.lower(), fuzzy, threshold):
-                        next_prefixes.append(child_prefix)
-                else:
-                    next_prefixes.append(child_prefix)
-        return next_prefixes
-
     def _list_metadata_keys(self) -> List[str]:
-        """List all metadata.json keys under the schema prefix using pagination."""
+        """List all metadata.json keys under the schema prefix (for build_index)."""
         client = self._get_client()
         prefix = f"{self._s3_prefix()}/"
         keys: List[str] = []
@@ -239,53 +179,36 @@ class S3Registry(ModelRegistry):
                     keys.append(key)
         return keys
 
-    def _fetch_index(self) -> Optional[List[ModelInfo]]:
-        """Fetch the index.json from the bucket if it exists."""
+    def _fetch_index(self) -> List[ModelInfo]:
+        """Fetch and parse the index.json at the schema root.
+
+        Raises:
+            IndexMissingError: if the index is missing or unreadable. Callers
+                should surface this with guidance to run ``build_index``.
+        """
         key = f"{self._s3_prefix()}/{INDEX_FILENAME}"
         try:
             data = self._fetch_bytes(key)
+        except Exception as exc:
+            raise IndexMissingError(
+                f"Could not read '{key}' from s3://{self.bucket}. "
+                "The S3 registry requires an index.json at the schema root — "
+                "run routee.powertrain.registry.s3.build_index to generate one."
+            ) from exc
+        try:
             index_dict = json.loads(data)
             return [ModelInfo.from_dict(m) for m in index_dict.get("models", [])]
-        except Exception:
-            return None
+        except Exception as exc:
+            raise IndexMissingError(f"Could not parse index at '{key}': {exc}") from exc
 
-    def _scan_models(self) -> List[ModelInfo]:
-        """Scan the bucket for all models and return their metadata."""
-        index = self._fetch_index()
-        if index is not None:
-            return index
-
-        results: List[ModelInfo] = []
-        for key in self._list_metadata_keys():
-            try:
-                model_id = _parse_model_id_from_key(
-                    key, self.schema_version, self.root_prefix
-                )
-                data = self._fetch_bytes(key)
-                metadata_dict = json.loads(data)
-                # path is the directory prefix (key without /metadata.json)
-                dir_key = key[: -len(f"/{METADATA_FILENAME}")]
-                info = _model_info_from_metadata(metadata_dict, model_id, dir_key)
-                results.append(info)
-            except Exception:
-                continue
-        return results
-
-    def list_models(self) -> List[ModelId]:
-        index = self._fetch_index()
-        if index is not None:
-            return [m.model_id for m in index]
-
-        results: List[ModelId] = []
-        for key in self._list_metadata_keys():
-            try:
-                model_id = _parse_model_id_from_key(
-                    key, self.schema_version, self.root_prefix
-                )
-                results.append(model_id)
-            except Exception:
-                continue
-        return results
+    def list_models(
+        self,
+        version_strategy: VersionStrategy = "latest",
+    ) -> List[ModelId]:
+        ids = [m.model_id for m in self._fetch_index()]
+        if version_strategy == "latest":
+            return latest_model_ids(ids)
+        return ids
 
     def query(
         self,
@@ -299,132 +222,30 @@ class S3Registry(ModelRegistry):
         drivetrain: Optional[str] = None,
         engine: Optional[str] = None,
         trim: Optional[str] = None,
+        version: Optional[int] = None,
+        version_strategy: VersionStrategy = "latest",
         custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
         fuzzy: bool = True,
         fuzzy_threshold: int = 80,
     ) -> List[ModelInfo]:
-        index = self._fetch_index()
-        if index is not None:
-            return filter_models(
-                index,
-                make=make,
-                model=model,
-                year=year,
-                config_slug=config_slug,
-                feature_names=feature_names,
-                powertrain_type=powertrain_type,
-                fuel_type=fuel_type,
-                drivetrain=drivetrain,
-                engine=engine,
-                trim=trim,
-                custom_filters=custom_filters,
-                fuzzy=fuzzy,
-                fuzzy_threshold=fuzzy_threshold,
-            )
-
-        has_filters = any(
-            v is not None
-            for v in (
-                make,
-                model,
-                year,
-                config_slug,
-                feature_names,
-                powertrain_type,
-                fuel_type,
-                drivetrain,
-                engine,
-                trim,
-            )
+        return filter_models(
+            self._fetch_index(),
+            make=make,
+            model=model,
+            year=year,
+            config_slug=config_slug,
+            feature_names=feature_names,
+            powertrain_type=powertrain_type,
+            fuel_type=fuel_type,
+            drivetrain=drivetrain,
+            engine=engine,
+            trim=trim,
+            version=version,
+            version_strategy=version_strategy,
+            custom_filters=custom_filters,
+            fuzzy=fuzzy,
+            fuzzy_threshold=fuzzy_threshold,
         )
-        has_custom_filters = custom_filters is not None and len(custom_filters) > 0
-        if not has_filters and not has_custom_filters:
-            return self._scan_models()
-
-        # Walk the S3 hierarchy level-by-level, narrowing at each step.
-        # Levels: make / model / year / config_slug / version
-        prefixes = [f"{self._s3_prefix()}/"]
-
-        # Level 1: make
-        prefixes = self._narrow_prefixes(prefixes, make, fuzzy, fuzzy_threshold)
-        # Level 2: model
-        prefixes = self._narrow_prefixes(prefixes, model, fuzzy, fuzzy_threshold)
-        # Level 3: year
-        prefixes = self._narrow_prefixes(
-            prefixes,
-            None,
-            fuzzy,
-            fuzzy_threshold,
-            is_year=(year is not None),
-            year_query=year,
-        )
-        # Level 4: config_slug
-        prefixes = self._narrow_prefixes(prefixes, config_slug, fuzzy, fuzzy_threshold)
-        # Level 5: version (expand all)
-        prefixes = self._narrow_prefixes(prefixes, None, fuzzy, fuzzy_threshold)
-
-        required_features = (
-            {n.lower() for n in feature_names} if feature_names else None
-        )
-
-        # Fetch metadata for narrowed results
-        results: List[ModelInfo] = []
-        for prefix in prefixes:
-            meta_key = f"{prefix}{METADATA_FILENAME}"
-            try:
-                model_id = _parse_model_id_from_key(
-                    meta_key, self.schema_version, self.root_prefix
-                )
-                data = self._fetch_bytes(meta_key)
-                metadata_dict = json.loads(data)
-                dir_key = prefix.rstrip("/")
-                info = _model_info_from_metadata(metadata_dict, model_id, dir_key)
-                # Apply metadata-level filters that can't be narrowed
-                # via the S3 directory hierarchy.
-                if required_features is not None and not required_features.issubset(
-                    {fn.lower() for fn in info.feature_names}
-                ):
-                    continue
-                if powertrain_type is not None and not _matches(
-                    powertrain_type,
-                    info.powertrain_type.lower(),
-                    fuzzy,
-                    fuzzy_threshold,
-                ):
-                    continue
-                if fuel_type is not None and (
-                    info.fuel_type is None
-                    or not _matches(
-                        fuel_type, info.fuel_type.lower(), fuzzy, fuzzy_threshold
-                    )
-                ):
-                    continue
-                if drivetrain is not None and (
-                    info.drivetrain is None
-                    or not _matches(
-                        drivetrain,
-                        info.drivetrain.lower(),
-                        fuzzy,
-                        fuzzy_threshold,
-                    )
-                ):
-                    continue
-                if engine is not None and (
-                    info.engine is None
-                    or not _matches(engine, info.engine.lower(), fuzzy, fuzzy_threshold)
-                ):
-                    continue
-                if trim is not None and (
-                    info.trim is None
-                    or not _matches(trim, info.trim.lower(), fuzzy, fuzzy_threshold)
-                ):
-                    continue
-                if custom_filters and not all(fn(info) for fn in custom_filters):
-                    continue
-                results.append(info)
-            except Exception:
-                continue
-        return results
 
     def load(self, model_id: Union[str, ModelId]) -> Model:
         model_id = _resolve_model_id(model_id)
@@ -471,7 +292,6 @@ def build_index(
     log = logging.getLogger(__name__)
     log.info("Scanning s3://%s/%s for models...", bucket, registry._s3_prefix())
 
-    # We use _list_metadata_keys directly to avoid using an old index if it exists
     models = []
     for key in registry._list_metadata_keys():
         try:

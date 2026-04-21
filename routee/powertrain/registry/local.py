@@ -12,7 +12,11 @@ from routee.powertrain.io.archive import (
     METADATA_FILENAME,
 )
 from routee.powertrain.core.metadata import SCHEMA_VERSION_STRING
-from routee.powertrain.registry.filtering import filter_models
+from routee.powertrain.registry.filtering import (
+    VersionStrategy,
+    filter_models,
+    latest_model_ids,
+)
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
 
@@ -130,7 +134,10 @@ class LocalRegistry(ModelRegistry):
                 continue  # skip malformed entries
         return results
 
-    def list_models(self) -> List[ModelId]:
+    def list_models(
+        self,
+        version_strategy: VersionStrategy = "latest",
+    ) -> List[ModelId]:
         schema_root = self._schema_root
         if not schema_root.exists():
             return []
@@ -143,6 +150,8 @@ class LocalRegistry(ModelRegistry):
                 results.append(model_id)
             except Exception:
                 continue
+        if version_strategy == "latest":
+            return latest_model_ids(results)
         return results
 
     def query(
@@ -157,13 +166,14 @@ class LocalRegistry(ModelRegistry):
         drivetrain: Optional[str] = None,
         engine: Optional[str] = None,
         trim: Optional[str] = None,
+        version: Optional[int] = None,
+        version_strategy: VersionStrategy = "latest",
         custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
         fuzzy: bool = True,
         fuzzy_threshold: int = 80,
     ) -> List[ModelInfo]:
-        results = self._scan_models()
         return filter_models(
-            results,
+            self._scan_models(),
             make=make,
             model=model,
             year=year,
@@ -174,6 +184,8 @@ class LocalRegistry(ModelRegistry):
             drivetrain=drivetrain,
             engine=engine,
             trim=trim,
+            version=version,
+            version_strategy=version_strategy,
             custom_filters=custom_filters,
             fuzzy=fuzzy,
             fuzzy_threshold=fuzzy_threshold,

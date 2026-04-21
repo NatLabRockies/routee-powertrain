@@ -276,6 +276,162 @@ class TestLocalRegistry(TestCase):
         self.assertEqual(len(results), 1)
 
 
+class TestVersionStrategyAndPartialLoad(TestCase):
+    """Multi-version fixture exercising version_strategy, version filter,
+    and partial-id resolution in load_model."""
+
+    def setUp(self):
+        import tempfile
+
+        self.tmp = tempfile.mkdtemp()
+        self.root = Path(self.tmp)
+        self.schema_version = "v2"
+
+        data_path = (
+            this_dir
+            / Path("routee-powertrain-test-data")
+            / Path("sample_train_data.csv")
+        )
+        df = pd.read_csv(data_path)
+        config = pt.ModelConfig(
+            vehicle_description="2016 Toyota Camry 4cyl FWD",
+            powertrain_type=pt.PowertrainType.ICE,
+            feature_set=pt.FeatureSet(
+                features=[
+                    pt.DataColumn(name="speed_mph", units="mph"),
+                    pt.DataColumn(name="grade_dec", units="decimal"),
+                ],
+            ),
+            distance=pt.DataColumn(name="miles", units="miles"),
+            target=pt.TargetSet(
+                targets=[
+                    pt.DataColumn(
+                        name="gallons_fastsim",
+                        units="gallons_gasoline",
+                        constraints=pt.Constraints(lower=0.0, upper=100.0),
+                    )
+                ],
+            ),
+            make="Toyota",
+            model="Camry_4cyl_fwd",
+            year=2016,
+        )
+        trainer = SklearnRandomForestTrainer()
+        self.model = trainer.train(df, config)
+        self.df = df
+
+        # Save three versions of the same (make, model, year, config_slug).
+        for version in (1, 2, 3):
+            mid = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", version)
+            save_model_directory(
+                self.model, self.root / self.schema_version / mid.to_path()
+            )
+
+        # Also save a second config_slug so we can test ambiguity safeguards.
+        mid_other = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_speed_grade", 1)
+        save_model_directory(
+            self.model, self.root / self.schema_version / mid_other.to_path()
+        )
+
+        self.registry = LocalRegistry(
+            root=self.root, schema_version=self.schema_version
+        )
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmp)
+
+    def test_query_default_returns_latest_only(self):
+        """Default strategy keeps only the highest version per group."""
+        results = self.registry.query(make="toyota", model="camry_4cyl_fwd")
+        # rf_default v3 + rf_speed_grade v1 = 2 groups
+        self.assertEqual(len(results), 2)
+        versions_by_slug = {r.model_id.config_slug: r.model_id.version for r in results}
+        self.assertEqual(versions_by_slug["rf_default"], 3)
+        self.assertEqual(versions_by_slug["rf_speed_grade"], 1)
+
+    def test_query_version_strategy_all(self):
+        """version_strategy='all' returns every version."""
+        results = self.registry.query(
+            make="toyota",
+            config_slug="rf_default",
+            version_strategy="all",
+        )
+        self.assertEqual(len(results), 3)
+        versions = sorted(r.model_id.version for r in results)
+        self.assertEqual(versions, [1, 2, 3])
+
+    def test_query_version_filter_exact(self):
+        """version=2 returns only v2 of matching models."""
+        results = self.registry.query(config_slug="rf_default", version=2)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].model_id.version, 2)
+
+    def test_query_version_filter_overrides_strategy(self):
+        """When version is set, version_strategy should be ignored."""
+        results = self.registry.query(
+            config_slug="rf_default",
+            version=1,
+            version_strategy="latest",
+        )
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].model_id.version, 1)
+
+    def test_list_models_default_latest(self):
+        """list_models default keeps only the highest version per group."""
+        ids = self.registry.list_models()
+        self.assertEqual(len(ids), 2)
+        by_slug = {mid.config_slug: mid.version for mid in ids}
+        self.assertEqual(by_slug["rf_default"], 3)
+
+    def test_list_models_all(self):
+        """list_models with version_strategy='all' returns every version."""
+        ids = self.registry.list_models(version_strategy="all")
+        self.assertEqual(len(ids), 4)
+
+    def test_load_model_partial_id_resolves_latest(self):
+        """A 4-segment string loads the highest-versioned model."""
+        loaded = pt.load_model(
+            "toyota/camry_4cyl_fwd/2016/rf_default", registry=self.registry
+        )
+        r1 = self.model.predict(self.df)
+        r2 = loaded.predict(self.df)
+        self.assertTrue(
+            math.isclose(r1.gallons_fastsim.sum(), r2.gallons_fastsim.sum())
+        )
+
+    def test_load_model_explicit_version_still_works(self):
+        """A 5-segment path pins the specific version."""
+        loaded = pt.load_model(
+            "toyota/camry_4cyl_fwd/2016/rf_default/v1", registry=self.registry
+        )
+        self.assertIsNotNone(loaded)
+
+    def test_load_model_partial_id_no_match_raises(self):
+        """Partial id with no match raises ValueError naming the path."""
+        with self.assertRaises(ValueError) as ctx:
+            pt.load_model(
+                "toyota/camry_4cyl_fwd/2016/does_not_exist", registry=self.registry
+            )
+        self.assertIn("No model found", str(ctx.exception))
+
+    def test_load_model_partial_id_uses_exact_match_not_fuzzy(self):
+        """Partial id resolver must use fuzzy=False to avoid neighbor matches."""
+        # 'rf' would fuzzy-match both 'rf_default' and 'rf_speed_grade', but
+        # the resolver pins fuzzy=False, so no model should match.
+        with self.assertRaises(ValueError) as ctx:
+            pt.load_model("toyota/camry_4cyl_fwd/2016/rf", registry=self.registry)
+        self.assertIn("No model found", str(ctx.exception))
+
+    def test_load_model_bad_segment_count_raises(self):
+        """A path with neither 4 nor 5 segments raises with a helpful message."""
+        with self.assertRaises(ValueError) as ctx:
+            pt.load_model("toyota/camry", registry=self.registry)
+        msg = str(ctx.exception)
+        self.assertIn("<make>/<model>/<year>/<config_slug>", msg)
+
+
 class TestMassLbsModelConfig(TestCase):
     def setUp(self):
         import tempfile
