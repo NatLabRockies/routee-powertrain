@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from typing import List
@@ -30,6 +32,17 @@ class Trainer(ABC):
         """
         return []
 
+    @property
+    def split_grouping_column(self) -> str | None:
+        """If set, the train/test split keeps all rows of a given group together.
+
+        Sequence-aware trainers (e.g. the 1D CNN) must set this so that a
+        route's links stay contiguous within train or test — otherwise the
+        per-group lookback windows built at both train and predict time stitch
+        together non-consecutive rows and the temporal signal is lost.
+        """
+        return None
+
     def train(self, data: pd.DataFrame, config: ModelConfig) -> Model:
         """
         A wrapper for inner train that does some pre and post processing.
@@ -42,7 +55,10 @@ class Trainer(ABC):
                 data[energy_rate_name] = data[energy_target.name] / data[distance_name]
 
         train, test = test_train_split(
-            data, test_size=config.test_size, seed=config.random_seed
+            data,
+            test_size=config.test_size,
+            seed=config.random_seed,
+            grouping_column=self.split_grouping_column,
         )
 
         feature_columns = list(config.all_feature_names)

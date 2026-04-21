@@ -25,7 +25,11 @@ class TestCNNPipeline(TestCase):
             / Path("sample_train_data.csv")
         )
         df = pd.read_csv(data_path)
-        # alias trip_id as route_id for the CNN's grouping expectation
+        # The sample data is a single trip; synthesize five pseudo-trips so
+        # the group-aware train/test split in ``Trainer.train`` produces a
+        # non-empty test set for the CNN pipeline round-trip.
+        n = len(df)
+        df["trip_id"] = (np.arange(n) // max(1, n // 5)).astype(np.int64)
         df["route_id"] = df["trip_id"]
         self.df = df
 
