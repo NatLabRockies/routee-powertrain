@@ -21,6 +21,23 @@ DEFAULT_LOOKBACK = 5
 DEFAULT_GROUPING_COLUMN = "route_id"
 
 
+def _auto_n_conv_layers(lookback: int, kernel_size: int) -> int:
+    """Pick the most VALID-padded conv layers that fit a given lookback.
+
+    Each kernel-K VALID conv shrinks the sequence by K-1. We stack until the
+    next layer would not have enough input. This makes the receptive field at
+    the head match (or as close as possible to) the lookback window — the
+    pattern that won in the autoresearch sweep (lookback=5 → 2 kernel-3 convs
+    → RF=5 exactly, head sees the full window in one position).
+    """
+    n = lookback
+    layers = 0
+    while n - kernel_size + 1 >= 1:
+        n = n - kernel_size + 1
+        layers += 1
+    return max(1, layers)
+
+
 class CNNTrainer(Trainer):
     """Train a 1D CNN over link sequences with a fixed lookback window.
 
@@ -44,15 +61,14 @@ class CNNTrainer(Trainer):
         self,
         lookback: int = DEFAULT_LOOKBACK,
         grouping_column: str = DEFAULT_GROUPING_COLUMN,
-        pad_strategy: Literal["zero", "repeat_first"] = "repeat_first",
-        hidden_channels: int = 128,
+        pad_strategy: Literal["zero", "repeat_first"] = "zero",
+        hidden_channels: int = 64,
         kernel_size: int = 3,
-        head_hidden_1: int = 256,
-        head_hidden_2: int = 128,
-        dropout: float = 0.1,
-        epochs: int = 15,
-        batch_size: int = 2048,
-        learning_rate: float = 3e-3,
+        n_conv_layers: int | None = None,
+        epochs: int = 50,
+        batch_size: int = 4096,
+        learning_rate: float = 1e-3,
+        min_learning_rate: float = 1e-5,
         weight_decay: float = 1e-4,
         grad_clip_norm: float = 1.0,
         normalize_features: bool = True,
@@ -64,12 +80,15 @@ class CNNTrainer(Trainer):
         self.pad_strategy = pad_strategy
         self.hidden_channels = hidden_channels
         self.kernel_size = kernel_size
-        self.head_hidden_1 = head_hidden_1
-        self.head_hidden_2 = head_hidden_2
-        self.dropout = dropout
+        self.n_conv_layers = (
+            n_conv_layers
+            if n_conv_layers is not None
+            else _auto_n_conv_layers(lookback, kernel_size)
+        )
         self.epochs = epochs
         self.batch_size = batch_size
         self.learning_rate = learning_rate
+        self.min_learning_rate = min_learning_rate
         self.weight_decay = weight_decay
         self.grad_clip_norm = grad_clip_norm
         self.normalize_features = normalize_features
@@ -85,7 +104,6 @@ class CNNTrainer(Trainer):
         try:
             import torch
             from torch import nn
-            from torch.utils.data import DataLoader, TensorDataset
         except ImportError as exc:
             raise ImportError(
                 "CNNTrainer requires torch. Install via pip install routee.powertrain[pytorch]"
@@ -100,10 +118,10 @@ class CNNTrainer(Trainer):
         def _pick_device(override: str | None) -> "torch.device":
             if override is not None:
                 return torch.device(override)
-            if torch.backends.mps.is_available():
-                return torch.device("mps")
             if torch.cuda.is_available():
                 return torch.device("cuda")
+            if torch.backends.mps.is_available():
+                return torch.device("mps")
             return torch.device("cpu")
 
         device = _pick_device(self.device)
@@ -143,25 +161,26 @@ class CNNTrainer(Trainer):
             for i, row_pos in enumerate(idx_array):
                 windows[row_pos] = padded[i : i + self.lookback]
 
-        X = torch.from_numpy(windows)
-        y = torch.from_numpy(y_matrix)
-        log.info("CNN training rows: %d", len(features))
+        X_cpu = torch.from_numpy(windows)
+        y_cpu = torch.from_numpy(y_matrix)
+        n_train = X_cpu.shape[0]
+        log.info("CNN training rows: %d", n_train)
 
         def _train_on(dev: "torch.device"):
             torch.manual_seed(self.random_seed)
-            loader = DataLoader(
-                TensorDataset(X, y),
-                batch_size=self.batch_size,
-                shuffle=True,
-            )
+            # Move the full training tensors to the target device once. Per-batch
+            # CPU→GPU transfer through DataLoader was the dominant cost on small
+            # CNNs (>10× slowdown vs. resident-on-device); the autoresearch sweep
+            # demonstrated that the windowed tensor easily fits on a single GPU
+            # for routee-powertrain workloads.
+            X_dev = X_cpu.to(dev)
+            y_dev = y_cpu.to(dev)
             m = _CNN1D(
                 n_features=n_features,
                 lookback=self.lookback,
                 hidden_channels=self.hidden_channels,
                 kernel_size=self.kernel_size,
-                head_hidden_1=self.head_hidden_1,
-                head_hidden_2=self.head_hidden_2,
-                dropout=self.dropout,
+                n_conv_layers=self.n_conv_layers,
                 n_targets=n_targets,
                 feat_mean=feat_mean,
                 feat_std=feat_std,
@@ -172,28 +191,33 @@ class CNNTrainer(Trainer):
                 lr=self.learning_rate,
                 weight_decay=self.weight_decay,
             )
-            steps_per_epoch = max(1, len(loader))
-            scheduler = torch.optim.lr_scheduler.OneCycleLR(
+            steps_per_epoch = max(1, (n_train + self.batch_size - 1) // self.batch_size)
+            total_steps = max(1, steps_per_epoch * self.epochs)
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                 optimizer,
-                max_lr=self.learning_rate,
-                steps_per_epoch=steps_per_epoch,
-                epochs=self.epochs,
+                T_max=total_steps,
+                eta_min=self.min_learning_rate,
             )
             loss_fn = nn.MSELoss()
             m.train()
             log.info(
-                "CNN training: device=%s epochs=%d batches/epoch=%d",
+                "CNN training: device=%s epochs=%d batches/epoch=%d hidden=%d conv_layers=%d",
                 dev.type,
                 self.epochs,
                 steps_per_epoch,
+                self.hidden_channels,
+                self.n_conv_layers,
             )
+            rng = np.random.default_rng(self.random_seed)
             for epoch_idx in range(self.epochs):
                 epoch_start = time.time()
+                perm = torch.from_numpy(rng.permutation(n_train)).to(dev)
                 loss_accum = torch.zeros((), device=dev)
                 n_batches = 0
-                for xb, yb in loader:
-                    xb = xb.to(dev)
-                    yb = yb.to(dev)
+                for s in range(0, n_train, self.batch_size):
+                    b = perm[s : s + self.batch_size]
+                    xb = X_dev[b]
+                    yb = y_dev[b]
                     optimizer.zero_grad()
                     pred = m(xb)
                     loss = loss_fn(pred, yb)
@@ -208,10 +232,11 @@ class CNNTrainer(Trainer):
                     n_batches += 1
                 avg_loss = (loss_accum / max(1, n_batches)).item()
                 log.info(
-                    "  epoch %d/%d  loss=%.6f  elapsed=%.1fs",
+                    "  epoch %d/%d  loss=%.6f  lr=%.2e  elapsed=%.1fs",
                     epoch_idx + 1,
                     self.epochs,
                     avg_loss,
+                    optimizer.param_groups[0]["lr"],
                     time.time() - epoch_start,
                 )
             return m
@@ -287,27 +312,20 @@ def _CNN1D(
     lookback: int,
     hidden_channels: int,
     kernel_size: int,
-    head_hidden_1: int,
-    head_hidden_2: int,
-    dropout: float,
+    n_conv_layers: int,
     n_targets: int,
     feat_mean: np.ndarray,
     feat_std: np.ndarray,
 ):
     """A 1D CNN that maps (N, lookback, F) → (N, n_targets).
 
-    Architecture mirrors the Conv1DModel used in the autoresearch training
-    sweep: three Conv1d → ReLU blocks with ``hidden_channels`` channels each,
-    followed by a fully-connected head ``conv_out → head_hidden_1 →
-    head_hidden_2 → n_targets`` with ReLU activations and a single dropout
-    between the first two linear layers. Feature mean/std are baked into the
-    graph as non-trainable buffers so the exported ONNX normalizes inputs at
-    inference time.
+    Stack of VALID-padded kernel-K Conv1D → ReLU layers sized so the receptive
+    field matches the lookback window, an adaptive average pool over any
+    leftover sequence positions, and a single linear head ``hidden → n_targets``.
     """
     import torch
     from torch import nn
 
-    padding = kernel_size // 2
     mean_tensor = torch.from_numpy(feat_mean.astype(np.float32)).view(1, n_features, 1)
     std_tensor = torch.from_numpy(feat_std.astype(np.float32)).view(1, n_features, 1)
 
@@ -319,34 +337,22 @@ def _CNN1D(
             super().__init__()
             self.register_buffer("feat_mean", mean_tensor)
             self.register_buffer("feat_std", std_tensor)
-            self.conv = nn.Sequential(
-                nn.Conv1d(n_features, hidden_channels, kernel_size, padding=padding),
-                nn.ReLU(),
-                nn.Conv1d(
-                    hidden_channels, hidden_channels, kernel_size, padding=padding
-                ),
-                nn.ReLU(),
-                nn.Conv1d(
-                    hidden_channels, hidden_channels, kernel_size, padding=padding
-                ),
-                nn.ReLU(),
-            )
-            conv_out_dim = hidden_channels * lookback
-            self.head = nn.Sequential(
-                nn.Linear(conv_out_dim, head_hidden_1),
-                nn.ReLU(),
-                nn.Dropout(dropout),
-                nn.Linear(head_hidden_1, head_hidden_2),
-                nn.ReLU(),
-                nn.Linear(head_hidden_2, n_targets),
-            )
+            layers: list[nn.Module] = []
+            in_ch = n_features
+            for _ in range(n_conv_layers):
+                layers.append(nn.Conv1d(in_ch, hidden_channels, kernel_size, padding=0))
+                layers.append(nn.ReLU())
+                in_ch = hidden_channels
+            self.conv = nn.Sequential(*layers)
+            self.pool = nn.AdaptiveAvgPool1d(1)
+            self.head = nn.Linear(hidden_channels, n_targets)
 
         def forward(self, x: torch.Tensor) -> torch.Tensor:
             # x: (N, lookback, F) → (N, F, lookback) for Conv1d
             x = x.transpose(1, 2)
             x = (x - self.feat_mean) / self.feat_std
             x = self.conv(x)
-            x = x.flatten(start_dim=1)
+            x = self.pool(x).squeeze(-1)
             return self.head(x)
 
     return CNN()
