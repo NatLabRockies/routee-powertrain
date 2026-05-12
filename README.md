@@ -1,7 +1,7 @@
 # <img src="docs/images/routeelogo.png" alt="Routee Powertrain" width="100"/>
 
 <div align="left">
-    <img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue"/>
+    <img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue"/>
   <a href="https://pypi.org/project/routee.powertrain/">
     <img src="https://img.shields.io/pypi/v/routee.powertrain" alt="PyPi Latest Release"/>
   </a>
@@ -44,10 +44,10 @@ import pandas as pd
 import routee.powertrain as pt
 
 # Query for a specific model
-print(pt.query_available_models(make="Chevy", model="Bolt", year=2017))
+print(pt.query_available_models(make="chevrolet", model="bolt", year=2017))
 
 # Load a pre-trained model
-model = pt.load_model("chevrolet/bolt_ev/2017/default/speed_mph/v1")
+model = pt.load_model("chevrolet/bolt/2017/rf_default/v1")
 
 # Inspect the model to see what it expects for input
 print(model)
@@ -57,7 +57,7 @@ links_df = pd.DataFrame(
     {
         "distance": [0.1, 0.2, 0.3], # miles
         "speed_mph": [30, 40, 50], # mph
-        "grade_percent": [-0.5, 0, 0.5], # percent
+        "grade_percent": [-5.0, 0.0, 5.0], # percent
     }
 )
 

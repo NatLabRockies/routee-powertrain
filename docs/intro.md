@@ -20,16 +20,16 @@ import routee.powertrain as pt
 print(pt.list_available_models())
 
 # [
-#   toyota/camry_4cyl_2wd/2016/default/grade_percent_speed_mph/v1,
-#   chevrolet/bolt/2017/default/grade_percent_speed_mph/v1,
+#   toyota/camry_4cyl_2wd/2016/rf_default/v1,
+#   chevrolet/bolt/2017/rf_default/v1,
 #   ...
 # ]
 
 # You can also query available models with filters for more detail
-results = pt.query_available_models(make="toyota", model_name="camry")
+results = pt.query_available_models(make="toyota", model="camry")
 
 # Load a pre-trained model using its registry path
-model = pt.load_model("toyota/camry_4cyl_2wd/2016/default/grade_percent_speed_mph/v1")
+model = pt.load_model("toyota/camry_4cyl_2wd/2016/rf_default/v1")
 
 # Inspect the model to see what it expects for input
 print(model)
@@ -46,8 +46,8 @@ print(model)
 # Feature: grade_percent (percent)
 # Distance: distance (miles)
 # Target: gge (gallons gasoline)
-# Raw Predicted Consumption: 30.289 (miles/gge)
-# Real World Predicted Consumption: 25.977 (miles/gge)
+# Raw Predicted Consumption: 30.289 (miles/gallons gasoline)
+# Real World Predicted Consumption: 25.977 (miles/gallons gasoline)
 # Predict Method: RATE
 # ========================================
 

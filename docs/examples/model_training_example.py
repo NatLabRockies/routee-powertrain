@@ -10,6 +10,14 @@ In this example, we'll use the scikit-learn based estimators which you can insta
 ```bash
 pip install routee.powertrain[scikit]
 ```
+
+RouteE Powertrain v2 ships three trainer pipelines:
+
+- `SklearnRandomForestTrainer` (extra: `scikit`) — produces an `ONNXEstimator` via `skl2onnx`.
+- `NGBoostTrainer` (extra: `ngboost`) — probabilistic estimator that emits both a point estimate and a per-link standard deviation.
+- `CNNTrainer` (extra: `pytorch`) — sequence-aware 1D CNN that exports to ONNX with an `InputSpec` describing the sliding window.
+
+We'll use the Random Forest trainer below.
 """
 
 import routee.powertrain as pt
@@ -92,9 +100,13 @@ test_vehicle.metadata.errors
 While this training dataset is far too small to draw real conclusions, these metrics can give you an idea of how well the model performed on a holdout test set (20% of the training data as we specificed by the `test_size` parameter in the configuration. 
 """
 """
-Now, we can write the model to a zip or tar file that can be loaded later:
+Now, we can write the model to a `.zip` archive, `.tar.gz` archive, or a flat directory (auto-detected from the path's suffix):
 
 ```python
-test_vehicle.to_file("Test_Vehicle.zip")
+test_vehicle.to_file("Test_Vehicle.zip")        # ZIP archive
+test_vehicle.to_file("Test_Vehicle.tar.gz")     # tar archive
+test_vehicle.to_file("Test_Vehicle/")           # flat directory
 ```
+
+The saved artifact contains a `metadata.json` and a binary estimator file (e.g. `model.onnx`). Reload it with `pt.load_model("Test_Vehicle.zip")`.
 """

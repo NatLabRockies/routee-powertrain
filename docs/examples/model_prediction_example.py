@@ -4,7 +4,15 @@
 RouteE models can be loaded from a large library of pre-trained models. Conventional gasoline (CV), hybrid electric (HEV), plug-in hybrid electric (PHEV), and battery electric (BEV) powertrain types are all available.
 
 __A note on PHEVs__: Plug-in hybrids have two general operating modes 1) "Charge Depleting" or "EV" mode, where the vehicle relies only on energy from the battery to power the motor and 2) "Charge Sustaining" or "Hybrid" mode, where the vehicle operates like a typical parallel hybrid, using a combination of the combustion energy and electric motor for tractive effort and regenerative braking. Since the operating mode depends on battery state-of-charge and driver decisions, pre-trained RouteE-Powertrain models for both operating modes are provided for all PHEVs and it is up to the user to decide which is most appropriate for a particular application.
+
+## Picking a registry
+
+By default, `routee.powertrain` fetches models from the public S3 catalog. For this example we'll use the small bundled registry that ships with the package so the notebook runs fully offline — set `ROUTEE_REGISTRY_BACKEND=local` before importing. Drop this line to query the full S3 catalog instead.
 """
+
+import os
+
+os.environ["ROUTEE_REGISTRY_BACKEND"] = "local"
 
 import routee.powertrain as pt
 
@@ -14,7 +22,7 @@ pt.list_available_models()
 # Use query_available_models for richer metadata with optional filters
 pt.query_available_models(make="toyota")
 
-camry = pt.load_model("toyota/camry_4cyl_2wd/2016/default/grade_percent_speed_mph/v1")
+camry = pt.load_model("toyota/camry_4cyl_2wd/2016/rf_default/v1")
 """
 After loading a model, we can inspect it to see what features (and units) the model expects.
 Each model contains a single estimator trained on a specific feature set.
@@ -29,14 +37,17 @@ There is a sample route included with the package that we'll use for demonstrati
 sample_route = pt.load_sample_route()
 sample_route
 """
-If we just pass in the links DataFrame without any other information, the model will use its configured feature set.
-The sample route has `speed_mph`, `grade_percent`, and `distance` columns which match the Camry model's expected inputs.
+`predict` always uses the feature set the model was trained on. The sample route has `speed_mph`, `grade_percent`, and `distance` columns which match the Camry model's expected inputs.
 """
 camry.predict(sample_route)
 """
-The `feature_columns` argument lets you pass in only a subset of feature columns from a larger DataFrame. In this case, we'll restrict prediction to only use speed (e.g. if grade data is unavailable).
+If your input DataFrame only has a subset of the features a model needs, pick a model whose feature set matches what you have. The `feature_names` filter on `query_available_models` makes this easy:
+
+```python
+# Find Toyota Camry models trained on speed alone
+results = pt.query_available_models(make="toyota", model="camry", feature_names=["speed_mph"])
+```
 """
-camry.predict(sample_route, feature_columns=["speed_mph"])
 """
 ## Model Visualization
 

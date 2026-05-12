@@ -27,12 +27,29 @@ This returns a list of `ModelId` objects. For more detail (including feature nam
 results = pt.query_available_models(make="toyota")
 
 # Query with multiple filters
-results = pt.query_available_models(make="chevrolet", model_name="bolt", year=2017)
+results = pt.query_available_models(make="chevrolet", model="bolt", year=2017)
 ```
 
 To predict with any of these models you can use the `pt.load_model()` function. Pass the registry path string (or a `ModelId` object) to load a model:
 
 ```python
-camry = pt.load_model('toyota/camry_4cyl_2wd/2016/default/grade_percent_speed_mph/v1')
-bolt = pt.load_model('chevrolet/bolt/2017/default/grade_percent_speed_mph/v1')
+camry = pt.load_model('toyota/camry_4cyl_2wd/2016/rf_default/v1')
+bolt = pt.load_model('chevrolet/bolt/2017/rf_default/v1')
 ```
+
+## Model Registry
+
+Model discovery and retrieval go through a `ModelRegistry` abstraction. By default, models are fetched from a public S3 bucket; you can also point at a local directory tree by setting the `ROUTEE_REGISTRY_BACKEND` environment variable.
+
+A `ModelId` is structured as `<make>/<model>/<year>/<config_slug>/v<N>`, where `config_slug` (e.g. `rf_default`, `cnn_5link`) disambiguates multiple trained models for the same vehicle/year. For example, we might have 3 difference model architectures for a specific vehicle, or, we might have models trained on different input feature sets. Omit the trailing `v<N>` to load the latest version.
+
+| Variable                     | Default                           | Meaning                               |
+| ---------------------------- | --------------------------------- | ------------------------------------- |
+| `ROUTEE_REGISTRY_BACKEND`    | `s3`                              | Backend to use: `s3` or `local`       |
+| `ROUTEE_S3_BUCKET`           | `routeecore-bucket`               | S3 bucket name                        |
+| `ROUTEE_S3_REGION`           | `us-west-2`                       | AWS region                            |
+| `ROUTEE_S3_ROOT_PREFIX`      | `routee-powertrain-model-library` | S3 key prefix                         |
+| `ROUTEE_SCHEMA_VERSION`      | `v2`                              | On-disk schema version                |
+| `ROUTEE_LOCAL_REGISTRY_ROOT` | (bundled registry)                | Filesystem root for the local backend |
+
+`query_available_models` supports fuzzy string matching by default (`fuzzy=True`, `fuzzy_threshold=80`) and accepts the additional filters `powertrain_type`, `fuel_type`, `drivetrain`, `engine`, `trim`, `feature_names`, and `custom_filters`. Pass `version_strategy="all"` to see every version of every model instead of just the latest.

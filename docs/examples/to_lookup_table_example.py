@@ -16,15 +16,12 @@ First, let's load a few different models to demonstrate lookup table generation.
 We'll use models with different feature sets to show the flexibility of the approach.
 """
 
-toyota_camry = pt.load_model(
-    "toyota/camry_4cyl_2wd/2016/default/speed_mph/v1"
-)
-tesla_model3 = pt.load_model(
-    "tesla/model_3_rwd/2022/default/grade_percent_speed_mph/v1"
-)
-tesla_with_temp = pt.load_model(
-    "tesla/model_3_rwd/2022/steady/ambient_temp_f_grade_percent_speed_mph/v1"
-)
+# TODO(v2-catalog): the v2 5-segment scheme collapses the old variant/features
+# slugs into a single config_slug. Confirm the speed-only and temperature-aware
+# slugs once the v2 S3 catalog is published.
+toyota_camry = pt.load_model("toyota/camry_4cyl_2wd/2016/rf_speed_only/v1")
+tesla_model3 = pt.load_model("tesla/model_3_rwd/2022/rf_default/v1")
+tesla_with_temp = pt.load_model("tesla/model_3_rwd/2022/rf_steady_temp/v1")
 """
 Let's examine the available features and targets for each model.
 """
