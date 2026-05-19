@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import logging
-import tempfile
 import time
-from pathlib import Path
 from typing import Literal
 
 import numpy as np
-import onnx
+import onnxruntime as rt
 import pandas as pd
+import torch
 
 from routee.powertrain.core.model_config import ModelConfig
 from routee.powertrain.estimators.estimator_interface import Estimator, InputSpec
@@ -26,9 +25,7 @@ def _auto_n_conv_layers(lookback: int, kernel_size: int) -> int:
 
     Each kernel-K VALID conv shrinks the sequence by K-1. We stack until the
     next layer would not have enough input. This makes the receptive field at
-    the head match (or as close as possible to) the lookback window — the
-    pattern that won in the autoresearch sweep (lookback=5 → 2 kernel-3 convs
-    → RF=5 exactly, head sees the full window in one position).
+    the head match (or as close as possible to) the lookback window.
     """
     n = lookback
     layers = 0
@@ -168,16 +165,11 @@ class CNNTrainer(Trainer):
 
         def _train_on(dev: "torch.device"):
             torch.manual_seed(self.random_seed)
-            # Move the full training tensors to the target device once. Per-batch
-            # CPU→GPU transfer through DataLoader was the dominant cost on small
-            # CNNs (>10× slowdown vs. resident-on-device); the autoresearch sweep
-            # demonstrated that the windowed tensor easily fits on a single GPU
-            # for routee-powertrain workloads.
+            # Move the full training tensors to the target device once.
             X_dev = X_cpu.to(dev)
             y_dev = y_cpu.to(dev)
             m = _CNN1D(
                 n_features=n_features,
-                lookback=self.lookback,
                 hidden_channels=self.hidden_channels,
                 kernel_size=self.kernel_size,
                 n_conv_layers=self.n_conv_layers,
@@ -265,21 +257,18 @@ class CNNTrainer(Trainer):
         model = model.to("cpu")
 
         dummy = torch.zeros(1, self.lookback, n_features, dtype=torch.float32)
-        with tempfile.TemporaryDirectory() as td:
-            onnx_path = Path(td) / "cnn.onnx"
-            torch.onnx.export(
-                model,
-                (dummy,),
-                onnx_path,
-                input_names=[ONNX_INPUT_NAME],
-                output_names=["output"],
-                dynamic_axes={ONNX_INPUT_NAME: {0: "batch"}, "output": {0: "batch"}},
-                opset_version=17,
-                dynamo=False,
-            )
-            onnx_proto = onnx.load_from_string(onnx_path.read_bytes())
-
-        import onnxruntime as _rt
+        batch_dim = torch.export.Dim("batch")
+        onnx_program = torch.onnx.export(
+            model,
+            (dummy,),
+            input_names=[ONNX_INPUT_NAME],
+            output_names=["output"],
+            dynamic_shapes={"x": {0: batch_dim}},
+            opset_version=18,
+            dynamo=True,
+        )
+        assert onnx_program is not None  # dynamo=True always returns an ONNXProgram
+        onnx_proto = onnx_program.model_proto
 
         rng = np.random.default_rng(self.random_seed)
         sanity_x = rng.standard_normal((4, self.lookback, n_features)).astype(
@@ -287,7 +276,7 @@ class CNNTrainer(Trainer):
         )
         with torch.no_grad():
             torch_out = model(torch.from_numpy(sanity_x)).cpu().numpy()
-        onnx_sess = _rt.InferenceSession(
+        onnx_sess = rt.InferenceSession(
             onnx_proto.SerializeToString(), providers=["CPUExecutionProvider"]
         )
         onnx_out = onnx_sess.run(None, {ONNX_INPUT_NAME: sanity_x})[0]
@@ -309,7 +298,6 @@ class CNNTrainer(Trainer):
 
 def _CNN1D(
     n_features: int,
-    lookback: int,
     hidden_channels: int,
     kernel_size: int,
     n_conv_layers: int,
@@ -317,11 +305,11 @@ def _CNN1D(
     feat_mean: np.ndarray,
     feat_std: np.ndarray,
 ):
-    """A 1D CNN that maps (N, lookback, F) → (N, n_targets).
+    """A 1D CNN that maps (N, T, F) → (N, n_targets) for sequence length T.
 
-    Stack of VALID-padded kernel-K Conv1D → ReLU layers sized so the receptive
-    field matches the lookback window, an adaptive average pool over any
-    leftover sequence positions, and a single linear head ``hidden → n_targets``.
+    Stack of ``n_conv_layers`` VALID-padded kernel-K Conv1D → ReLU layers, an
+    adaptive average pool over any remaining sequence positions, and a single
+    linear head ``hidden → n_targets``.
     """
     import torch
     from torch import nn
@@ -348,7 +336,7 @@ def _CNN1D(
             self.head = nn.Linear(hidden_channels, n_targets)
 
         def forward(self, x: torch.Tensor) -> torch.Tensor:
-            # x: (N, lookback, F) → (N, F, lookback) for Conv1d
+            # x: (N, T, F) → (N, F, T) for Conv1d
             x = x.transpose(1, 2)
             x = (x - self.feat_mean) / self.feat_std
             x = self.conv(x)
