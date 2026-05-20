@@ -18,6 +18,7 @@ __all__ = [
     "query_available_models",
     "load_model",
     "load_sample_route",
+    "save_to_registry",
     "visualize_features",
     "contour_plot",
 ]
@@ -28,6 +29,7 @@ from .core.fuel_type import FuelType
 from .core.model import Model
 from .core.model_config import ModelConfig
 from .core.powertrain_type import PowertrainType
+from .io.archive import save_to_registry
 from .io.load import (
     list_available_models,
     query_available_models,

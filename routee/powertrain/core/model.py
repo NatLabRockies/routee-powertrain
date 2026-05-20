@@ -17,6 +17,7 @@ from routee.powertrain.io.archive import (
     save_model_directory,
     save_archive,
     save_tar_archive,
+    save_to_registry as _save_to_registry,
 )
 from routee.powertrain.io.to_lookup_table import to_lookup_table
 from routee.powertrain.validation.feature_visualization import (
@@ -87,6 +88,33 @@ class Model:
         else:
             # No extension → flat directory
             save_model_directory(self, path)
+
+    def save_to_registry(
+        self,
+        registry_root: Union[str, Path],
+        config_slug: str,
+        version: int = 1,
+        schema_version: str = "v2",
+        overwrite: bool = False,
+    ):
+        """
+        Save this model into a local registry directory tree.
+
+        Builds the canonical ``<registry_root>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/``
+        layout from ``self.metadata.config`` plus the caller-supplied
+        ``config_slug`` and ``version``. See
+        ``routee.powertrain.io.archive.save_to_registry`` for full details.
+
+        Returns: the ``ModelId`` that was written.
+        """
+        return _save_to_registry(
+            self,
+            registry_root=registry_root,
+            config_slug=config_slug,
+            version=version,
+            schema_version=schema_version,
+            overwrite=overwrite,
+        )
 
     def to_lookup_table(
         self,

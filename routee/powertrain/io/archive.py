@@ -11,6 +11,7 @@ from routee.powertrain.core.metadata import Metadata, SCHEMA_VERSION
 
 if TYPE_CHECKING:
     from routee.powertrain.core.model import Model
+    from routee.powertrain.registry.model_id import ModelId
 
 METADATA_FILENAME = "metadata.json"
 
@@ -80,6 +81,79 @@ def save_model_directory(model: Model, path: Union[str, Path]) -> None:
 
     (path / METADATA_FILENAME).write_text(json.dumps(metadata_dict, indent=2))
     (path / model_filename).write_bytes(model.estimator.to_bytes())
+
+
+def save_to_registry(
+    model: Model,
+    registry_root: Union[str, Path],
+    config_slug: str,
+    version: int = 1,
+    schema_version: str = "v2",
+    overwrite: bool = False,
+) -> ModelId:
+    """
+    Save a model into a local registry directory tree.
+
+    Builds the canonical path
+    ``<registry_root>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/``
+    using ``make``/``model``/``year`` from ``model.metadata.config`` plus the
+    caller-supplied ``config_slug`` and ``version``. The resulting directory
+    is directly loadable by ``LocalRegistry`` — or by ``pt.load_model(...)``
+    when ``ROUTEE_REGISTRY_BACKEND=local`` and ``ROUTEE_LOCAL_REGISTRY_ROOT``
+    points at ``registry_root``.
+
+    Args:
+        model: the trained model to save
+        registry_root: filesystem root of the local registry (the directory
+            that contains the ``<schema_version>/`` subtree)
+        config_slug: identifier disambiguating multiple trained configurations
+            for the same vehicle/year (e.g. ``rf_default``, ``cnn_5link``).
+            Lowercase snake_case is conventional.
+        version: positive integer version. Bump when retraining the same
+            ``config_slug``. A materially different feature set or
+            architecture should use a new ``config_slug`` and start at v1.
+        schema_version: registry schema directory name (default ``"v2"``)
+        overwrite: if False (default), raise ``FileExistsError`` when the
+            target directory already contains a saved model. If True, the
+            existing files are replaced.
+
+    Returns:
+        The ``ModelId`` that was written. Its ``to_path()`` matches what
+        ``LocalRegistry.load()`` expects.
+
+    Raises:
+        FileExistsError: if ``overwrite`` is False and the target directory
+            already contains a saved model.
+        ValueError: if ``version`` is not a positive integer.
+    """
+    # Local import to avoid a circular import at package load time:
+    # routee.powertrain.registry imports Model from core.model, and core.model
+    # imports from this module.
+    from routee.powertrain.registry.model_id import ModelId
+
+    if version < 1:
+        raise ValueError(f"version must be a positive integer, got {version}")
+
+    config = model.metadata.config
+    model_id = ModelId(
+        make=config.make,
+        model=config.model,
+        year=config.year,
+        config_slug=config_slug,
+        version=version,
+    )
+
+    target_dir = Path(registry_root) / schema_version / model_id.to_path()
+    if target_dir.exists() and any(target_dir.iterdir()) and not overwrite:
+        existing = sorted(p.name for p in target_dir.parent.iterdir() if p.is_dir())
+        raise FileExistsError(
+            f"Registry slot already exists: {target_dir}. "
+            f"Existing versions for this config_slug: {existing}. "
+            "Pass overwrite=True to replace, or bump version."
+        )
+
+    save_model_directory(model, target_dir)
+    return model_id
 
 
 def load_model_directory(path: Union[str, Path]) -> Model:
