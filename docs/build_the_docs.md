@@ -12,4 +12,4 @@ Then, to build the docs, run the following command from the root of the reposito
 jupyter-book build docs/
 ```
 
-This, build build the docs as html and place them in `docs/_build/html/`. You can then view the docs by opening `docs/_build/html/index.html` in your browser.
+This builds the docs as `.html` and places them in `docs/_build/html/`. You can then view the docs by opening `docs/_build/html/index.html` in your browser.
