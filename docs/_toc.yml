@@ -19,6 +19,7 @@ parts:
       - file: examples/model_training_example
       - file: examples/temperature_models_example
       - file: examples/to_lookup_table_example
+      - file: publishing_a_model
 
   - caption: Developers
     chapters:

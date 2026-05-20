@@ -43,6 +43,8 @@ Model discovery and retrieval go through a `ModelRegistry` abstraction. By defau
 
 A `ModelId` is structured as `<make>/<model>/<year>/<config_slug>/v<N>`, where `config_slug` (e.g. `rf_default`, `cnn_5link`) disambiguates multiple trained models for the same vehicle/year. For example, we might have 3 difference model architectures for a specific vehicle, or, we might have models trained on different input feature sets. Omit the trailing `v<N>` to load the latest version.
 
+For a step-by-step walkthrough of training a new model and writing it into the registry layout, see [Publishing a Model](publishing_a_model.md).
+
 | Variable                     | Default                           | Meaning                               |
 | ---------------------------- | --------------------------------- | ------------------------------------- |
 | `ROUTEE_REGISTRY_BACKEND`    | `s3`                              | Backend to use: `s3` or `local`       |
