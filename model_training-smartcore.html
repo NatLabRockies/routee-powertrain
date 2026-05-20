@@ -30,9 +30,9 @@
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
-    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=9c3e77be" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -50,7 +50,7 @@
     <script>let toggleHintShow = 'Click to show';</script>
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="_static/togglebutton.js?v=b8b12719"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
@@ -529,7 +529,7 @@ You can access this dataset yourself <a class="reference external" href="https:/
 </table>
 </div></div></div>
 </div>
-<p>This dataframe represents a set of road network links (i.e. roads) in which we've already computed the energy consumption over. In this case, we've use the Fastsim software to simulate a vehicle driving over a high resolution drive cycle and then have aggregated everything up to the link level. We also have link level attributes like average driving speed in mile per hour (<code class="docutils literal notranslate"><span class="pre">speed</span></code>), road gradient as a decimal (<code class="docutils literal notranslate"><span class="pre">grade</span></code>), road distance in miles (<code class="docutils literal notranslate"><span class="pre">miles</span></code>) and road classification as a integer category (<code class="docutils literal notranslate"><span class="pre">road_class</span></code>). Lastly, we have a trip identifier column (<code class="docutils literal notranslate"><span class="pre">trip_id</span></code>) which is only 1 in this case, represeting a single trip taken by this vehicle.</p>
+<p>This dataframe represents a set of road network links (i.e. roads) in which we've already computed the energy consumption over. In this case, we've use the FastSIM software to simulate a vehicle driving over a high resolution drive cycle and then have aggregated everything up to the link level. We also have link level attributes like average driving speed in mile per hour (<code class="docutils literal notranslate"><span class="pre">speed</span></code>), road gradient as a decimal (<code class="docutils literal notranslate"><span class="pre">grade</span></code>), road distance in miles (<code class="docutils literal notranslate"><span class="pre">miles</span></code>) and road classification as a integer category (<code class="docutils literal notranslate"><span class="pre">road_class</span></code>). Lastly, we have a trip identifier column (<code class="docutils literal notranslate"><span class="pre">trip_id</span></code>) which is only 1 in this case, representing a single trip taken by this vehicle.</p>
 <p>Ok, onto setting up the training pipeline.</p>
 <p>First, we need to tell the trainer what feature sets we want to use for the internal estimators (Random Forests in this case). We can provide one or many feature sets, depending on the different features we might expect to see when apply this model. In this case, we'll just use three different features sets. One with just <code class="docutils literal notranslate"><span class="pre">speed</span></code>, one with <code class="docutils literal notranslate"><span class="pre">speed</span></code> and <code class="docutils literal notranslate"><span class="pre">grade</span></code> and then another with <code class="docutils literal notranslate"><span class="pre">speed</span></code>, <code class="docutils literal notranslate"><span class="pre">grade</span></code>, and <code class="docutils literal notranslate"><span class="pre">road_class</span></code>. This will make it such that our model is flexible to cases where we might only have speed information for a link or we might have more feature resolution.</p>
 <div class="cell docutils container">
@@ -553,7 +553,7 @@ You can access this dataset yourself <a class="reference external" href="https:/
 </div>
 </div>
 </div>
-<p>Note that we didn't incude the distance column in any of our feature sets. That is because, RouteE Powertrain always requires distance information and so we have a special designation for distance in the training configuation whereas features can be any arbitrary link attribute. So, let's define our distance columns</p>
+<p>Note that we didn't include the distance column in any of our feature sets. This is because RouteE Powertrain always requires distance information and so we have a special designation for distance in the training configuration whereas features can be any arbitrary link attribute. So, let's define our distance columns</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">distance</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;miles&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;miles&quot;</span><span class="p">)</span>
@@ -561,7 +561,7 @@ You can access this dataset yourself <a class="reference external" href="https:/
 </div>
 </div>
 </div>
-<p>Now, we need to define our energy target which is gallons of gasoline simualted by Fastsim:</p>
+<p>Now, we need to define our energy target which is gallons of gasoline simulated by FastSIM:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">energy_target</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span>
@@ -572,14 +572,10 @@ You can access this dataset yourself <a class="reference external" href="https:/
 </div>
 </div>
 </div>
-<p>We also need to decide how we want to predict the energy.
-We have two options: &quot;rate&quot; or &quot;raw&quot;.
-&quot;rate&quot; will take our energy values and divide them by the distance column to arrive at and energy rate.
-Then, the estimator will be trained to predict the rate value (without using distance as a feature) and then the model will multiply the rate value by the incoming link distance to give a final raw energy value.
-This can be useful in your training data is sparse as it allows the model to be flexible to distance.
-&quot;raw&quot; will tell the estimator to predict the energy on the link directly, using distance as an explicit feature.
-This can be more robust for situations where the energy rate on a link might vary with respect to distance but can lead to weird results if there are not a good representation of different distance values in the training dataset.
-In our case we'll use &quot;rate&quot; since our training data is very sparse.</p>
+<p>We also need to decide how we want to predict the energy. We have two options: &quot;rate&quot; or &quot;raw&quot;.</p>
+<p>&quot;rate&quot; will take our energy values and divide them by the distance column to calculate an energy rate. Then, the estimator will be trained to predict the rate value (without using distance as a feature) and then the model will multiply the rate value by the incoming link distance to give a final raw energy value. This can be useful if your training data is sparse as it allows the model to be flexible to distance.</p>
+<p>&quot;raw&quot; will tell the estimator to predict the energy on the link directly, using distance as an explicit feature. This can be more robust in situations where the energy rate on a link might vary with respect to distance but can lead to weird results if there are not good representations of different distance values in the training dataset.</p>
+<p>In our case we'll use &quot;rate&quot; since our training data is very sparse.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">predict_method</span> <span class="o">=</span> <span class="s2">&quot;rate&quot;</span>
@@ -621,10 +617,10 @@ In our case we'll use &quot;rate&quot; since our training data is very sparse.</
 <div class="cell_output docutils container">
 <div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
 <span class="ne">ModuleNotFoundError</span><span class="g g-Whitespace">                       </span>Traceback (most recent call last)
-<span class="nn">File /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/nrel/routee/powertrain/trainers/smartcore_random_forest.py:17,</span> in <span class="ni">SmartcoreRandomForestTrainer.inner_train</span><span class="nt">(self, features, target, config)</span>
-<span class="g g-Whitespace">     </span><span class="mi">16</span> <span class="k">try</span><span class="p">:</span>
-<span class="ne">---&gt; </span><span class="mi">17</span>     <span class="kn">from</span><span class="w"> </span><span class="nn">powertrain_rust</span><span class="w"> </span><span class="kn">import</span> <span class="n">RustRandomForest</span>
-<span class="g g-Whitespace">     </span><span class="mi">18</span> <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+<span class="nn">File /opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages/nrel/routee/powertrain/trainers/smartcore_random_forest.py:18,</span> in <span class="ni">SmartcoreRandomForestTrainer.inner_train</span><span class="nt">(self, features, target, config)</span>
+<span class="g g-Whitespace">     </span><span class="mi">17</span> <span class="k">try</span><span class="p">:</span>
+<span class="ne">---&gt; </span><span class="mi">18</span>     <span class="kn">from</span><span class="w"> </span><span class="nn">powertrain_rust</span><span class="w"> </span><span class="kn">import</span> <span class="n">RustRandomForest</span>
+<span class="g g-Whitespace">     </span><span class="mi">19</span> <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
 
 <span class="ne">ModuleNotFoundError</span>: No module named &#39;powertrain_rust&#39;
 
@@ -634,7 +630,7 @@ In our case we'll use &quot;rate&quot; since our training data is very sparse.</
 <span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
 <span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">test_vehicle</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
-<span class="nn">File /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/nrel/routee/powertrain/trainers/trainer.py:56,</span> in <span class="ni">Trainer.train</span><span class="nt">(self, data, config)</span>
+<span class="nn">File /opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages/nrel/routee/powertrain/trainers/trainer.py:56,</span> in <span class="ni">Trainer.train</span><span class="nt">(self, data, config)</span>
 <span class="g g-Whitespace">     </span><span class="mi">54</span>         <span class="n">name_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">distance_name</span><span class="p">)</span>
 <span class="g g-Whitespace">     </span><span class="mi">55</span>     <span class="n">sub_features</span> <span class="o">=</span> <span class="n">all_features</span><span class="p">[</span><span class="n">name_list</span><span class="p">]</span>
 <span class="ne">---&gt; </span><span class="mi">56</span>     <span class="n">estimator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_train</span><span class="p">(</span>
@@ -643,15 +639,15 @@ In our case we'll use &quot;rate&quot; since our training data is very sparse.</
 <span class="g g-Whitespace">     </span><span class="mi">59</span>     <span class="n">estimators</span><span class="p">[</span><span class="n">feature_set</span><span class="o">.</span><span class="n">features_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">estimator</span>
 <span class="g g-Whitespace">     </span><span class="mi">61</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">Metadata</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
 
-<span class="nn">File /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/nrel/routee/powertrain/trainers/smartcore_random_forest.py:19,</span> in <span class="ni">SmartcoreRandomForestTrainer.inner_train</span><span class="nt">(self, features, target, config)</span>
-<span class="g g-Whitespace">     </span><span class="mi">17</span>     <span class="kn">from</span><span class="w"> </span><span class="nn">powertrain_rust</span><span class="w"> </span><span class="kn">import</span> <span class="n">RustRandomForest</span>
-<span class="g g-Whitespace">     </span><span class="mi">18</span> <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-<span class="ne">---&gt; </span><span class="mi">19</span>     <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
-<span class="g g-Whitespace">     </span><span class="mi">20</span>         <span class="s2">&quot;Please install powertrain_rust to use &quot;</span>
-<span class="g g-Whitespace">     </span><span class="mi">21</span>         <span class="s2">&quot;the SmartCoreRandomForest estimator.&quot;</span>
-<span class="g g-Whitespace">     </span><span class="mi">22</span>     <span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">24</span> <span class="n">x</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-<span class="g g-Whitespace">     </span><span class="mi">25</span> <span class="n">y</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">values</span>
+<span class="nn">File /opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages/nrel/routee/powertrain/trainers/smartcore_random_forest.py:20,</span> in <span class="ni">SmartcoreRandomForestTrainer.inner_train</span><span class="nt">(self, features, target, config)</span>
+<span class="g g-Whitespace">     </span><span class="mi">18</span>     <span class="kn">from</span><span class="w"> </span><span class="nn">powertrain_rust</span><span class="w"> </span><span class="kn">import</span> <span class="n">RustRandomForest</span>
+<span class="g g-Whitespace">     </span><span class="mi">19</span> <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+<span class="ne">---&gt; </span><span class="mi">20</span>     <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+<span class="g g-Whitespace">     </span><span class="mi">21</span>         <span class="s2">&quot;Please install powertrain_rust to use &quot;</span>
+<span class="g g-Whitespace">     </span><span class="mi">22</span>         <span class="s2">&quot;the SmartCoreRandomForest estimator.&quot;</span>
+<span class="g g-Whitespace">     </span><span class="mi">23</span>     <span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">25</span> <span class="n">x</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">26</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">values</span>
 
 <span class="ne">ImportError</span>: Please install powertrain_rust to use the SmartCoreRandomForest estimator.
 </pre></div>
@@ -668,7 +664,7 @@ In our case we'll use &quot;rate&quot; since our training data is very sparse.</
 <div class="cell_output docutils container">
 <div class="output text_html"><table border="1" style="border-collapse: collapse;"><tr><td colspan='2' style='border-bottom: 2px solid black;text-align: center;'><b>Estimator Errors</b></td></tr><tr><td>Feature Set ID</td><td>speed_mph</td></tr><tr><td>Target</td><td>gallons_fastsim</td></tr><tr><td>Link RMSE</td><td>0.00158</td></tr><tr><td>Link Norm RMSE</td><td>0.99731</td></tr><tr><td>Link Weighted RPD</td><td>0.82687</td></tr><tr><td>Net Error</td><td>-0.33547</td></tr><tr><td>Actual Dist/Energy</td><td>18.87243</td></tr><tr><td>Predicted Dist/Energy</td><td>28.39965</td></tr><tr><td>Real World Predicted Dist/Energy</td><td>24.35648</td></tr><tr><td>Trip RPD</td><td>0.40308</td></tr><tr><td>Trip Weighted RPD</td><td>0.40308</td></tr><tr><td>Trip RMSE</td><td>0.01380</td></tr><tr><td>Trip Norm RMSE</td><td>0.33547</td></tr><tr><td colspan='2' style='border-bottom: 2px solid black;text-align: center;'><b>Estimator Errors</b></td></tr><tr><td>Feature Set ID</td><td>grade_dec&speed_mph</td></tr><tr><td>Target</td><td>gallons_fastsim</td></tr><tr><td>Link RMSE</td><td>0.00136</td></tr><tr><td>Link Norm RMSE</td><td>0.85802</td></tr><tr><td>Link Weighted RPD</td><td>0.66681</td></tr><tr><td>Net Error</td><td>-0.24353</td></tr><tr><td>Actual Dist/Energy</td><td>18.87243</td></tr><tr><td>Predicted Dist/Energy</td><td>24.94792</td></tr><tr><td>Real World Predicted Dist/Energy</td><td>21.39615</td></tr><tr><td>Trip RPD</td><td>0.27729</td></tr><tr><td>Trip Weighted RPD</td><td>0.27729</td></tr><tr><td>Trip RMSE</td><td>0.01002</td></tr><tr><td>Trip Norm RMSE</td><td>0.24353</td></tr><tr><td colspan='2' style='border-bottom: 2px solid black;text-align: center;'><b>Estimator Errors</b></td></tr><tr><td>Feature Set ID</td><td>grade_dec&road_class&speed_mph</td></tr><tr><td>Target</td><td>gallons_fastsim</td></tr><tr><td>Link RMSE</td><td>0.00128</td></tr><tr><td>Link Norm RMSE</td><td>0.80778</td></tr><tr><td>Link Weighted RPD</td><td>0.65296</td></tr><tr><td>Net Error</td><td>-0.25203</td></tr><tr><td>Actual Dist/Energy</td><td>18.87243</td></tr><tr><td>Predicted Dist/Energy</td><td>25.23138</td></tr><tr><td>Real World Predicted Dist/Energy</td><td>21.63926</td></tr><tr><td>Trip RPD</td><td>0.28836</td></tr><tr><td>Trip Weighted RPD</td><td>0.28836</td></tr><tr><td>Trip RMSE</td><td>0.01037</td></tr><tr><td>Trip Norm RMSE</td><td>0.25203</td></tr></table></div></div>
 </div>
-<p>While this training dataset is far too small to draw real conclusions, these metrics can give you an idea of how well the model performed on a holdout test set (20% of the training data as we specificed by the <code class="docutils literal notranslate"><span class="pre">test_size</span></code> parameter in the configuration.</p>
+<p>While this training dataset is far too small to draw real conclusions, these metrics can give you an idea of how well the model performed on a holdout test set (20% of the training data as we specified by the <code class="docutils literal notranslate"><span class="pre">test_size</span></code> parameter in the configuration).</p>
 <p>Now, we can write the model to a json file that can be loaded later:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">test_vehicle</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="s2">&quot;Test_Vehicle.bin&quot;</span><span class="p">)</span>
 </pre></div>
