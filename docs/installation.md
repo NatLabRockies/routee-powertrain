@@ -26,7 +26,7 @@ Each training pipeline has its own set of dependencies.
 
 ### Scikit-learn
 
-To install the depenecies the scikit learn training pipeline, use the following command:
+To install the dependencies for the scikit learn training pipeline, use the following command:
 
 ```bash
 pip install nrel.routee.powertrain[scikit]
