@@ -1,9 +1,9 @@
 # Build The Docs
 
-The documentation is built using jupyter-book which you can install with pip:
+The documentation is built using jupyter-book V1 which you can install with pip:
 
 ```bash
-pip install jupyter-book
+pip install jupyter-book<2
 ```
 
 Then, to build the docs, run the following command from the root of the repository:
