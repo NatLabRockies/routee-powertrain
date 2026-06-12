@@ -279,7 +279,7 @@ class CNNTrainer(Trainer):
             torch_out = model(torch.from_numpy(sanity_x)).cpu().numpy()
 
         sess_options = rt.SessionOptions()
-        try: 
+        try:
             num_threads = len(os.sched_getaffinity(0))
         except AttributeError:
             num_threads = os.cpu_count() or 1
@@ -287,7 +287,7 @@ class CNNTrainer(Trainer):
         onnx_sess = rt.InferenceSession(
             onnx_proto.SerializeToString(),
             sess_options=sess_options,
-            providers=["CPUExecutionProvider"]
+            providers=["CPUExecutionProvider"],
         )
         onnx_out = onnx_sess.run(None, {ONNX_INPUT_NAME: sanity_x})[0]
         max_abs = float(np.max(np.abs(torch_out - onnx_out)))

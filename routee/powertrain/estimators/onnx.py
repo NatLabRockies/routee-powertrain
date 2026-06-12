@@ -119,7 +119,7 @@ class ONNXEstimator(Estimator):
     ) -> None:
         self.onnx_model = onnx_model
         sess_options = rt.SessionOptions()
-        try: 
+        try:
             num_threads = len(os.sched_getaffinity(0))
         except AttributeError:
             num_threads = os.cpu_count() or 1
@@ -127,7 +127,7 @@ class ONNXEstimator(Estimator):
         self.session = rt.InferenceSession(
             onnx_model.SerializeToString(),
             sess_options=sess_options,
-            providers=["CPUExecutionProvider"]
+            providers=["CPUExecutionProvider"],
         )
         self._input_spec = input_spec
 
