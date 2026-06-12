@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 from typing import Literal
 
@@ -276,8 +277,17 @@ class CNNTrainer(Trainer):
         )
         with torch.no_grad():
             torch_out = model(torch.from_numpy(sanity_x)).cpu().numpy()
+
+        sess_options = rt.SessionOptions()
+        try: 
+            num_threads = len(os.sched_getaffinity(0))
+        except AttributeError:
+            num_threads = os.cpu_count() or 1
+        sess_options.intra_op_num_threads = num_threads
         onnx_sess = rt.InferenceSession(
-            onnx_proto.SerializeToString(), providers=["CPUExecutionProvider"]
+            onnx_proto.SerializeToString(),
+            sess_options=sess_options,
+            providers=["CPUExecutionProvider"]
         )
         onnx_out = onnx_sess.run(None, {ONNX_INPUT_NAME: sanity_x})[0]
         max_abs = float(np.max(np.abs(torch_out - onnx_out)))

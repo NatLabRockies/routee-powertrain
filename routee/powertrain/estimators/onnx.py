@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import os
 from pathlib import Path
 from typing import Literal, Optional, cast
 
@@ -117,8 +118,16 @@ class ONNXEstimator(Estimator):
         input_spec: InputSpec = InputSpec(),
     ) -> None:
         self.onnx_model = onnx_model
+        sess_options = rt.SessionOptions()
+        try: 
+            num_threads = len(os.sched_getaffinity(0))
+        except AttributeError:
+            num_threads = os.cpu_count() or 1
+        sess_options.intra_op_num_threads = num_threads
         self.session = rt.InferenceSession(
-            onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+            onnx_model.SerializeToString(),
+            sess_options=sess_options,
+            providers=["CPUExecutionProvider"]
         )
         self._input_spec = input_spec
 
