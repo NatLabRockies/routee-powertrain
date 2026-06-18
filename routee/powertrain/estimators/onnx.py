@@ -15,6 +15,7 @@ from routee.powertrain.estimators.estimator_interface import (
     InputSpec,
     PadStrategy,
 )
+from routee.powertrain.utils.threading import get_restricted_threads
 
 ONNX_INPUT_NAME = "input"
 ONNX_DTYPE = "float32"
@@ -117,8 +118,14 @@ class ONNXEstimator(Estimator):
         input_spec: InputSpec = InputSpec(),
     ) -> None:
         self.onnx_model = onnx_model
+        sess_options = rt.SessionOptions()
+        restricted_threads = get_restricted_threads()
+        if restricted_threads is not None:
+            sess_options.intra_op_num_threads = restricted_threads
         self.session = rt.InferenceSession(
-            onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+            onnx_model.SerializeToString(),
+            sess_options=sess_options,
+            providers=["CPUExecutionProvider"],
         )
         self._input_spec = input_spec
 
