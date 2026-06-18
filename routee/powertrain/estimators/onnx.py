@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import base64
-import os
 from pathlib import Path
 from typing import Literal, Optional, cast
 
@@ -16,6 +15,7 @@ from routee.powertrain.estimators.estimator_interface import (
     InputSpec,
     PadStrategy,
 )
+from routee.powertrain.utils.threading import get_restricted_threads
 
 ONNX_INPUT_NAME = "input"
 ONNX_DTYPE = "float32"
@@ -119,11 +119,9 @@ class ONNXEstimator(Estimator):
     ) -> None:
         self.onnx_model = onnx_model
         sess_options = rt.SessionOptions()
-        try:
-            num_threads = len(os.sched_getaffinity(0))
-        except AttributeError:
-            num_threads = os.cpu_count() or 1
-        sess_options.intra_op_num_threads = num_threads
+        restricted_threads = get_restricted_threads()
+        if restricted_threads is not None:
+            sess_options.intra_op_num_threads = restricted_threads
         self.session = rt.InferenceSession(
             onnx_model.SerializeToString(),
             sess_options=sess_options,

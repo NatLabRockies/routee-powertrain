@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import time
 from typing import Literal
 
@@ -14,6 +13,7 @@ from routee.powertrain.core.model_config import ModelConfig
 from routee.powertrain.estimators.estimator_interface import Estimator, InputSpec
 from routee.powertrain.estimators.onnx import ONNX_INPUT_NAME, ONNXEstimator
 from routee.powertrain.trainers.trainer import Trainer
+from routee.powertrain.utils.threading import get_restricted_threads
 
 log = logging.getLogger(__name__)
 
@@ -279,11 +279,9 @@ class CNNTrainer(Trainer):
             torch_out = model(torch.from_numpy(sanity_x)).cpu().numpy()
 
         sess_options = rt.SessionOptions()
-        try:
-            num_threads = len(os.sched_getaffinity(0))
-        except AttributeError:
-            num_threads = os.cpu_count() or 1
-        sess_options.intra_op_num_threads = num_threads
+        restricted_threads = get_restricted_threads()
+        if restricted_threads is not None:
+            sess_options.intra_op_num_threads = restricted_threads
         onnx_sess = rt.InferenceSession(
             onnx_proto.SerializeToString(),
             sess_options=sess_options,
