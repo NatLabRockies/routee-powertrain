@@ -72,6 +72,8 @@ class CNNTrainer(Trainer):
         normalize_features: bool = True,
         random_seed: int = 52,
         device: str | None = None,
+        early_stopping_patience: int | None = None,
+        early_stopping_min_delta: float = 1e-6,
     ):
         self.lookback = lookback
         self.grouping_column = grouping_column
@@ -92,6 +94,8 @@ class CNNTrainer(Trainer):
         self.normalize_features = normalize_features
         self.random_seed = random_seed
         self.device = device
+        self.early_stopping_patience = early_stopping_patience
+        self.early_stopping_min_delta = early_stopping_min_delta
 
     def inner_train(
         self,
@@ -226,6 +230,10 @@ class CNNTrainer(Trainer):
                 self.n_conv_layers,
             )
             rng = np.random.default_rng(self.random_seed)
+            best_val_loss = float("inf")
+            best_state: dict | None = None
+            patience_counter = 0
+            stopped_early = False
             for epoch_idx in range(self.epochs):
                 epoch_start = time.time()
                 perm = torch.from_numpy(rng.permutation(n_train)).to(dev)
@@ -254,6 +262,23 @@ class CNNTrainer(Trainer):
                     with torch.no_grad():
                         val_loss = loss_fn(m(X_val_dev), y_val_dev).item()
                     m.train()
+                    if self.early_stopping_patience is not None:
+                        if val_loss < best_val_loss - self.early_stopping_min_delta:
+                            best_val_loss = val_loss
+                            best_state = {
+                                k: v.clone() for k, v in m.state_dict().items()
+                            }
+                            patience_counter = 0
+                        else:
+                            patience_counter += 1
+                        if patience_counter >= self.early_stopping_patience:
+                            log.info(
+                                "  Early stopping at epoch %d/%d (no improvement for %d epochs)",
+                                epoch_idx + 1,
+                                self.epochs,
+                                self.early_stopping_patience,
+                            )
+                            stopped_early = True
                 log.info(
                     "  epoch %d/%d  loss=%.6f  val_loss=%.6f  lr=%.2e  elapsed=%.1fs",
                     epoch_idx + 1,
@@ -263,6 +288,10 @@ class CNNTrainer(Trainer):
                     optimizer.param_groups[0]["lr"],
                     time.time() - epoch_start,
                 )
+                if stopped_early:
+                    break
+            if best_state is not None:
+                m.load_state_dict(best_state)
             return m
 
         model = _train_on(device)
