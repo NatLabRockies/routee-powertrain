@@ -31,7 +31,11 @@ class NGBoostTrainer(Trainer):
         self.random_state = random_state
 
     def inner_train(
-        self, features: pd.DataFrame, target: pd.DataFrame, config: ModelConfig
+        self,
+        features: pd.DataFrame,
+        target: pd.DataFrame,
+        config: ModelConfig,
+        **kwargs: object,
     ) -> Estimator:
         """
         Uses a ngboost model to predict the energy rate values

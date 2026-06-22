@@ -90,8 +90,17 @@ class Trainer(ABC):
             if extra not in name_list:
                 name_list.append(extra)
         sub_features = train[name_list]
+        test_sub_features = test[name_list]
+        if config.predict_method == PredictMethod.RATE:
+            test_target = test[config.target.target_rate_name_list]
+        else:
+            test_target = test[config.target.target_name_list]
         estimator = self.inner_train(
-            features=sub_features, target=target, config=config
+            features=sub_features,
+            target=target,
+            config=config,
+            test_features=test_sub_features,
+            test_target=test_target,
         )
 
         model_errors = compute_errors(test, estimator, config)
@@ -115,6 +124,9 @@ class Trainer(ABC):
         features: pd.DataFrame,
         target: pd.DataFrame,
         config: ModelConfig,
+        test_features: pd.DataFrame | None = None,
+        test_target: pd.DataFrame | None = None,
+        **kwargs: object,
     ) -> Estimator:
         """
         Builds an estimator from the given data.

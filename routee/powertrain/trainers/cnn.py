@@ -98,6 +98,9 @@ class CNNTrainer(Trainer):
         features: pd.DataFrame,
         target: pd.DataFrame,
         config: ModelConfig,
+        test_features: pd.DataFrame | None = None,
+        test_target: pd.DataFrame | None = None,
+        **kwargs: object,
     ) -> Estimator:
         try:
             import torch
@@ -143,24 +146,43 @@ class CNNTrainer(Trainer):
             feat_mean = np.zeros(n_features, dtype=np.float32)
             feat_std = np.ones(n_features, dtype=np.float32)
 
-        windows = np.zeros((len(features), self.lookback, n_features), dtype=np.float32)
-        groups = features.groupby(self.grouping_column, sort=False).indices
-        for idx_array in groups.values():
-            idx_array = np.asarray(idx_array)
-            group_features = feature_matrix[idx_array]
-            if self.pad_strategy == "repeat_first":
-                pad_row = group_features[:1]
-            else:
-                pad_row = np.zeros((1, n_features), dtype=np.float32)
-            padded = np.concatenate(
-                [np.repeat(pad_row, self.lookback - 1, axis=0), group_features],
-                axis=0,
-            )
-            for i, row_pos in enumerate(idx_array):
-                windows[row_pos] = padded[i : i + self.lookback]
+        def _build_windows(df: pd.DataFrame, matrix: np.ndarray) -> np.ndarray:
+            windows = np.zeros((len(df), self.lookback, n_features), dtype=np.float32)
+            groups = df.groupby(self.grouping_column, sort=False).indices
+            for idx_array in groups.values():
+                idx_array = np.asarray(idx_array)
+                group_features = matrix[idx_array]
+                if self.pad_strategy == "repeat_first":
+                    pad_row = group_features[:1]
+                else:
+                    pad_row = np.zeros((1, n_features), dtype=np.float32)
+                padded = np.concatenate(
+                    [np.repeat(pad_row, self.lookback - 1, axis=0), group_features],
+                    axis=0,
+                )
+                for i, row_pos in enumerate(idx_array):
+                    windows[row_pos] = padded[i : i + self.lookback]
+            return windows
+
+        windows = _build_windows(features, feature_matrix)
 
         X_cpu = torch.from_numpy(windows)
         y_cpu = torch.from_numpy(y_matrix)
+        X_val_cpu: torch.Tensor | None = None
+        y_val_cpu: torch.Tensor | None = None
+        if test_features is not None and test_target is not None:
+            if self.grouping_column not in test_features.columns:
+                raise ValueError(
+                    f"CNNTrainer requires a '{self.grouping_column}' column in the "
+                    f"validation features so windows can be built per route."
+                )
+            test_matrix = test_features[feature_cols].to_numpy(dtype=np.float32)
+            y_val_matrix = test_target.to_numpy(dtype=np.float32)
+            if y_val_matrix.ndim == 1:
+                y_val_matrix = y_val_matrix.reshape(-1, 1)
+            X_val_cpu = torch.from_numpy(_build_windows(test_features, test_matrix))
+            y_val_cpu = torch.from_numpy(y_val_matrix)
+
         n_train = X_cpu.shape[0]
         log.info("CNN training rows: %d", n_train)
 
@@ -169,6 +191,8 @@ class CNNTrainer(Trainer):
             # Move the full training tensors to the target device once.
             X_dev = X_cpu.to(dev)
             y_dev = y_cpu.to(dev)
+            X_val_dev = X_val_cpu.to(dev) if X_val_cpu is not None else None
+            y_val_dev = y_val_cpu.to(dev) if y_val_cpu is not None else None
             m = _CNN1D(
                 n_features=n_features,
                 hidden_channels=self.hidden_channels,
@@ -224,11 +248,18 @@ class CNNTrainer(Trainer):
                     loss_accum += loss.detach()
                     n_batches += 1
                 avg_loss = (loss_accum / max(1, n_batches)).item()
+                val_loss = float("nan")
+                if X_val_dev is not None and y_val_dev is not None:
+                    m.eval()
+                    with torch.no_grad():
+                        val_loss = loss_fn(m(X_val_dev), y_val_dev).item()
+                    m.train()
                 log.info(
-                    "  epoch %d/%d  loss=%.6f  lr=%.2e  elapsed=%.1fs",
+                    "  epoch %d/%d  loss=%.6f  val_loss=%.6f  lr=%.2e  elapsed=%.1fs",
                     epoch_idx + 1,
                     self.epochs,
                     avg_loss,
+                    val_loss,
                     optimizer.param_groups[0]["lr"],
                     time.time() - epoch_start,
                 )
