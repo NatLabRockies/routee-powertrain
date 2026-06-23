@@ -74,6 +74,7 @@ class CNNTrainer(Trainer):
         device: str | None = None,
         early_stopping_patience: int | None = None,
         early_stopping_min_delta: float = 1e-6,
+        warmup_epochs: int = 0,
     ):
         self.lookback = lookback
         self.grouping_column = grouping_column
@@ -96,6 +97,7 @@ class CNNTrainer(Trainer):
         self.device = device
         self.early_stopping_patience = early_stopping_patience
         self.early_stopping_min_delta = early_stopping_min_delta
+        self.warmup_epochs = warmup_epochs
 
     def inner_train(
         self,
@@ -213,12 +215,25 @@ class CNNTrainer(Trainer):
                 weight_decay=self.weight_decay,
             )
             steps_per_epoch = max(1, (n_train + self.batch_size - 1) // self.batch_size)
-            total_steps = max(1, steps_per_epoch * self.epochs)
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            warmup_steps = self.warmup_epochs * steps_per_epoch
+            cosine_epochs = max(1, self.epochs - self.warmup_epochs)
+            cosine_steps = max(1, cosine_epochs * steps_per_epoch)
+            cosine_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                 optimizer,
-                T_max=total_steps,
+                T_max=cosine_steps,
                 eta_min=self.min_learning_rate,
             )
+            if warmup_steps > 0:
+                warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
+                    optimizer,
+                    start_factor=1e-8,
+                    total_iters=warmup_steps,
+                )
+                scheduler = torch.optim.lr_scheduler.ChainedScheduler(
+                    [warmup_scheduler, cosine_scheduler]
+                )
+            else:
+                scheduler = cosine_scheduler
             loss_fn = nn.MSELoss()
             m.train()
             log.info(
