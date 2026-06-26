@@ -106,7 +106,6 @@ class CNNTrainer(Trainer):
         config: ModelConfig,
         test_features: pd.DataFrame | None = None,
         test_target: pd.DataFrame | None = None,
-        **kwargs: object,
     ) -> Estimator:
         try:
             import torch

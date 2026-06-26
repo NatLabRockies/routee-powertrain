@@ -126,7 +126,6 @@ class Trainer(ABC):
         config: ModelConfig,
         test_features: pd.DataFrame | None = None,
         test_target: pd.DataFrame | None = None,
-        **kwargs: object,
     ) -> Estimator:
         """
         Builds an estimator from the given data.

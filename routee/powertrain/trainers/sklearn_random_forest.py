@@ -40,7 +40,8 @@ class SklearnRandomForestTrainer(Trainer):
         features: pd.DataFrame,
         target: pd.DataFrame,
         config: ModelConfig,
-        **kwargs: object,
+        test_features: pd.DataFrame | None = None,
+        test_target: pd.DataFrame | None = None,
     ) -> Estimator:
         """
         Uses a random forest to predict the energy rate values
