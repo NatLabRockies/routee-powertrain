@@ -24,6 +24,7 @@ dependencies = [
   "onnxruntime>=1.23.2,<1.24",
   "rapidfuzz>=3.0",
   "boto3>=1.42,<2.0",
+  "pydantic>=2.5,<3.0",
 ]
 requires-python = ">=3.10,<3.14"
 
@@ -169,9 +170,15 @@ lint_check = "ruff check"
 lint_fix = "ruff check --fix"
 typing = "mypy ."
 test = "pytest tests/"
+# Mirrors the GitHub CI test step (.github/workflows/test.yaml) exactly.
+test_ci = "python -m unittest discover tests/"
 docs = "jupyter-book build docs"
 check = { depends-on = ["fmt_fix", "dprint_fix", "lint_fix", "typing", "test"] }
-ci = { depends-on = ["fmt_check", "dprint_check", "lint_check", "typing", "test"] }
+# Runs the same checks, in the same order, as the GitHub CI workflow
+# (.github/workflows/test.yaml): mypy, ruff check, ruff format --check,
+# dprint check, then `python -m unittest discover tests/`. Invoked by the
+# pre-commit hook so local pre-commit matches CI.
+ci = { depends-on = ["typing", "lint_check", "fmt_check", "dprint_check", "test_ci"] }
 precommit-install = "pre-commit install"
 
 [tool.pixi.pypi-dependencies]

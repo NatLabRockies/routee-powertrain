@@ -7,7 +7,11 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Union
 
-from routee.powertrain.core.metadata import Metadata, SCHEMA_VERSION
+from routee.powertrain.core.metadata import (
+    SCHEMA_VERSION,
+    SCHEMA_VERSION_STRING,
+    Metadata,
+)
 
 if TYPE_CHECKING:
     from routee.powertrain.core.model import Model
@@ -24,7 +28,7 @@ def _get_estimator_registry():
 
 def _build_metadata_dict(model: Model) -> dict:
     """Build the metadata dictionary for serialization."""
-    return model.metadata.to_dict()
+    return model.metadata.model_dump(mode="json")
 
 
 def _model_from_metadata_and_bytes(metadata_dict: dict, model_bytes: bytes) -> Model:
@@ -55,7 +59,7 @@ def _model_from_metadata_and_bytes(metadata_dict: dict, model_bytes: bytes) -> M
         raise ValueError("Archive metadata must contain 'model_file'")
 
     estimator = estimator_cls.from_bytes(model_bytes)
-    metadata = Metadata.from_dict(metadata_dict)
+    metadata = Metadata.model_validate(metadata_dict)
 
     return Model(estimator=estimator, metadata=metadata)
 
@@ -88,7 +92,7 @@ def save_to_registry(
     registry_root: Union[str, Path],
     config_slug: str,
     version: int = 1,
-    schema_version: str = "v2",
+    schema_version: str = SCHEMA_VERSION_STRING,
     overwrite: bool = False,
 ) -> ModelId:
     """
@@ -112,7 +116,7 @@ def save_to_registry(
         version: positive integer version. Bump when retraining the same
             ``config_slug``. A materially different feature set or
             architecture should use a new ``config_slug`` and start at v1.
-        schema_version: registry schema directory name (default ``"v2"``)
+        schema_version: registry schema directory name (default ``"v3"``)
         overwrite: if False (default), raise ``FileExistsError`` when the
             target directory already contains a saved model. If True, the
             existing files are replaced.

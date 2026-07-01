@@ -34,6 +34,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
+from routee.powertrain.core.metadata import Metadata
+
 log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -174,7 +176,7 @@ def convert_legacy_json(
     identity: VehicleIdentity,
     *,
     version: int = 1,
-    schema_version: int = 2,
+    schema_version: int = 3,
 ) -> List[Path]:
     """
     Convert a single legacy v1 JSON model file into v2 model directories.
@@ -368,10 +370,14 @@ def convert_legacy_json(
 
         model_dir.mkdir(parents=True, exist_ok=True)
 
-        # Write metadata.json
-        metadata = _sanitize_infinities(metadata)
+        # Validate + normalize through the pydantic Metadata model so the emitted
+        # JSON is guaranteed schema-correct (single source of truth), then sanitize
+        # any infinite error metrics to null.
+        metadata_out = _sanitize_infinities(
+            Metadata.model_validate(metadata).model_dump(mode="json")
+        )
         metadata_path = model_dir / "metadata.json"
-        metadata_path.write_text(json.dumps(metadata, indent=2))
+        metadata_path.write_text(json.dumps(metadata_out, indent=2))
 
         # Write binary model file
         binary_path = model_dir / model_filename

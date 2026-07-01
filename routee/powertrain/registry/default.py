@@ -34,7 +34,7 @@ def get_default_registry() -> ModelRegistry:
         ROUTEE_S3_REGION: AWS region (default: us-west-2)
         ROUTEE_S3_ROOT_PREFIX: Top-level folder in the S3 bucket
             (default: routee-powertrain-model-library)
-        ROUTEE_SCHEMA_VERSION: schema version (default: v2)
+        ROUTEE_SCHEMA_VERSION: schema version (default: v3)
         ROUTEE_LOCAL_REGISTRY_ROOT: root directory for local registry backend
             (default: bundled registry shipped with the package)
 

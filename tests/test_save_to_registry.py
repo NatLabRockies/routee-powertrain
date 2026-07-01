@@ -60,7 +60,7 @@ class TestSaveToRegistry(TestCase):
         )
 
         expected_dir = (
-            self.registry_root / "v2" / "test" / "sedan" / "2024" / "rf_default" / "v1"
+            self.registry_root / "v3" / "test" / "sedan" / "2024" / "rf_default" / "v1"
         )
         self.assertTrue(expected_dir.is_dir())
         self.assertTrue((expected_dir / "metadata.json").exists())

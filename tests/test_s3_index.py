@@ -39,7 +39,7 @@ class TestS3Index(TestCase):
             vehicle_description="2016 toyota camry",
             path=f"{BASE}/toyota/camry/2016/rf_default/v1",
         )
-        index = {"schema_version": SCHEMA, "models": [info.to_dict()]}
+        index = {"schema_version": SCHEMA, "models": [info.model_dump(mode="json")]}
 
         registry = S3Registry(
             bucket="test-bucket", schema_version=SCHEMA, root_prefix=ROOT

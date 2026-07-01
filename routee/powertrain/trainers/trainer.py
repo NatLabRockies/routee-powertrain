@@ -102,7 +102,7 @@ class Trainer(ABC):
             estimator_type=estimator.__class__.__name__,
             model_file="model" + estimator.file_extension,
             architecture_tag=self.architecture_tag,
-            input_spec=estimator.input_spec.to_dict(),
+            input_spec=estimator.input_spec.model_dump(mode="json"),
         )
 
         vehicle_model = Model(estimator, metadata)

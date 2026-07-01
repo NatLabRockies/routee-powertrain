@@ -197,7 +197,7 @@ class S3Registry(ModelRegistry):
             ) from exc
         try:
             index_dict = json.loads(data)
-            return [ModelInfo.from_dict(m) for m in index_dict.get("models", [])]
+            return [ModelInfo.model_validate(m) for m in index_dict.get("models", [])]
         except Exception as exc:
             raise IndexMissingError(f"Could not parse index at '{key}': {exc}") from exc
 
@@ -301,7 +301,7 @@ def build_index(
             # path is the directory prefix (key without /metadata.json)
             dir_key = key[: -len(f"/{METADATA_FILENAME}")]
             info = _model_info_from_metadata(metadata_dict, model_id, dir_key)
-            models.append(info.to_dict())
+            models.append(info.model_dump(mode="json"))
         except Exception:
             continue
 

@@ -31,8 +31,8 @@ class TestModelId(TestCase):
 
     def test_roundtrip_dict(self):
         mid = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", 1)
-        d = mid.to_dict()
-        mid2 = ModelId.from_dict(d)
+        d = mid.model_dump(mode="json")
+        mid2 = ModelId.model_validate(d)
         self.assertEqual(mid, mid2)
 
 
@@ -511,9 +511,9 @@ class TestMassLbsModelConfig(TestCase):
         """mass_lbs should roundtrip through to_dict/from_dict."""
         results = self.registry.query()
         info = results[0]
-        d = info.to_dict()
+        d = info.model_dump(mode="json")
         self.assertEqual(d["mass_lbs"], 33000.0)
-        restored = ModelInfo.from_dict(d)
+        restored = ModelInfo.model_validate(d)
         self.assertEqual(restored.mass_lbs, 33000.0)
 
 
@@ -669,12 +669,12 @@ class TestVehicleAttributeFields(TestCase):
     def test_model_info_roundtrip_dict(self):
         results = self.registry.query()
         info = results[0]
-        d = info.to_dict()
+        d = info.model_dump(mode="json")
         self.assertEqual(d["fuel_type"], "DIESEL")
         self.assertEqual(d["drivetrain"], "FOURWD")
         self.assertEqual(d["engine"], "4cyl")
         self.assertEqual(d["trim"], "lt")
-        restored = ModelInfo.from_dict(d)
+        restored = ModelInfo.model_validate(d)
         self.assertEqual(restored.fuel_type, "DIESEL")
         self.assertEqual(restored.drivetrain, "FOURWD")
         self.assertEqual(restored.engine, "4cyl")
@@ -736,7 +736,7 @@ class TestVehicleAttributeFields(TestCase):
             "model": "test",
             "year": 2020,
         }
-        config = pt.ModelConfig.from_dict(d)
+        config = pt.ModelConfig.model_validate(d)
         self.assertIsNone(config.fuel_type)
         self.assertIsNone(config.drivetrain)
         self.assertIsNone(config.engine)
@@ -758,7 +758,7 @@ class TestVehicleAttributeFields(TestCase):
             "powertrain_type": "ICE",
             "vehicle_description": "test",
         }
-        info = ModelInfo.from_dict(d)
+        info = ModelInfo.model_validate(d)
         self.assertIsNone(info.fuel_type)
         self.assertIsNone(info.drivetrain)
         self.assertIsNone(info.engine)

@@ -17,7 +17,7 @@ this_dir = Path(__file__).parent
 
 class TestToLookup(TestCase):
     def setUp(self) -> None:
-        registry = LocalRegistry(root=bundled_registry_root(), schema_version="v2")
+        registry = LocalRegistry(root=bundled_registry_root(), schema_version="v3")
         model_id = ModelId("toyota", "camry_4cyl_2wd", 2016, "rf_default", 1)
         self.mock_model = registry.load(model_id)
 

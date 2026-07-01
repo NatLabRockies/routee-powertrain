@@ -1,20 +1,21 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Optional
 
 import pandas as pd
+from pydantic import BaseModel, ConfigDict
 
 from routee.powertrain.core.model_config import ModelConfig
 
 PadStrategy = Literal["zero", "repeat_first"]
 
 
-@dataclass(frozen=True)
-class InputSpec:
+class InputSpec(BaseModel):
     """Declares what an estimator needs from the caller's dataframe beyond plain feature columns."""
+
+    model_config = ConfigDict(frozen=True)
 
     #: rows of prior context required per prediction. 0 = pointwise (classic tabular).
     lookback: int = 0
@@ -23,21 +24,6 @@ class InputSpec:
     grouping_column: Optional[str] = None
     #: how to pad the lookback window at the start of a group (first rows lack prior context).
     pad_strategy: PadStrategy = "repeat_first"
-
-    def to_dict(self) -> dict:
-        return {
-            "lookback": self.lookback,
-            "grouping_column": self.grouping_column,
-            "pad_strategy": self.pad_strategy,
-        }
-
-    @classmethod
-    def from_dict(cls, d: dict) -> InputSpec:
-        return cls(
-            lookback=int(d.get("lookback", 0)),
-            grouping_column=d.get("grouping_column"),
-            pad_strategy=d.get("pad_strategy", "repeat_first"),
-        )
 
 
 class Estimator(ABC):

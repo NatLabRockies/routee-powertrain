@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
 from typing import List, Optional
 
-from routee.powertrain.core.year import Year, format_year, parse_year, serialize_year
+from pydantic import BaseModel, field_validator
+
+from routee.powertrain.core.pydantic_fields import YearField
+from routee.powertrain.core.year import format_year, parse_year
 
 _VERSION_RE = re.compile(r"^v(\d+)$")
 
 
-@dataclass
-class ModelId:
+class ModelId(BaseModel):
     """Uniquely identifies a model in the registry.
 
     A ``config_slug`` disambiguates multiple models for the same vehicle/year —
@@ -22,15 +23,37 @@ class ModelId:
 
     make: str
     model: str
-    year: Year
+    year: YearField
     config_slug: str
     version: int
 
-    def __post_init__(self):
-        self.make = self.make.lower()
-        self.model = self.model.lower()
-        self.config_slug = self.config_slug.lower()
-        self.year = parse_year(self.year)
+    def __init__(
+        self,
+        make: object = None,
+        model: object = None,
+        year: object = None,
+        config_slug: object = None,
+        version: object = None,
+        **data: object,
+    ) -> None:
+        # Preserve positional construction (make, model, year, config_slug, version)
+        # while still routing through pydantic validation.
+        if make is not None:
+            data["make"] = make
+        if model is not None:
+            data["model"] = model
+        if year is not None:
+            data["year"] = year
+        if config_slug is not None:
+            data["config_slug"] = config_slug
+        if version is not None:
+            data["version"] = version
+        super().__init__(**data)
+
+    @field_validator("make", "model", "config_slug", mode="after")
+    @classmethod
+    def _lowercase(cls, v: str) -> str:
+        return v.lower()
 
     @classmethod
     def from_path(cls, path: str) -> ModelId:
@@ -82,22 +105,6 @@ class ModelId:
             f"{format_year(self.year)}/{self.config_slug}/v{self.version}"
         )
 
-    def to_dict(self) -> dict:
-        return {
-            "make": self.make,
-            "model": self.model,
-            "year": serialize_year(self.year),
-            "config_slug": self.config_slug,
-            "version": self.version,
-        }
-
-    @classmethod
-    def from_dict(cls, d: dict) -> ModelId:
-        d = d.copy()
-        if "model_name" in d and "model" not in d:
-            d["model"] = d.pop("model_name")
-        return cls(**d)
-
     def __str__(self) -> str:
         return (
             f"{self.make}/{self.model}/{format_year(self.year)}/"
@@ -105,8 +112,7 @@ class ModelId:
         )
 
 
-@dataclass
-class ModelInfo:
+class ModelInfo(BaseModel):
     """Lightweight model summary returned from registry queries (no binary data)."""
 
     model_id: ModelId
@@ -123,37 +129,6 @@ class ModelInfo:
     drivetrain: Optional[str] = None
     engine: Optional[str] = None
     trim: Optional[str] = None
-
-    def to_dict(self) -> dict:
-        return {
-            "model_id": self.model_id.to_dict(),
-            "estimator_type": self.estimator_type,
-            "architecture_tag": self.architecture_tag,
-            "input_spec": self.input_spec,
-            "feature_names": self.feature_names,
-            "target_names": self.target_names,
-            "powertrain_type": self.powertrain_type,
-            "vehicle_description": self.vehicle_description,
-            "path": self.path,
-            "mass_lbs": self.mass_lbs,
-            "fuel_type": self.fuel_type,
-            "drivetrain": self.drivetrain,
-            "engine": self.engine,
-            "trim": self.trim,
-        }
-
-    @classmethod
-    def from_dict(cls, d: dict) -> ModelInfo:
-        d = d.copy()
-        d["model_id"] = ModelId.from_dict(d["model_id"])
-        d.setdefault("architecture_tag", "unknown")
-        d.setdefault("input_spec", None)
-        d.setdefault("mass_lbs", None)
-        d.setdefault("fuel_type", None)
-        d.setdefault("drivetrain", None)
-        d.setdefault("engine", None)
-        d.setdefault("trim", None)
-        return cls(**d)
 
     def __repr__(self) -> str:
         lines = [

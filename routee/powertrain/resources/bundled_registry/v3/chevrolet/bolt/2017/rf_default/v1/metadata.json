@@ -1,0 +1,98 @@
+{
+  "config": {
+    "vehicle_description": "2017_CHEVROLET_Bolt trained July 2024",
+    "powertrain_type": "BEV",
+    "feature_set": {
+      "features": [
+        {
+          "name": "speed_mph",
+          "units": "mph",
+          "dtype": "float32",
+          "constraints": {
+            "lower": 0.0,
+            "upper": 120.0
+          }
+        },
+        {
+          "name": "grade_percent",
+          "units": "percent",
+          "dtype": "float32",
+          "constraints": {
+            "lower": -20.0,
+            "upper": 20.0
+          }
+        }
+      ]
+    },
+    "distance": {
+      "name": "distance",
+      "units": "miles",
+      "dtype": "float32",
+      "constraints": {
+        "lower": null,
+        "upper": null
+      }
+    },
+    "target": {
+      "targets": [
+        {
+          "name": "kwh",
+          "units": "kilowatt-hour",
+          "dtype": "float32",
+          "constraints": {
+            "lower": null,
+            "upper": null
+          }
+        }
+      ]
+    },
+    "make": "chevrolet",
+    "model": "bolt",
+    "year": 2017,
+    "predict_method": "rate",
+    "test_size": 0.2,
+    "random_seed": 42,
+    "trip_column": "journey_id",
+    "apply_real_world_adjustment": true,
+    "mass_lbs": null,
+    "fuel_type": null,
+    "drivetrain": null,
+    "engine": null,
+    "trim": null
+  },
+  "errors": {
+    "estimator_errors": {
+      "error_by_target": {
+        "kwh": {
+          "link_root_mean_squared_error": 0.019031045651014208,
+          "link_norm_root_mean_squared_error": 1.4866731668102635,
+          "link_weighted_relative_percent_difference": 0.7349972159773847,
+          "net_error": -0.009809671977623587,
+          "actual_dist_per_energy": 4.180673987907612,
+          "pred_dist_per_energy": 4.222091318804658,
+          "real_world_pred_dist_per_energy": 3.02485407565887,
+          "trip_relative_percent_difference": 0.48704066565087567,
+          "trip_weighted_relative_percent_difference": 0.16109247823531392,
+          "trip_root_mean_squared_error": 0.1229873635354859,
+          "trip_norm_root_mean_squared_error": 0.3285596302409108,
+          "link_negative_log_likelihood": null,
+          "link_continuous_ranked_probability_score": null,
+          "link_prediction_interval_coverage_probability": null,
+          "trip_negative_log_likelihood": null,
+          "trip_continuous_ranked_probability_score": null,
+          "trip_prediction_interval_coverage_probability": null
+        }
+      }
+    }
+  },
+  "estimator_type": "ONNXEstimator",
+  "model_file": "model.onnx",
+  "architecture_tag": "random_forest",
+  "input_spec": {
+    "lookback": 0,
+    "grouping_column": null,
+    "pad_strategy": "zero"
+  },
+  "routee_version": "1.0.0",
+  "schema_version": 3
+}

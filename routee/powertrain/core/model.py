@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, TYPE_CHECKING, Union
 
 import pandas as pd
 
-from routee.powertrain.core.metadata import Metadata
+from routee.powertrain.core.metadata import Metadata, SCHEMA_VERSION_STRING
 from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
 from routee.powertrain.estimators.estimator_interface import Estimator
 from routee.powertrain.estimators.onnx import ONNXEstimator
@@ -94,7 +94,7 @@ class Model:
         registry_root: Union[str, Path],
         config_slug: str,
         version: int = 1,
-        schema_version: str = "v2",
+        schema_version: str = SCHEMA_VERSION_STRING,
         overwrite: bool = False,
     ):
         """

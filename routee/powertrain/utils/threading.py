@@ -13,7 +13,9 @@ def get_restricted_threads() -> int | None:
     default behavior.
     """
     try:
-        restricted = len(os.sched_getaffinity(0))
+        # os.sched_getaffinity is Linux-only; guarded at runtime for other
+        # platforms (e.g. macOS) where the attribute is absent.
+        restricted = len(os.sched_getaffinity(0))  # type: ignore[attr-defined]
     except AttributeError:
         return None
 

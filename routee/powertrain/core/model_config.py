@@ -1,41 +1,31 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from enum import Enum
 from typing import List, Optional
 
-from routee.powertrain.core.drivetrain import Drivetrain
+from pydantic import BaseModel, field_validator
+
 from routee.powertrain.core.features import (
     DataColumn,
     FeatureSet,
     TargetSet,
 )
-from routee.powertrain.core.fuel_type import FuelType
-from routee.powertrain.core.powertrain_type import PowertrainType
-from routee.powertrain.core.year import Year, parse_year, serialize_year
+from routee.powertrain.core.predict_method import PredictMethod
+from routee.powertrain.core.pydantic_fields import (
+    DrivetrainField,
+    FuelTypeField,
+    PowertrainTypeField,
+    PredictMethodField,
+    YearField,
+)
+
+# Re-exported for backwards compatibility: ``PredictMethod`` used to live here.
+__all__ = ["ModelConfig", "PredictMethod"]
 
 
-class PredictMethod(Enum):
-    # Predict the rate of energy consumption and then multiply it by the distance.
-    RATE = "rate"
-    # Predict the total energy consumption for the link (including distance as a feature).
-    RAW = "raw"
-
-    @classmethod
-    def from_string(cls, string: str) -> PredictMethod:
-        if string.lower() == "rate":
-            return PredictMethod.RATE
-        elif string.lower() == "raw":
-            return PredictMethod.RAW
-        else:
-            raise ValueError("Unknown predict method: {}".format(string))
-
-
-@dataclass
-class ModelConfig:
+class ModelConfig(BaseModel):
     ## vehicle information
     vehicle_description: str
-    powertrain_type: PowertrainType
+    powertrain_type: PowertrainTypeField
 
     ## estimator information
     feature_set: FeatureSet
@@ -45,9 +35,9 @@ class ModelConfig:
     ## structured vehicle identification
     make: str
     model: str
-    year: Year
+    year: YearField
 
-    predict_method: PredictMethod = PredictMethod.RATE
+    predict_method: PredictMethodField = PredictMethod.RATE
 
     test_size: float = 0.2
     random_seed: int = 42
@@ -58,89 +48,33 @@ class ModelConfig:
 
     mass_lbs: Optional[float] = None
 
-    fuel_type: Optional[FuelType] = None
-    drivetrain: Optional[Drivetrain] = None
+    fuel_type: Optional[FuelTypeField] = None
+    drivetrain: Optional[DrivetrainField] = None
     engine: Optional[str] = None
     trim: Optional[str] = None
 
-    def __post_init__(self):
-        # normalize vehicle id fields to lowercase
-        self.make = self.make.lower()
-        self.model = self.model.lower()
-        # parse year (supports int, tuple, or "YYYY-YYYY" string)
-        self.year = parse_year(self.year)
-        # convert feature_set to the correct type
-        if isinstance(self.feature_set, dict):
-            self.feature_set = FeatureSet.from_dict(self.feature_set)
-        elif isinstance(self.feature_set, list):
-            self.feature_set = FeatureSet(features=self.feature_set)
-
-        if isinstance(self.distance, dict):
-            self.distance = DataColumn.from_dict(self.distance)
-
-        if isinstance(self.target, dict):
-            self.target = TargetSet.from_dict(self.target)
-        elif isinstance(self.target, DataColumn):
-            self.target = TargetSet([self.target])
-        elif isinstance(self.target, list):
-            self.target = TargetSet(self.target)
-
-        if isinstance(self.powertrain_type, str):
-            self.powertrain_type = PowertrainType.from_string(self.powertrain_type)
-
-        if isinstance(self.predict_method, str):
-            self.predict_method = PredictMethod.from_string(self.predict_method)
-
-        if isinstance(self.fuel_type, str):
-            self.fuel_type = FuelType.from_string(self.fuel_type)
-
-        if isinstance(self.drivetrain, str):
-            self.drivetrain = Drivetrain.from_string(self.drivetrain)
-
-        # now check all the types
-        if not isinstance(self.feature_set, FeatureSet):
-            raise ValueError("feature_set must be a FeatureSet")
-        if not isinstance(self.distance, DataColumn):
-            raise ValueError("Distance must be a DataColumn")
-        if not isinstance(self.target, TargetSet):
-            raise ValueError("Target set must be a TargetSet")
-        if not isinstance(self.powertrain_type, PowertrainType):
-            raise ValueError("Powertrain type must be a PowertrainType")
-        if not isinstance(self.predict_method, PredictMethod):
-            raise ValueError("Predict method must be a PredictMethod")
-
+    @field_validator("make", "model", mode="after")
     @classmethod
-    def from_dict(cls, d: dict) -> ModelConfig:
-        # provide defaults for legacy model files that lack vehicle id fields
-        d = d.copy()
-        d.setdefault("make", "unknown")
-        # support legacy files that used "model_name" instead of "model"
-        if "model_name" in d and "model" not in d:
-            d["model"] = d.pop("model_name")
-        d.setdefault("model", "unknown")
-        d.setdefault("year", 0)
-        # legacy files may still contain "trim" — fold it into model
-        trim = d.pop("trim", None)
-        if trim and trim not in ("unknown", "default"):
-            base = d.get("model", "unknown")
-            d["model"] = f"{base}_{trim}"
-        return cls(**d)
+    def _lowercase(cls, v: str) -> str:
+        return v.lower()
 
-    def to_dict(self) -> dict:
-        d = self.__dict__.copy()
-        d["powertrain_type"] = self.powertrain_type.name
-        d["feature_set"] = self.feature_set.to_dict()
-        d["distance"] = self.distance.to_dict()
-        d["target"] = self.target.to_dict()
-        d["predict_method"] = self.predict_method.value
-        d["year"] = serialize_year(self.year)
+    @field_validator("feature_set", mode="before")
+    @classmethod
+    def _coerce_feature_set(cls, v: object) -> object:
+        # accept a bare list of columns; dicts/FeatureSet handled natively
+        if isinstance(v, list):
+            return {"features": v}
+        return v
 
-        if self.fuel_type is not None:
-            d["fuel_type"] = self.fuel_type.name
-        if self.drivetrain is not None:
-            d["drivetrain"] = self.drivetrain.name
-
-        return d
+    @field_validator("target", mode="before")
+    @classmethod
+    def _coerce_target(cls, v: object) -> object:
+        # accept a single column or a bare list; dicts/TargetSet handled natively
+        if isinstance(v, DataColumn):
+            return {"targets": [v]}
+        if isinstance(v, list):
+            return {"targets": v}
+        return v
 
     @property
     def feature_names(self) -> List[str]:

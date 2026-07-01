@@ -100,7 +100,7 @@ class LocalRegistry(ModelRegistry):
 
     Args:
         root: path to the top-level directory
-        schema_version: schema version to use (default "v2")
+        schema_version: schema version to use (default "v3")
     """
 
     def __init__(
