@@ -2,8 +2,9 @@
 
 After training a model with one of the `Trainer` classes, you can save it
 into the v2 registry layout that `LocalRegistry` and `S3Registry` understand.
-This page walks through writing a trained model into a local registry, picking
-a `config_slug`, and loading it back through `pt.load_model()`.
+This page walks through writing a trained model into a local registry,
+understanding the derived `config_slug`, and loading it back through
+`pt.load_model()`.
 
 ## The v2 Registry Layout
 
@@ -16,33 +17,51 @@ Every model in the registry lives in a five-segment path:
 ```
 
 The bundled example at
-`routee/powertrain/resources/bundled_registry/v2/toyota/camry_4cyl_2wd/2016/rf_default/v1/`
+`routee/powertrain/resources/bundled_registry/v2/toyota/camry_4cyl_2wd/2016/rf_c3326385/v1/`
 is a concrete reference for what the on-disk layout looks like.
 
-## Picking a `config_slug`
+## The derived `config_slug`
 
 The `config_slug` disambiguates multiple trained configurations for the same
-vehicle and year. The full feature composition and estimator architecture live
-inside `metadata.json`; the slug is a short human-readable handle.
+vehicle and year. **You don't pick it — it is derived from the model's
+metadata**, so it stays consistent and can't drift from what the model actually
+is. The slug is a pure function:
 
-The informal convention used by existing slugs (`rf_default`, `cnn_5link`,
-`rf_steady_temp`) is:
+```
+<architecture>_<variant?>_<feature_set_hash>
+```
 
-- **Format**: lowercase snake_case, `<architecture>_<descriptor>`.
-- **Use `_default`** when the model is the canonical configuration for that
-  architecture on that vehicle.
-- **The descriptor encodes the meaningful axis of variation** — feature
-  subset (`rf_steady_temp`), input window (`cnn_5link`), or training-data
-  scope. It is _not_ the date, the trainer's initials, or a version number.
-- **Do not put version info in the slug.** Re-training the same configuration
-  bumps `v<N>` (e.g. `rf_default/v2`). A materially different feature set or
-  architecture should use a _new_ slug and start at `v1`.
+- **architecture** — a short code for the estimator family (`rf`, `ngb`, `cnn`),
+  from `metadata.architecture_tag`.
+- **variant** — the optional `ModelConfig.variant` label, included only when set.
+- **feature_set_hash** — a short hash of the feature set, so different feature
+  compositions get different slugs automatically.
+
+For example, `rf_c3326385` (a random forest over speed & grade) or
+`ngb_stochastic_96224f1f` (an NGBoost model with `variant="stochastic"`).
+
+Because the hash already separates different feature sets, the only time you
+need to intervene is when **two models share the same architecture _and_ feature
+set** but represent different regimes — e.g. a "steady thermal state" model and
+a "warm-up" model. Set `ModelConfig.variant` to tell them apart:
+
+```python
+config = pt.ModelConfig(..., variant="steady")   # -> rf_steady_<hash>
+config = pt.ModelConfig(..., variant="warmup")   # -> rf_warmup_<hash>
+```
+
+The registry recomputes this slug when loading and **raises if it disagrees
+with the on-disk path**, so a moved or hand-edited model surfaces loudly
+instead of silently mis-loading. `version` is the one coordinate the registry
+assigns, not part of the derived identity — retraining the same configuration
+bumps `v<N>`.
 
 ## Train and Publish
 
 `Model.save_to_registry()` writes a trained model into the canonical layout in
-one call. It pulls `make`, `model`, and `year` from `model.metadata.config`,
-so make sure those fields on your `ModelConfig` are correct before training.
+one call. It pulls `make`, `model`, and `year` from `model.metadata.config` and
+derives the `config_slug`, so make sure those fields on your `ModelConfig` are
+correct before training.
 
 ```python
 import routee.powertrain as pt
@@ -68,17 +87,20 @@ config = pt.ModelConfig(
 
 model = SklearnRandomForestTrainer().train(training_df, config)
 
-model_id = model.save_to_registry(
-    registry_root="./my_local_registry",
-    config_slug="rf_default",
-    version=1,
-)
-print(model_id)  # test/sedan/2024/rf_default/v1
+# config_slug is derived; version defaults to the next unused version.
+model_id = model.save_to_registry(registry_root="./my_local_registry")
+print(model_id)      # test/sedan/2024/rf_aaa9554f/v1
+print(model.key)     # test/sedan/2024/rf_aaa9554f  (version-less identity)
 ```
 
-This creates `./my_local_registry/v2/test/sedan/2024/rf_default/v1/` with
-`metadata.json` and `model.onnx` inside. If the directory already has files,
-the call raises `FileExistsError` — bump `version` or pass `overwrite=True`.
+This creates `./my_local_registry/v2/test/sedan/2024/rf_aaa9554f/v1/` with
+`metadata.json` and `model.onnx` inside. If that exact version already has
+files, the call raises `FileExistsError` — omit `version` to auto-increment, or
+pass `overwrite=True`.
+
+Every `Model` also exposes its version-less identity as `model.key` (a
+`ModelKey`), available the moment it is trained — even before it is placed in a
+registry.
 
 ## Load It Back
 
@@ -103,8 +125,9 @@ import routee.powertrain as pt
 os.environ["ROUTEE_REGISTRY_BACKEND"] = "local"
 os.environ["ROUTEE_LOCAL_REGISTRY_ROOT"] = "./my_local_registry"
 
-# Omit the trailing v<N> to get the latest version.
-model = pt.load_model("test/sedan/2024/rf_default")
+# Omit the trailing v<N> to get the latest version. model.key.to_path() gives
+# exactly this version-less path.
+model = pt.load_model("test/sedan/2024/rf_aaa9554f")
 ```
 
 You can also list and query what's in the registry the same way you would
@@ -130,10 +153,15 @@ contents come from your `ModelConfig` and the trainer:
 | `errors`                                                   | Computed during `Trainer.train()`                |
 | `routee_version`                                           | Package version at save time                     |
 | `config.make / model / year`                               | From `ModelConfig` — drives the path             |
+| `config.variant`                                           | From `ModelConfig` (optional) — feeds the slug   |
 | `config.powertrain_type`                                   | From `ModelConfig`                               |
 | `config.vehicle_description`                               | From `ModelConfig`                               |
 | `config.feature_set / target / distance`                   | From `ModelConfig`                               |
 | `config.mass_lbs / fuel_type / drivetrain / engine / trim` | From `ModelConfig` (optional)                    |
+
+The `config_slug` in the path is _not_ stored in `metadata.json` — it is
+derived from `architecture_tag` + `config.variant` + `config.feature_set` (see
+`routee/powertrain/registry/slug.py`).
 
 See `routee/powertrain/core/metadata.py` for the full schema and
 `routee/powertrain/core/model_config.py` for the `ModelConfig` fields.

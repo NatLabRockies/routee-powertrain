@@ -33,15 +33,15 @@ results = pt.query_available_models(make="chevrolet", model="bolt", year=2017)
 To predict with any of these models you can use the `pt.load_model()` function. Pass the registry path string (or a `ModelId` object) to load a model:
 
 ```python
-camry = pt.load_model('toyota/camry_4cyl_2wd/2016/rf_default/v1')
-bolt = pt.load_model('chevrolet/bolt/2017/rf_default/v1')
+camry = pt.load_model('toyota/camry_4cyl_2wd/2016/rf_c3326385/v1')
+bolt = pt.load_model('chevrolet/bolt/2017/rf_c3326385/v1')
 ```
 
 ## Model Registry
 
 Model discovery and retrieval go through a `ModelRegistry` abstraction. By default, models are fetched from a public S3 bucket; you can also point at a local directory tree by setting the `ROUTEE_REGISTRY_BACKEND` environment variable.
 
-A `ModelId` is structured as `<make>/<model>/<year>/<config_slug>/v<N>`, where `config_slug` (e.g. `rf_default`, `cnn_5link`) disambiguates multiple trained models for the same vehicle/year. For example, we might have 3 difference model architectures for a specific vehicle, or, we might have models trained on different input feature sets. Omit the trailing `v<N>` to load the latest version.
+A `ModelId` is structured as `<make>/<model>/<year>/<config_slug>/v<N>`, where `config_slug` disambiguates multiple trained models for the same vehicle/year. The slug is _derived_ from the model's metadata as `<architecture>_<variant?>_<feature_hash>` (e.g. `rf_c3326385`, `ngb_stochastic_96224f1f`) — so different architectures, feature sets, or `variant` labels each get a distinct slug automatically. Omit the trailing `v<N>` to load the latest version. The version-less part (`<make>/<model>/<year>/<config_slug>`) is a model's `ModelKey`, exposed on any loaded or trained model as `model.key`.
 
 For a step-by-step walkthrough of training a new model and writing it into the registry layout, see [Publishing a Model](publishing_a_model.md).
 

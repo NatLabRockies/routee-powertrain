@@ -33,7 +33,7 @@ Package source lives under `routee/powertrain/`.
 
 ### Core layers
 
-- **`core/`** — Central data types: `Model`, `ModelConfig`, `FeatureSet`, `DataColumn`, `TargetSet`, `Constraints`, `PowertrainType` (enum), `Metadata`, `PredictMethod`, `Drivetrain`, `FuelType`, `Year` (type alias)
+- **`core/`** — Central data types: `Model` (with a computed `key` → `ModelKey`), `ModelConfig`, `FeatureSet`, `DataColumn`, `TargetSet`, `Constraints`, `PowertrainType` (enum), `Metadata`, `PredictMethod`, `Drivetrain`, `FuelType`, `Year` (type alias)
 - **`estimators/`** — `Estimator` ABC + `InputSpec` dataclass, with implementations:
   - `ONNXEstimator` — wraps any ONNX model via onnxruntime. Handles both plain tabular input (`(N, F)`) and windowed sequence input (`(N, lookback, F)`) driven by an `InputSpec` embedded in the model's ONNX `metadata_props` (keys `routee_lookback`, `routee_grouping_column`, `routee_pad_strategy`).
   - `NGBoostEstimator` — wraps NGBoost models (joblib + base64); emits both a point prediction and a per-row standard deviation column.
@@ -48,7 +48,8 @@ Package source lives under `routee/powertrain/`.
   - `ModelRegistry` (ABC) — Interface with `query()`, `load()`, `list_models()`, `get_metadata()`
   - `S3Registry` — Fetches models from a public S3 bucket (`routeecore-bucket`). Uses optional `index.json` for fast queries and hierarchical prefix walking for filtered searches
   - `LocalRegistry` — Reads models from a local directory tree using glob-based scanning
-  - `ModelId` — Identifier with five segments: `make/model/year/config_slug/v<N>` (e.g. `toyota/camry_4cyl_2wd/2016/rf_default/v1`). `config_slug` (e.g. `rf_default`, `cnn_5link`, `rf_steady_temp`) disambiguates multiple trained configurations for the same vehicle/year; the full feature composition lives in `metadata.json`.
+  - `ModelId` — Identifier with five segments: `make/model/year/config_slug/v<N>` (e.g. `toyota/camry_4cyl_2wd/2016/rf_c3326385/v1`). It composes a `ModelKey` (the version-less identity) plus a registry-assigned `version`. `config_slug` is **derived** from metadata (`registry/slug.py:derive_config_slug`) as `<arch_short>_<variant?>_<feature_hash>` — not user-supplied — so `make/model/year/config_slug` are all pure functions of a model's metadata; only `version` is a registry coordinate. `ModelId.from_metadata(metadata, version)` / `ModelId.from_key(key, version)` mint one.
+  - `ModelKey` — The version-less identity (`make/model/year/config_slug`), frozen/hashable. `Model.key` (`ModelKey.from_metadata`) exposes it on any trained or loaded model; `filter_models` groups versions by it. Registry `load()` re-derives the slug and **raises on any mismatch** with the on-disk path (`assert_metadata_matches_id`).
   - `ModelInfo` — Lightweight summary returned by `query()` with metadata but no binary data
   - `get_default_registry()` — Factory that selects backend based on `ROUTEE_REGISTRY_BACKEND` env var (`"s3"` or `"local"`, default `"s3"`)
   - `filter_models()` / `latest_model_ids()` — Filtering supports exact + fuzzy matching (via `rapidfuzz`) on `make`, `model`, `year`, `config_slug`, `feature_names`, `powertrain_type`, `fuel_type`, `drivetrain`, `engine`, `trim`, `version`, plus optional `custom_filters` callables.
@@ -58,7 +59,7 @@ Package source lives under `routee/powertrain/`.
 The Registry system abstracts model discovery and retrieval, allowing pre-trained models to be served from S3 or the local filesystem with an identical API.
 
 - **Directory/bucket layout**: `<root>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/` containing `metadata.json` + a binary estimator file (e.g. `model.onnx` or a `.joblib` blob)
-- **Bundled models**: `routee/powertrain/resources/bundled_registry/v2/` (currently 2016 Toyota Camry 4cyl 2WD and 2017 Chevy Bolt, both `rf_default/v1`)
+- **Bundled models**: `routee/powertrain/resources/bundled_registry/v2/` (currently 2016 Toyota Camry 4cyl 2WD and 2017 Chevy Bolt, both `rf_c3326385/v1` — the derived slug for a random forest over speed & grade)
 - **Public entry points** (in `io/load.py`):
   - `list_available_models(registry=None, version_strategy="latest")` — Returns all `ModelId`s. `version_strategy="all"` returns every version; default keeps only the latest per `(make, model, year, config_slug)` group.
   - `query_available_models(...)` — Filtered search returning `ModelInfo` objects; supports fuzzy matching (`fuzzy=True`, `fuzzy_threshold=80`) and the same filter set as `filter_models()`.
@@ -74,7 +75,7 @@ The Registry system abstracts model discovery and retrieval, allowing pre-traine
 ### Key abstractions
 
 - **`Model`** — Main user-facing object. Holds a single `estimator: Estimator` + `metadata: Metadata`; `metadata.errors` exposes the `ModelErrors`. Supports `from_file`, `to_file` (directory / `.zip` / `.tar.gz` auto-detected from suffix), `predict`, `visualize_features`, `contour`, `to_lookup_table`.
-- **`ModelConfig`** — Vehicle description, powertrain type, feature set, distance column, energy target(s), predict method, plus optional `mass_lbs`, `fuel_type`, `drivetrain`, `engine`, `trim`, `apply_real_world_adjustment` (default `True`).
+- **`ModelConfig`** — Vehicle description, powertrain type, feature set, distance column, energy target(s), predict method, plus optional `mass_lbs`, `fuel_type`, `drivetrain`, `engine`, `trim`, `variant` (short label — e.g. `steady`/`warmup` — folded into the derived `config_slug` to distinguish configs sharing architecture + feature set), `apply_real_world_adjustment` (default `True`).
 - **`Estimator`** (ABC) — Stateless prediction interface. All implementations provide `predict()`, `from_dict()`/`to_dict()`, `from_file()`/`to_file()`, and expose an `input_spec: InputSpec` (lookback / grouping_column / pad_strategy) describing whether they want pointwise or windowed inputs.
 - **`Trainer`** (ABC) — `train()` splits data, delegates to `inner_train()`, computes errors, returns a `Model`. Each subclass sets an `architecture_tag` (e.g. `random_forest`, `ngboost`, `cnn`) used in `metadata.json` and registry filtering.
 - **`FeatureSetId`** — String alias (`core/features.py`) holding the sorted-`&`-joined feature column names. Used as a hashable feature-set fingerprint for registry queries; v2 models hold a single estimator per file, so there's no runtime feature-set dispatch inside `Model`.
