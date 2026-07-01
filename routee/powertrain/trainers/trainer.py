@@ -96,8 +96,8 @@ class Trainer(ABC):
 
         model_errors = compute_errors(test, estimator, config)
 
-        metadata = Metadata(
-            config=config,
+        metadata = Metadata.from_config(
+            config,
             errors=model_errors,
             estimator_type=estimator.__class__.__name__,
             model_file="model" + estimator.file_extension,

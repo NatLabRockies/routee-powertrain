@@ -30,6 +30,28 @@ def _get_estimator_registry():
     return REGISTERED_ESTIMATORS
 
 
+def _estimator_section(metadata_dict: dict) -> dict:
+    """Return the ``estimator`` section of a serialized metadata dict.
+
+    The estimator descriptor (``estimator_type``, ``model_file``, …) is grouped
+    under an ``estimator`` key in the schema-v2 layout.
+    """
+    section = metadata_dict.get("estimator")
+    if not isinstance(section, dict):
+        raise ValueError("Archive metadata must contain an 'estimator' section")
+    return section
+
+
+def _model_filename(metadata_dict: dict) -> str:
+    """Return the estimator binary filename from a serialized metadata dict."""
+    filename = _estimator_section(metadata_dict).get("model_file")
+    if filename is None:
+        raise ValueError(
+            "Archive metadata 'estimator' section must contain 'model_file'"
+        )
+    return filename
+
+
 def _build_metadata_dict(model: Model) -> dict:
     """Build the metadata dictionary for serialization."""
     return model.metadata.model_dump(mode="json")
@@ -46,9 +68,12 @@ def _model_from_metadata_and_bytes(metadata_dict: dict, model_bytes: bytes) -> M
             f"Expected: {SCHEMA_VERSION}"
         )
 
-    estimator_type_str = metadata_dict.get("estimator_type")
+    estimator_section = _estimator_section(metadata_dict)
+    estimator_type_str = estimator_section.get("estimator_type")
     if estimator_type_str is None:
-        raise ValueError("Archive metadata must contain 'estimator_type'")
+        raise ValueError(
+            "Archive metadata 'estimator' section must contain 'estimator_type'"
+        )
 
     registry = _get_estimator_registry()
     estimator_cls = registry.get(estimator_type_str)
@@ -57,10 +82,6 @@ def _model_from_metadata_and_bytes(metadata_dict: dict, model_bytes: bytes) -> M
             f"Estimator type '{estimator_type_str}' is not registered. "
             f"Available types: {list(registry.keys())}"
         )
-
-    model_filename = metadata_dict.get("model_file")
-    if model_filename is None:
-        raise ValueError("Archive metadata must contain 'model_file'")
 
     estimator = estimator_cls.from_bytes(model_bytes)
     metadata = Metadata.model_validate(metadata_dict)
@@ -85,7 +106,7 @@ def save_model_directory(model: Model, path: Union[str, Path]) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
     metadata_dict = _build_metadata_dict(model)
-    model_filename = metadata_dict["model_file"]
+    model_filename = _model_filename(metadata_dict)
 
     (path / METADATA_FILENAME).write_text(json.dumps(metadata_dict, indent=2))
     (path / model_filename).write_bytes(model.estimator.to_bytes())
@@ -215,9 +236,7 @@ def load_model_directory(path: Union[str, Path]) -> Model:
         raise FileNotFoundError(f"metadata.json not found in {path}")
 
     metadata_dict = json.loads(metadata_path.read_text())
-    model_filename = metadata_dict.get("model_file")
-    if model_filename is None:
-        raise ValueError("metadata.json must contain 'model_file'")
+    model_filename = _model_filename(metadata_dict)
 
     model_bytes = (path / model_filename).read_bytes()
     return _model_from_metadata_and_bytes(metadata_dict, model_bytes)
@@ -257,7 +276,7 @@ def save_archive(model: Model, path: Union[str, Path]) -> None:
         raise ValueError("Model archive must be a .zip file")
 
     metadata_dict = _build_metadata_dict(model)
-    model_filename = metadata_dict["model_file"]
+    model_filename = _model_filename(metadata_dict)
     model_bytes = model.estimator.to_bytes()
 
     with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
@@ -280,7 +299,7 @@ def load_archive(path: Union[str, Path]) -> Model:
 
     with zipfile.ZipFile(path, "r") as zf:
         metadata_dict = json.loads(zf.read(METADATA_FILENAME))
-        model_filename = metadata_dict.get("model_file", "")
+        model_filename = _model_filename(metadata_dict)
         model_bytes = zf.read(model_filename)
         return _model_from_metadata_and_bytes(metadata_dict, model_bytes)
 
@@ -296,9 +315,7 @@ def load_archive_bytes(data: bytes) -> Model:
     """
     with zipfile.ZipFile(BytesIO(data), "r") as zf:
         metadata_dict = json.loads(zf.read(METADATA_FILENAME))
-        model_filename = metadata_dict.get("model_file")
-        if model_filename is None:
-            raise ValueError("Archive metadata must contain 'model_file'")
+        model_filename = _model_filename(metadata_dict)
         model_bytes = zf.read(model_filename)
         return _model_from_metadata_and_bytes(metadata_dict, model_bytes)
 
@@ -333,7 +350,7 @@ def save_tar_archive(model: Model, path: Union[str, Path]) -> None:
     path = Path(path)
 
     metadata_dict = _build_metadata_dict(model)
-    model_filename = metadata_dict["model_file"]
+    model_filename = _model_filename(metadata_dict)
     model_bytes = model.estimator.to_bytes()
     metadata_bytes = json.dumps(metadata_dict).encode()
 
@@ -364,7 +381,7 @@ def load_tar_archive(path: Union[str, Path]) -> Model:
             raise ValueError(f"Could not extract {METADATA_FILENAME} from {path}")
         metadata_dict = json.loads(meta_file.read())
 
-        model_filename = metadata_dict.get("model_file", "")
+        model_filename = _model_filename(metadata_dict)
         model_member = tf.getmember(model_filename)
         model_file = tf.extractfile(model_member)
         if model_file is None:

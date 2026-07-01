@@ -32,7 +32,7 @@ is. The slug is a pure function:
 ```
 
 - **architecture** — a short code for the estimator family (`rf`, `ngb`, `cnn`),
-  from `metadata.architecture_tag`.
+  from `metadata.estimator.architecture_tag`.
 - **variant** — the optional `ModelConfig.variant` label, included only when set.
 - **feature_set_hash** — a short hash of the feature set, so different feature
   compositions get different slugs automatically.
@@ -59,7 +59,7 @@ bumps `v<N>`.
 ## Train and Publish
 
 `Model.save_to_registry()` writes a trained model into the canonical layout in
-one call. It pulls `make`, `model`, and `year` from `model.metadata.config` and
+one call. It pulls `make`, `model`, and `year` from `model.metadata.vehicle` and
 derives the `config_slug`, so make sure those fields on your `ModelConfig` are
 correct before training.
 
@@ -140,28 +140,36 @@ pt.query_available_models(make="test", powertrain_type="ICE")
 
 ## What's in `metadata.json`
 
-`metadata.json` is written automatically by the save call. Most of its
-contents come from your `ModelConfig` and the trainer:
+`metadata.json` is written automatically by the save call. Its fields are
+grouped by the job a reader needs them for — `vehicle` (identity), `contract`
+(input/output), `estimator` (how to load the binary), and `training`
+(reproduction). Most of the contents come from your `ModelConfig` and the
+trainer:
 
-| Field                                                      | Source                                           |
-| ---------------------------------------------------------- | ------------------------------------------------ |
-| `schema_version`                                           | `routee.powertrain.core.metadata.SCHEMA_VERSION` |
-| `estimator_type`                                           | The trainer (e.g. `"ONNXEstimator"`)             |
-| `architecture_tag`                                         | The trainer (e.g. `"random_forest"`, `"cnn"`)    |
-| `input_spec`                                               | The estimator (lookback / grouping column / pad) |
-| `model_file`                                               | Filename of the binary (e.g. `"model.onnx"`)     |
-| `errors`                                                   | Computed during `Trainer.train()`                |
-| `routee_version`                                           | Package version at save time                     |
-| `config.make / model / year`                               | From `ModelConfig` — drives the path             |
-| `config.variant`                                           | From `ModelConfig` (optional) — feeds the slug   |
-| `config.powertrain_type`                                   | From `ModelConfig`                               |
-| `config.vehicle_description`                               | From `ModelConfig`                               |
-| `config.feature_set / target / distance`                   | From `ModelConfig`                               |
-| `config.mass_lbs / fuel_type / drivetrain / engine / trim` | From `ModelConfig` (optional)                    |
+| Field                                                       | Source                                           |
+| ----------------------------------------------------------- | ------------------------------------------------ |
+| `schema_version`                                            | `routee.powertrain.core.metadata.SCHEMA_VERSION` |
+| `routee_version`                                            | Package version at save time                     |
+| `errors`                                                    | Computed during `Trainer.train()`                |
+| `estimator.estimator_type`                                  | The trainer (e.g. `"ONNXEstimator"`)             |
+| `estimator.architecture_tag`                                | The trainer (e.g. `"random_forest"`, `"cnn"`)    |
+| `estimator.input_spec`                                      | The estimator (lookback / grouping column / pad) |
+| `estimator.model_file`                                      | Filename of the binary (e.g. `"model.onnx"`)     |
+| `vehicle.make / model / year`                               | From `ModelConfig` — drives the path             |
+| `vehicle.variant`                                           | From `ModelConfig` (optional) — feeds the slug   |
+| `vehicle.powertrain_type`                                   | From `ModelConfig`                               |
+| `vehicle.vehicle_description`                               | From `ModelConfig`                               |
+| `vehicle.mass_lbs / fuel_type / drivetrain / engine / trim` | From `ModelConfig` (optional)                    |
+| `contract.feature_set / target / distance`                  | From `ModelConfig`                               |
+| `contract.predict_method`                                   | From `ModelConfig`                               |
+| `training.test_size / random_seed / trip_column`            | From `ModelConfig`                               |
+
+`Metadata.config` reconstructs the original flat `ModelConfig` from these
+grouped sections on demand, so nothing is stored twice.
 
 The `config_slug` in the path is _not_ stored in `metadata.json` — it is
-derived from `architecture_tag` + `config.variant` + `config.feature_set` (see
-`routee/powertrain/registry/slug.py`).
+derived from `estimator.architecture_tag` + `vehicle.variant` +
+`contract.feature_set` (see `routee/powertrain/registry/slug.py`).
 
 See `routee/powertrain/core/metadata.py` for the full schema and
 `routee/powertrain/core/model_config.py` for the `ModelConfig` fields.

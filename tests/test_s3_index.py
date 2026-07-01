@@ -15,13 +15,17 @@ def _fake_metadata(
     year: int = 2016,
 ) -> dict:
     return {
-        "estimator_type": "some-type",
-        "model_file": "model.onnx",
-        "config": {
+        "vehicle": {
             "vehicle_description": f"{year} {make} {model}",
             "powertrain_type": "ICE",
+        },
+        "contract": {
             "feature_set": [{"name": "speed"}],
             "target": [{"name": "energy"}],
+        },
+        "estimator": {
+            "estimator_type": "some-type",
+            "model_file": "model.onnx",
         },
     }
 

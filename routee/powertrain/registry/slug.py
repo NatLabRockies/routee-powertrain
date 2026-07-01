@@ -50,13 +50,13 @@ def derive_config_slug(metadata: Metadata) -> str:
 
     Returns: the derived config slug
     """
-    parts = [architecture_short_code(metadata.architecture_tag)]
+    parts = [architecture_short_code(metadata.estimator.architecture_tag)]
 
-    variant = metadata.config.variant
+    variant = metadata.vehicle.variant
     if variant:
         parts.append(variant)
 
-    parts.append(feature_set_hash(metadata.config.feature_set.features_id))
+    parts.append(feature_set_hash(metadata.contract.feature_set.features_id))
 
     return "_".join(parts)
 
@@ -76,18 +76,18 @@ def assert_metadata_matches_id(metadata: Metadata, model_id: ModelId) -> None:
     Raises:
         ValueError: if any identity field disagrees with the metadata
     """
-    config = metadata.config
+    vehicle = metadata.vehicle
     derived_slug = derive_config_slug(metadata)
 
     mismatches = []
-    if model_id.make != config.make:
-        mismatches.append(f"make: path='{model_id.make}' metadata='{config.make}'")
-    if model_id.model != config.model:
-        mismatches.append(f"model: path='{model_id.model}' metadata='{config.model}'")
-    if format_year(model_id.year) != format_year(config.year):
+    if model_id.make != vehicle.make:
+        mismatches.append(f"make: path='{model_id.make}' metadata='{vehicle.make}'")
+    if model_id.model != vehicle.model:
+        mismatches.append(f"model: path='{model_id.model}' metadata='{vehicle.model}'")
+    if format_year(model_id.year) != format_year(vehicle.year):
         mismatches.append(
             f"year: path='{format_year(model_id.year)}' "
-            f"metadata='{format_year(config.year)}'"
+            f"metadata='{format_year(vehicle.year)}'"
         )
     if model_id.config_slug != derived_slug:
         mismatches.append(

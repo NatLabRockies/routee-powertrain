@@ -45,9 +45,9 @@ class ModelKey(BaseModel):
         from routee.powertrain.registry.slug import derive_config_slug
 
         return cls(
-            make=metadata.config.make,
-            model=metadata.config.model,
-            year=metadata.config.year,
+            make=metadata.vehicle.make,
+            model=metadata.vehicle.model,
+            year=metadata.vehicle.year,
             config_slug=derive_config_slug(metadata),
         )
 

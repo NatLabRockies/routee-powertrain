@@ -19,16 +19,20 @@ def _fake_metadata(
 ) -> dict:
     """Return a minimal metadata dict that _model_info_from_metadata can parse."""
     return {
-        "estimator_type": "ONNXEstimator",
-        "model_file": "model.onnx",
-        "config": {
+        "vehicle": {
             "vehicle_description": f"{year} {make} {model}",
             "powertrain_type": powertrain,
+        },
+        "contract": {
             "feature_set": [
                 {"name": "speed_mph", "units": "mph"},
                 {"name": "grade_dec", "units": "decimal"},
             ],
             "target": [{"name": "gallons_fastsim", "units": "gallons_gasoline"}],
+        },
+        "estimator": {
+            "estimator_type": "ONNXEstimator",
+            "model_file": "model.onnx",
         },
         "errors": {
             "estimator_errors": {

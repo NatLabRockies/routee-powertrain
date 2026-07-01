@@ -34,7 +34,9 @@ from pathlib import Path
 from typing import List, Optional
 
 from routee.powertrain.core.metadata import Metadata
+from routee.powertrain.core.model_config import ModelConfig
 from routee.powertrain.registry.model_id import ModelId
+from routee.powertrain.validation.errors import ModelErrors
 
 log = logging.getLogger(__name__)
 
@@ -317,28 +319,29 @@ def convert_legacy_json(
         new_errors = {"estimator_errors": estimator_errors_dict}
 
         # Build metadata.json. Legacy models are all pointwise (no lookback),
-        # so input_spec is the default.
-        metadata = {
-            "schema_version": schema_version,
-            "estimator_type": estimator_type,
-            "architecture_tag": arch_tag,
-            "input_spec": {
+        # so input_spec is the default. The flat legacy config is decomposed into
+        # the grouped v2 sections (vehicle / contract / estimator / training) via
+        # Metadata.from_config.
+        #
+        # Validating through the pydantic ModelConfig + Metadata models keeps the
+        # emitted JSON schema-correct (single source of truth). The config_slug —
+        # and thus the registry path — is derived from this exact metadata via
+        # ModelId.from_metadata, so the on-disk path always matches the slug the
+        # registry recomputes (and validates) on load.
+        config_obj = ModelConfig.model_validate(new_config)
+        metadata_obj = Metadata.from_config(
+            config_obj,
+            errors=ModelErrors.model_validate(new_errors),
+            estimator_type=estimator_type,
+            model_file=model_filename,
+            architecture_tag=arch_tag,
+            input_spec={
                 "lookback": 0,
                 "grouping_column": None,
                 "pad_strategy": "zero",
             },
-            "model_file": model_filename,
-            "config": new_config,
-            "routee_version": old_routee_version,
-            "errors": new_errors,
-        }
-
-        # Validate + normalize through the pydantic Metadata model so the emitted
-        # JSON is guaranteed schema-correct (single source of truth). The
-        # config_slug — and thus the registry path — is derived from this exact
-        # metadata via ModelId.from_metadata, so the on-disk path always matches
-        # the slug the registry recomputes (and validates) on load.
-        metadata_obj = Metadata.model_validate(metadata)
+            routee_version=old_routee_version,
+        )
         model_id = ModelId.from_metadata(metadata_obj, version)
 
         model_dir = output_dir / f"v{schema_version}" / model_id.to_path()

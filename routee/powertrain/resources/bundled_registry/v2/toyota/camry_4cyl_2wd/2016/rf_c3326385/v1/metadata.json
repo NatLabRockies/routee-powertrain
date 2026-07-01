@@ -1,7 +1,18 @@
 {
-  "config": {
+  "vehicle": {
     "vehicle_description": "2016_TOYOTA_Camry_4cyl_2WD trained July 2024",
     "powertrain_type": "ICE",
+    "make": "toyota",
+    "model": "camry_4cyl_2wd",
+    "year": 2016,
+    "variant": null,
+    "mass_lbs": null,
+    "fuel_type": null,
+    "drivetrain": null,
+    "engine": null,
+    "trim": null
+  },
+  "contract": {
     "feature_set": [
       {
         "name": "speed_mph",
@@ -42,19 +53,23 @@
         }
       }
     ],
-    "make": "toyota",
-    "model": "camry_4cyl_2wd",
-    "year": 2016,
     "predict_method": "rate",
+    "real_world_adjustment_factor": 1.166
+  },
+  "estimator": {
+    "estimator_type": "ONNXEstimator",
+    "model_file": "model.onnx",
+    "architecture_tag": "random_forest",
+    "input_spec": {
+      "lookback": 0,
+      "grouping_column": null,
+      "pad_strategy": "zero"
+    }
+  },
+  "training": {
     "test_size": 0.2,
     "random_seed": 42,
-    "trip_column": "journey_id",
-    "real_world_adjustment_factor": 1.166,
-    "mass_lbs": null,
-    "fuel_type": null,
-    "drivetrain": null,
-    "engine": null,
-    "trim": null
+    "trip_column": "journey_id"
   },
   "errors": {
     "estimator_errors": {
@@ -80,14 +95,6 @@
         }
       }
     }
-  },
-  "estimator_type": "ONNXEstimator",
-  "model_file": "model.onnx",
-  "architecture_tag": "random_forest",
-  "input_spec": {
-    "lookback": 0,
-    "grouping_column": null,
-    "pad_strategy": "zero"
   },
   "routee_version": "1.0.0",
   "schema_version": 2

@@ -10,6 +10,11 @@ __all__ = [
     "TargetSet",
     "Model",
     "ModelConfig",
+    "Vehicle",
+    "Contract",
+    "TrainingConfig",
+    "Metadata",
+    "EstimatorInfo",
     "PowertrainType",
     "ModelId",
     "ModelKey",
@@ -28,7 +33,8 @@ from .core.drivetrain import Drivetrain
 from .core.features import DataColumn, FeatureSet, Constraints, TargetSet
 from .core.fuel_type import FuelType
 from .core.model import Model
-from .core.model_config import ModelConfig
+from .core.model_config import ModelConfig, Vehicle, Contract, TrainingConfig
+from .core.metadata import Metadata, EstimatorInfo
 from .core.powertrain_type import PowertrainType
 from .io.archive import save_to_registry
 from .io.load import (

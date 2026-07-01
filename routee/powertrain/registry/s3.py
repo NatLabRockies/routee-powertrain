@@ -9,6 +9,7 @@ from routee.powertrain.core.metadata import SCHEMA_VERSION_STRING
 from routee.powertrain.core.model import Model
 from routee.powertrain.core.year import parse_year
 from routee.powertrain.io.archive import (
+    _model_filename,
     _model_from_metadata_and_bytes,
     METADATA_FILENAME,
 )
@@ -79,26 +80,28 @@ def _model_info_from_metadata(
     metadata_dict: dict, model_id: ModelId, path: str
 ) -> ModelInfo:
     """Convert an archive metadata dict + ModelId into a ModelInfo."""
-    config = metadata_dict["config"]
+    vehicle = metadata_dict["vehicle"]
+    contract = metadata_dict["contract"]
+    estimator = metadata_dict["estimator"]
 
-    feature_names = [f["name"] for f in config["feature_set"]]
-    target_names = [t["name"] for t in config["target"]]
+    feature_names = [f["name"] for f in contract["feature_set"]]
+    target_names = [t["name"] for t in contract["target"]]
 
     return ModelInfo(
         model_id=model_id,
-        estimator_type=metadata_dict["estimator_type"],
-        architecture_tag=metadata_dict.get("architecture_tag", "unknown"),
-        input_spec=metadata_dict.get("input_spec"),
+        estimator_type=estimator["estimator_type"],
+        architecture_tag=estimator.get("architecture_tag", "unknown"),
+        input_spec=estimator.get("input_spec"),
         feature_names=feature_names,
         target_names=target_names,
-        powertrain_type=config["powertrain_type"],
-        vehicle_description=config["vehicle_description"],
+        powertrain_type=vehicle["powertrain_type"],
+        vehicle_description=vehicle["vehicle_description"],
         path=path,
-        mass_lbs=config.get("mass_lbs"),
-        fuel_type=config.get("fuel_type"),
-        drivetrain=config.get("drivetrain"),
-        engine=config.get("engine"),
-        trim=config.get("trim"),
+        mass_lbs=vehicle.get("mass_lbs"),
+        fuel_type=vehicle.get("fuel_type"),
+        drivetrain=vehicle.get("drivetrain"),
+        engine=vehicle.get("engine"),
+        trim=vehicle.get("trim"),
     )
 
 
@@ -256,9 +259,7 @@ class S3Registry(ModelRegistry):
         meta_bytes = self._fetch_bytes(meta_key)
         metadata_dict = json.loads(meta_bytes)
 
-        model_filename = metadata_dict.get("model_file")
-        if model_filename is None:
-            raise ValueError("metadata.json must contain 'model_file'")
+        model_filename = _model_filename(metadata_dict)
 
         model_key = f"{dir_key}/{model_filename}"
         model_bytes = self._fetch_bytes(model_key)
