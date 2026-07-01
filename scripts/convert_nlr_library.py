@@ -8,9 +8,11 @@ JSON filenames, then delegates to ``convert_legacy_models.convert_legacy_json``
 for the actual conversion.
 
 The v2 on-disk layout is
-``v2/<make>/<model>/<year>/<config_slug>/v<N>/`` — ``variant`` is now folded
-into ``config_slug`` (e.g. ``rf_charge_depleting``) rather than being its own
-path segment. See ``convert_legacy_models.py`` for the slug construction rule.
+``v2/<make>/<model>/<year>/<config_slug>/v<N>/``. ``variant`` is stored on the
+model config and folded into the derived ``config_slug`` (e.g.
+``rf_charge_depleting_c3326385``) rather than being its own path segment. The
+slug is derived from metadata by the package (``ModelId.from_metadata``); see
+``convert_legacy_models.py``.
 
 Usage
 -----

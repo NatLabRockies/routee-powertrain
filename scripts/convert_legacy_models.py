@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import argparse
 import base64
-import hashlib
 import json
 import logging
 import math
@@ -35,6 +34,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from routee.powertrain.core.metadata import Metadata
+from routee.powertrain.registry.model_id import ModelId
 
 log = logging.getLogger(__name__)
 
@@ -79,26 +79,12 @@ ESTIMATOR_FILE_MAP = {
 }
 
 # Legacy estimator class name -> v2 architecture_tag (matches values emitted by
-# routee/powertrain/trainers/*.py).
+# routee/powertrain/trainers/*.py). The architecture_tag feeds the derived
+# config_slug (via ModelId.from_metadata), so it must match the trainer values.
 ARCHITECTURE_TAG_MAP = {
     "ONNXEstimator": "random_forest",  # legacy ONNX exports are all sklearn RFs
     "NGBoostEstimator": "ngboost",
 }
-
-# architecture_tag -> short prefix used when building a config_slug. Mirrors the
-# "rf_default" pattern used by the bundled v2 models.
-ARCHITECTURE_SLUG_PREFIX = {
-    "random_forest": "rf",
-    "ngboost": "ngb",
-    "cnn": "cnn",
-}
-
-
-def _feature_hash(feature_names: List[str]) -> str:
-    """Short deterministic hash used to disambiguate config_slugs when a single
-    legacy JSON carries multiple feature sets for the same estimator type."""
-    joined = "&".join(sorted(feature_names)).encode("utf-8")
-    return hashlib.blake2b(joined, digest_size=4).hexdigest()
 
 
 def _extract_binary(estimator_dict: dict, estimator_type: str) -> bytes:
@@ -194,15 +180,17 @@ def convert_legacy_json(
 
             {output_dir}/v{schema_version}/{make}/{model}/{year}/{config_slug}/v{version}/
 
-        ``config_slug`` is derived as ``{short_arch}_{variant}`` (e.g.
-        ``rf_default``). If the legacy JSON carries multiple feature sets for
-        the same estimator type, a short feature-name hash is appended to keep
-        the slugs unique.
+        ``config_slug`` is derived from the emitted metadata via the package's
+        ``ModelId.from_metadata`` (``{short_arch}_{variant?}_{feature_hash}``),
+        so the on-disk path always matches the slug the registry recomputes on
+        load. Distinct feature sets get distinct slugs automatically; the
+        ``variant`` (when not the ``"default"`` sentinel) is stored on the
+        config and folded into the slug.
 
     identity:
         Vehicle identification (make / model / year / trim / variant).
-        ``variant`` is now folded into ``config_slug`` rather than being its
-        own path segment.
+        ``variant`` is stored on the model config and feeds the derived
+        ``config_slug``; the sentinel ``"default"`` is treated as "no variant".
     version:
         Model version number (default 1).
     schema_version:
@@ -222,18 +210,11 @@ def convert_legacy_json(
 
     feature_sets: list = old_config["feature_sets"]
 
-    # Pre-compute how many valid estimator entries will land on the same
-    # base config_slug. When >1 share a base, all of them need a hash suffix
-    # to stay unique within (make, model, year).
-    base_slug_counts: dict = {}
-    for fs_id, est_entry in all_estimators.items():
-        et = est_entry["estimator_constructor_type"]
-        if et not in ESTIMATOR_FILE_MAP:
-            continue
-        arch = ARCHITECTURE_TAG_MAP[et]
-        prefix = ARCHITECTURE_SLUG_PREFIX[arch]
-        base = f"{prefix}_{identity.variant}"
-        base_slug_counts[base] = base_slug_counts.get(base, 0) + 1
+    # Treat the "default" placeholder as "no variant" so the common case matches
+    # the bundled v2 models (slug ``rf_<hash>`` rather than ``rf_default_<hash>``).
+    variant: Optional[str] = identity.variant
+    if variant is not None and variant.strip().lower() == "default":
+        variant = None
 
     created: List[Path] = []
 
@@ -252,8 +233,6 @@ def convert_legacy_json(
 
         model_filename, _ = ESTIMATOR_FILE_MAP[estimator_type]
         arch_tag = ARCHITECTURE_TAG_MAP[estimator_type]
-        slug_prefix = ARCHITECTURE_SLUG_PREFIX[arch_tag]
-        base_slug = f"{slug_prefix}_{identity.variant}"
 
         # Extract binary
         model_bytes = _extract_binary(estimator_dict, estimator_type)
@@ -296,6 +275,7 @@ def convert_legacy_json(
             "model": identity.model,
             "year": identity.year,
             "predict_method": old_config.get("predict_method", "rate"),
+            "variant": variant,
             "test_size": old_config.get("test_size", 0.2),
             "random_seed": old_config.get("random_seed", 42),
             "trip_column": old_config.get("trip_column", "trip_id"),
@@ -353,38 +333,23 @@ def convert_legacy_json(
             "errors": new_errors,
         }
 
-        # Compute config_slug. Append a feature-name hash only when multiple
-        # estimators in this JSON share the same base slug.
-        feature_names = [f["name"] for f in feature_set_dict["features"]]
-        if base_slug_counts[base_slug] > 1:
-            config_slug = f"{base_slug}_{_feature_hash(feature_names)}"
-        else:
-            config_slug = base_slug
+        # Validate + normalize through the pydantic Metadata model so the emitted
+        # JSON is guaranteed schema-correct (single source of truth). The
+        # config_slug — and thus the registry path — is derived from this exact
+        # metadata via ModelId.from_metadata, so the on-disk path always matches
+        # the slug the registry recomputes (and validates) on load.
+        metadata_obj = Metadata.model_validate(metadata)
+        model_id = ModelId.from_metadata(metadata_obj, version)
 
-        model_dir = (
-            output_dir
-            / f"v{schema_version}"
-            / identity.make
-            / identity.model
-            / str(identity.year)
-            / config_slug
-            / f"v{version}"
-        )
-
+        model_dir = output_dir / f"v{schema_version}" / model_id.to_path()
         model_dir.mkdir(parents=True, exist_ok=True)
 
-        # Validate + normalize through the pydantic Metadata model so the emitted
-        # JSON is guaranteed schema-correct (single source of truth), then sanitize
-        # any infinite error metrics to null.
-        metadata_out = _sanitize_infinities(
-            Metadata.model_validate(metadata).model_dump(mode="json")
-        )
-        metadata_path = model_dir / "metadata.json"
-        metadata_path.write_text(json.dumps(metadata_out, indent=2))
+        # Sanitize any infinite error metrics to null before writing.
+        metadata_out = _sanitize_infinities(metadata_obj.model_dump(mode="json"))
+        (model_dir / "metadata.json").write_text(json.dumps(metadata_out, indent=2))
 
         # Write binary model file
-        binary_path = model_dir / model_filename
-        binary_path.write_bytes(model_bytes)
+        (model_dir / model_filename).write_bytes(model_bytes)
 
         created.append(model_dir)
         log.info("Created model: %s", model_dir)
