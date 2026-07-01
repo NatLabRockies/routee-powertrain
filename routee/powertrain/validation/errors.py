@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from routee.powertrain.core.model_config import ModelConfig
 from routee.powertrain.estimators.estimator_interface import Estimator
 from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
-from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
 
 REPR_ROWS = {
     "target": "Target",
@@ -346,7 +345,7 @@ def compute_errors(
 
         total_dist = test_df[distance.name].sum()
 
-        real_word_pred = target_pred * ADJUSTMENT_FACTORS[config.powertrain_type]
+        real_word_pred = target_pred * config.real_world_adjustment_factor
 
         pred_energy = np.sum(target_pred)
         real_word_pred_energy = np.sum(real_word_pred)

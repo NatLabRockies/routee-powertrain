@@ -173,7 +173,6 @@ def cnn_config() -> pt.ModelConfig:
         year=2024,
         predict_method=PredictMethod.RATE,
         trip_column=TRIP_COL,
-        apply_real_world_adjustment=True,
     )
 
 

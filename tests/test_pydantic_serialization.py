@@ -65,6 +65,39 @@ class TestSerializationShape(TestCase):
         mid = ModelId("Toyota", "Camry", 2016, "rf_default", 1)
         self.assertEqual(ModelId.model_validate(mid.model_dump(mode="json")), mid)
 
+    def test_feature_set_and_target_serialize_as_bare_lists(self):
+        cfg = _make_config(
+            feature_set=[
+                pt.DataColumn(name="speed_mph", units="mph"),
+                pt.DataColumn(name="grade", units="percent"),
+            ],
+        )
+        d = cfg.model_dump(mode="json")
+        # no nested "features"/"targets" wrapper — just a list of columns
+        self.assertIsInstance(d["feature_set"], list)
+        self.assertEqual([f["name"] for f in d["feature_set"]], ["speed_mph", "grade"])
+        self.assertIsInstance(d["target"], list)
+        self.assertEqual([t["name"] for t in d["target"]], ["gge"])
+        # round-trips from the flat shape
+        self.assertEqual(pt.ModelConfig.model_validate(d), cfg)
+
+
+class TestRealWorldAdjustmentFactor(TestCase):
+    def test_factor_defaults_from_powertrain_type(self):
+        ice = _make_config(powertrain_type=pt.PowertrainType.ICE)
+        bev = _make_config(powertrain_type=pt.PowertrainType.BEV)
+        self.assertAlmostEqual(ice.real_world_adjustment_factor, 1.166)
+        self.assertAlmostEqual(bev.real_world_adjustment_factor, 1.3958)
+
+    def test_explicit_factor_respected(self):
+        cfg = _make_config(real_world_adjustment_factor=1.0)
+        self.assertEqual(cfg.real_world_adjustment_factor, 1.0)
+
+    def test_no_apply_flag_in_dump(self):
+        d = _make_config().model_dump(mode="json")
+        self.assertNotIn("apply_real_world_adjustment", d)
+        self.assertIn("real_world_adjustment_factor", d)
+
 
 class TestValidation(TestCase):
     def test_constraints_bounds(self):

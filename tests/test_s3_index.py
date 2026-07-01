@@ -20,8 +20,8 @@ def _fake_metadata(
         "config": {
             "vehicle_description": f"{year} {make} {model}",
             "powertrain_type": "ICE",
-            "feature_set": {"features": [{"name": "speed"}]},
-            "target": {"targets": [{"name": "energy"}]},
+            "feature_set": [{"name": "speed"}],
+            "target": [{"name": "energy"}],
         },
     }
 

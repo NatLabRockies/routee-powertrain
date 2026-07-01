@@ -7,7 +7,6 @@ from typing import Dict, List, Optional, TYPE_CHECKING, Union
 import pandas as pd
 
 from routee.powertrain.core.metadata import Metadata, SCHEMA_VERSION_STRING
-from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
 from routee.powertrain.estimators.estimator_interface import Estimator
 from routee.powertrain.estimators.onnx import ONNXEstimator
 from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
@@ -244,16 +243,9 @@ class Model:
         pred_energy_df = self.estimator.predict(links_df, config)
 
         for energy in config.target.targets:
-            if config.apply_real_world_adjustment:
-                adjustment_factor = ADJUSTMENT_FACTORS.get(config.powertrain_type)
-                if adjustment_factor is None:
-                    raise ValueError(
-                        f"Could not find an adjustment factor for powertrain type "
-                        f"{config.powertrain_type}"
-                    )
-                pred_energy_df[energy.name] = (
-                    pred_energy_df[energy.name] * adjustment_factor
-                )
+            pred_energy_df[energy.name] = (
+                pred_energy_df[energy.name] * config.real_world_adjustment_factor
+            )
 
         return pred_energy_df
 

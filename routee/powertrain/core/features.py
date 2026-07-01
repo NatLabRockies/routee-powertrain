@@ -2,7 +2,14 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    SerializationInfo,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 
 class Constraints(BaseModel):
@@ -65,6 +72,12 @@ class FeatureSet(BaseModel):
             return [v]
         return v
 
+    @model_serializer
+    def _serialize(self, info: SerializationInfo) -> list:
+        # Serialize as a bare list of feature columns (no nested "features" key);
+        # a model holds a single feature set, so the wrapper adds no information.
+        return [f.model_dump(mode=info.mode) for f in self.features]
+
     def __repr__(self) -> str:
         summary_lines = []
         for feature in self.features:
@@ -104,6 +117,11 @@ class TargetSet(BaseModel):
         if isinstance(v, DataColumn):
             return [v]
         return v
+
+    @model_serializer
+    def _serialize(self, info: SerializationInfo) -> list:
+        # Serialize as a bare list of target columns (no nested "targets" key).
+        return [t.model_dump(mode=info.mode) for t in self.targets]
 
     @property
     def target_map(self) -> Dict[str, DataColumn]:

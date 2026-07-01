@@ -24,15 +24,11 @@ def _fake_metadata(
         "config": {
             "vehicle_description": f"{year} {make} {model}",
             "powertrain_type": powertrain,
-            "feature_set": {
-                "features": [
-                    {"name": "speed_mph", "units": "mph"},
-                    {"name": "grade_dec", "units": "decimal"},
-                ]
-            },
-            "target": {
-                "targets": [{"name": "gallons_fastsim", "units": "gallons_gasoline"}]
-            },
+            "feature_set": [
+                {"name": "speed_mph", "units": "mph"},
+                {"name": "grade_dec", "units": "decimal"},
+            ],
+            "target": [{"name": "gallons_fastsim", "units": "gallons_gasoline"}],
         },
         "errors": {
             "estimator_errors": {

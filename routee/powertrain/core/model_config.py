@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 from routee.powertrain.core.features import (
     DataColumn,
     FeatureSet,
     TargetSet,
 )
+from routee.powertrain.core.powertrain_type import PowertrainType
 from routee.powertrain.core.predict_method import PredictMethod
+from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
 from routee.powertrain.core.pydantic_fields import (
     DrivetrainField,
     FuelTypeField,
@@ -44,7 +46,11 @@ class ModelConfig(BaseModel):
 
     trip_column: str = "trip_id"
 
-    apply_real_world_adjustment: bool = True
+    #: Multiplicative factor applied to predicted energy to correct for
+    #: real-world conditions (e.g. temperature). Defaults to the
+    #: powertrain-type factor in ``ADJUSTMENT_FACTORS``; set to ``1.0`` to
+    #: apply no adjustment.
+    real_world_adjustment_factor: float = 1.0
 
     mass_lbs: Optional[float] = None
 
@@ -52,6 +58,27 @@ class ModelConfig(BaseModel):
     drivetrain: Optional[DrivetrainField] = None
     engine: Optional[str] = None
     trim: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _default_adjustment_factor(cls, data: object) -> object:
+        # When no factor is supplied, derive it from the powertrain type so the
+        # real-world adjustment matches the vehicle's default behavior.
+        if isinstance(data, dict) and data.get("real_world_adjustment_factor") is None:
+            pt_val = data.get("powertrain_type")
+            try:
+                pt = (
+                    pt_val
+                    if isinstance(pt_val, PowertrainType)
+                    else PowertrainType.from_string(pt_val)
+                )
+            except Exception:
+                pt = PowertrainType.UNDEFINED
+            data = dict(data)
+            data["real_world_adjustment_factor"] = float(
+                ADJUSTMENT_FACTORS.get(pt, 1.0)
+            )
+        return data
 
     @field_validator("make", "model", mode="after")
     @classmethod

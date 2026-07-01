@@ -2,28 +2,26 @@
   "config": {
     "vehicle_description": "2017_CHEVROLET_Bolt trained July 2024",
     "powertrain_type": "BEV",
-    "feature_set": {
-      "features": [
-        {
-          "name": "speed_mph",
-          "units": "mph",
-          "dtype": "float32",
-          "constraints": {
-            "lower": 0.0,
-            "upper": 120.0
-          }
-        },
-        {
-          "name": "grade_percent",
-          "units": "percent",
-          "dtype": "float32",
-          "constraints": {
-            "lower": -20.0,
-            "upper": 20.0
-          }
+    "feature_set": [
+      {
+        "name": "speed_mph",
+        "units": "mph",
+        "dtype": "float32",
+        "constraints": {
+          "lower": 0.0,
+          "upper": 120.0
         }
-      ]
-    },
+      },
+      {
+        "name": "grade_percent",
+        "units": "percent",
+        "dtype": "float32",
+        "constraints": {
+          "lower": -20.0,
+          "upper": 20.0
+        }
+      }
+    ],
     "distance": {
       "name": "distance",
       "units": "miles",
@@ -33,19 +31,17 @@
         "upper": null
       }
     },
-    "target": {
-      "targets": [
-        {
-          "name": "kwh",
-          "units": "kilowatt-hour",
-          "dtype": "float32",
-          "constraints": {
-            "lower": null,
-            "upper": null
-          }
+    "target": [
+      {
+        "name": "kwh",
+        "units": "kilowatt-hour",
+        "dtype": "float32",
+        "constraints": {
+          "lower": null,
+          "upper": null
         }
-      ]
-    },
+      }
+    ],
     "make": "chevrolet",
     "model": "bolt",
     "year": 2017,
@@ -53,7 +49,7 @@
     "test_size": 0.2,
     "random_seed": 42,
     "trip_column": "journey_id",
-    "apply_real_world_adjustment": true,
+    "real_world_adjustment_factor": 1.3958,
     "mass_lbs": null,
     "fuel_type": null,
     "drivetrain": null,
@@ -94,5 +90,5 @@
     "pad_strategy": "zero"
   },
   "routee_version": "1.0.0",
-  "schema_version": 3
+  "schema_version": 2
 }

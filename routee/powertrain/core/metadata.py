@@ -9,7 +9,7 @@ from routee.powertrain.core.model_config import ModelConfig
 from routee.powertrain.utils.fs import get_version
 from routee.powertrain.validation.errors import ModelErrors
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 2
 SCHEMA_VERSION_STRING = f"v{SCHEMA_VERSION}"
 
 

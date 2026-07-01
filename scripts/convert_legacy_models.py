@@ -176,7 +176,7 @@ def convert_legacy_json(
     identity: VehicleIdentity,
     *,
     version: int = 1,
-    schema_version: int = 3,
+    schema_version: int = 2,
 ) -> List[Path]:
     """
     Convert a single legacy v1 JSON model file into v2 model directories.
@@ -299,10 +299,13 @@ def convert_legacy_json(
             "test_size": old_config.get("test_size", 0.2),
             "random_seed": old_config.get("random_seed", 42),
             "trip_column": old_config.get("trip_column", "trip_id"),
-            "apply_real_world_adjustment": old_config.get(
-                "apply_real_world_adjustment", True
-            ),
         }
+
+        # Legacy models stored a boolean flag; map it to the numeric factor.
+        # When the flag was False, force no adjustment (1.0); otherwise leave the
+        # factor unset so ModelConfig derives it from the powertrain type.
+        if old_config.get("apply_real_world_adjustment", True) is False:
+            new_config["real_world_adjustment_factor"] = 1.0
 
         # Add vehicle attribute fields
         fuel_type = identity.fuel_type

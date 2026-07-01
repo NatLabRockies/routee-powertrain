@@ -116,7 +116,7 @@ def save_to_registry(
         version: positive integer version. Bump when retraining the same
             ``config_slug``. A materially different feature set or
             architecture should use a new ``config_slug`` and start at v1.
-        schema_version: registry schema directory name (default ``"v3"``)
+        schema_version: registry schema directory name (default ``"v2"``)
         overwrite: if False (default), raise ``FileExistsError`` when the
             target directory already contains a saved model. If True, the
             existing files are replaced.

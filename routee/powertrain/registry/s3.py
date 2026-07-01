@@ -80,8 +80,8 @@ def _model_info_from_metadata(
     """Convert an archive metadata dict + ModelId into a ModelInfo."""
     config = metadata_dict["config"]
 
-    feature_names = [f["name"] for f in config["feature_set"]["features"]]
-    target_names = [t["name"] for t in config["target"]["targets"]]
+    feature_names = [f["name"] for f in config["feature_set"]]
+    target_names = [t["name"] for t in config["target"]]
 
     return ModelInfo(
         model_id=model_id,
