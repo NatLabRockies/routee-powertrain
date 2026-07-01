@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+import re
 import tarfile
+import warnings
 import zipfile
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from routee.powertrain.core.metadata import (
     SCHEMA_VERSION,
@@ -18,6 +20,8 @@ if TYPE_CHECKING:
     from routee.powertrain.registry.model_id import ModelId
 
 METADATA_FILENAME = "metadata.json"
+
+_VERSION_DIR_RE = re.compile(r"^v(\d+)$")
 
 
 def _get_estimator_registry():
@@ -87,11 +91,23 @@ def save_model_directory(model: Model, path: Union[str, Path]) -> None:
     (path / model_filename).write_bytes(model.estimator.to_bytes())
 
 
+def _next_version(config_dir: Path) -> int:
+    """Return the next unused version under a config_slug directory (max+1)."""
+    if not config_dir.exists():
+        return 1
+    versions = [
+        int(m.group(1))
+        for p in config_dir.iterdir()
+        if p.is_dir() and (m := _VERSION_DIR_RE.match(p.name))
+    ]
+    return max(versions, default=0) + 1
+
+
 def save_to_registry(
     model: Model,
     registry_root: Union[str, Path],
-    config_slug: str,
-    version: int = 1,
+    config_slug: Optional[str] = None,
+    version: Optional[int] = None,
     schema_version: str = SCHEMA_VERSION_STRING,
     overwrite: bool = False,
 ) -> ModelId:
@@ -100,22 +116,24 @@ def save_to_registry(
 
     Builds the canonical path
     ``<registry_root>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/``
-    using ``make``/``model``/``year`` from ``model.metadata.config`` plus the
-    caller-supplied ``config_slug`` and ``version``. The resulting directory
-    is directly loadable by ``LocalRegistry`` — or by ``pt.load_model(...)``
-    when ``ROUTEE_REGISTRY_BACKEND=local`` and ``ROUTEE_LOCAL_REGISTRY_ROOT``
-    points at ``registry_root``.
+    using ``make``/``model``/``year`` from ``model.metadata.config``. The
+    ``config_slug`` is *derived* from the model's metadata (architecture +
+    optional ``config.variant`` + feature-set hash) unless an explicit override
+    is passed. The resulting directory is directly loadable by ``LocalRegistry``
+    — or by ``pt.load_model(...)`` when ``ROUTEE_REGISTRY_BACKEND=local`` and
+    ``ROUTEE_LOCAL_REGISTRY_ROOT`` points at ``registry_root``.
 
     Args:
         model: the trained model to save
         registry_root: filesystem root of the local registry (the directory
             that contains the ``<schema_version>/`` subtree)
-        config_slug: identifier disambiguating multiple trained configurations
-            for the same vehicle/year (e.g. ``rf_default``, ``cnn_5link``).
-            Lowercase snake_case is conventional.
+        config_slug: optional override for the derived slug. Leave ``None`` to
+            use the canonical derived value (recommended); a mismatching
+            override emits a warning. Use ``config.variant`` to distinguish
+            configs that share an architecture and feature set.
         version: positive integer version. Bump when retraining the same
-            ``config_slug``. A materially different feature set or
-            architecture should use a new ``config_slug`` and start at v1.
+            ``config_slug``. Defaults to the next unused version (max+1) under
+            the slug directory when ``None``.
         schema_version: registry schema directory name (default ``"v2"``)
         overwrite: if False (default), raise ``FileExistsError`` when the
             target directory already contains a saved model. If True, the
@@ -133,17 +151,39 @@ def save_to_registry(
     # Local import to avoid a circular import at package load time:
     # routee.powertrain.registry imports Model from core.model, and core.model
     # imports from this module.
+    from routee.powertrain.core.year import format_year
     from routee.powertrain.registry.model_id import ModelId
+    from routee.powertrain.registry.slug import derive_config_slug
 
-    if version < 1:
+    if version is not None and version < 1:
         raise ValueError(f"version must be a positive integer, got {version}")
 
+    derived_slug = derive_config_slug(model.metadata)
+    if config_slug is not None and config_slug.lower() != derived_slug:
+        warnings.warn(
+            f"config_slug override '{config_slug}' does not match the slug "
+            f"derived from metadata ('{derived_slug}'). The registry validates "
+            "against the derived slug on load, so this override may fail to load."
+        )
+    effective_slug = config_slug if config_slug is not None else derived_slug
+
     config = model.metadata.config
+    config_dir = (
+        Path(registry_root)
+        / schema_version
+        / config.make.lower()
+        / config.model.lower()
+        / format_year(config.year)
+        / effective_slug.lower()
+    )
+    if version is None:
+        version = _next_version(config_dir)
+
     model_id = ModelId(
         make=config.make,
         model=config.model,
         year=config.year,
-        config_slug=config_slug,
+        config_slug=effective_slug,
         version=version,
     )
 

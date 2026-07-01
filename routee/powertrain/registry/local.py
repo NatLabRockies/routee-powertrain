@@ -19,6 +19,7 @@ from routee.powertrain.registry.filtering import (
 )
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
+from routee.powertrain.registry.slug import assert_metadata_matches_id
 
 # Pattern to extract version number from directory name like v1, v2
 VERSION_RE = re.compile(r"^v(\d+)$")
@@ -196,7 +197,9 @@ class LocalRegistry(ModelRegistry):
         full_path = self._schema_root / model_id.to_path()
         if not full_path.exists():
             raise FileNotFoundError(f"Model directory not found: {full_path}")
-        return load_model_directory(full_path)
+        model = load_model_directory(full_path)
+        assert_metadata_matches_id(model.metadata, model_id)
+        return model
 
     def get_metadata(self, model_id: Union[str, ModelId]) -> dict:
         model_id = _resolve_model_id(model_id)

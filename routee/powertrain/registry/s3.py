@@ -19,6 +19,7 @@ from routee.powertrain.registry.filtering import (
 )
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
+from routee.powertrain.registry.slug import assert_metadata_matches_id
 from routee.powertrain.registry.default import (
     DEFAULT_BUCKET,
     DEFAULT_REGION,
@@ -261,7 +262,9 @@ class S3Registry(ModelRegistry):
 
         model_key = f"{dir_key}/{model_filename}"
         model_bytes = self._fetch_bytes(model_key)
-        return _model_from_metadata_and_bytes(metadata_dict, model_bytes)
+        model = _model_from_metadata_and_bytes(metadata_dict, model_bytes)
+        assert_metadata_matches_id(model.metadata, model_id)
+        return model
 
     def get_metadata(self, model_id: Union[str, ModelId]) -> dict:
         model_id = _resolve_model_id(model_id)

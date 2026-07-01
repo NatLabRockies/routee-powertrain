@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Callable, Dict, List, Literal, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Literal, Optional, Sequence
 
 from rapidfuzz import fuzz
 
-from routee.powertrain.core.year import serialize_year, year_contains
-from routee.powertrain.registry.model_id import ModelId, ModelInfo
+from routee.powertrain.core.year import year_contains
+from routee.powertrain.registry.model_id import ModelId, ModelInfo, ModelKey
 
 VersionStrategy = Literal["latest", "all"]
 
@@ -18,14 +18,9 @@ def _matches(query: str, candidate: str, fuzzy: bool, threshold: int) -> bool:
     return fuzz.WRatio(query_lower, candidate) >= threshold
 
 
-def _group_key(model_id: ModelId) -> Tuple[str, str, object, str]:
-    """Build a hashable grouping key that collapses versions of the same model."""
-    return (
-        model_id.make,
-        model_id.model,
-        serialize_year(model_id.year),
-        model_id.config_slug,
-    )
+def _group_key(model_id: ModelId) -> ModelKey:
+    """The version-less identity, used to collapse versions of the same model."""
+    return model_id.key
 
 
 def filter_models(
@@ -136,7 +131,7 @@ def filter_models(
     if effective_strategy == "all":
         return results
     if effective_strategy == "latest":
-        best: Dict[Tuple[str, str, object, str], ModelInfo] = {}
+        best: Dict[ModelKey, ModelInfo] = {}
         for m in results:
             key = _group_key(m.model_id)
             current = best.get(key)
@@ -151,7 +146,7 @@ def filter_models(
 
 def latest_model_ids(ids: List[ModelId]) -> List[ModelId]:
     """Reduce a list of ModelIds to the highest version per model group."""
-    best: Dict[Tuple[str, str, object, str], ModelId] = {}
+    best: Dict[ModelKey, ModelId] = {}
     for mid in ids:
         key = _group_key(mid)
         current = best.get(key)

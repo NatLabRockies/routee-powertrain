@@ -12,6 +12,7 @@ __all__ = [
     "ModelConfig",
     "PowertrainType",
     "ModelId",
+    "ModelKey",
     "ModelInfo",
     "ModelRegistry",
     "list_available_models",
@@ -36,7 +37,7 @@ from .io.load import (
     load_model,
     load_sample_route,
 )
-from .registry.model_id import ModelId, ModelInfo
+from .registry.model_id import ModelId, ModelInfo, ModelKey
 from .registry.registry import ModelRegistry
 from .validation.feature_visualization import visualize_features, contour_plot
 

@@ -39,6 +39,11 @@ class ModelConfig(BaseModel):
     model: str
     year: YearField
 
+    #: Short label distinguishing configs that share the same architecture and
+    #: feature set (e.g. ``"steady"`` vs ``"warmup"`` thermal regimes). Feeds the
+    #: derived ``config_slug``; leave ``None`` when no such distinction is needed.
+    variant: Optional[str] = None
+
     predict_method: PredictMethodField = PredictMethod.RATE
 
     test_size: float = 0.2
@@ -84,6 +89,21 @@ class ModelConfig(BaseModel):
     @classmethod
     def _lowercase(cls, v: str) -> str:
         return v.lower()
+
+    @field_validator("variant", mode="after")
+    @classmethod
+    def _slug_safe_variant(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip().lower()
+        if not v:
+            return None
+        if "/" in v or any(c.isspace() for c in v):
+            raise ValueError(
+                f"variant '{v}' must not contain '/' or whitespace; "
+                "use a short slug-safe label like 'steady' or 'warmup'"
+            )
+        return v
 
     @field_validator("feature_set", mode="before")
     @classmethod

@@ -26,6 +26,7 @@ from routee.powertrain.validation.feature_visualization import (
 
 if TYPE_CHECKING:
     from pandas import Series
+    from routee.powertrain.registry.model_id import ModelKey
 
 REGISTERED_ESTIMATORS = {
     "ONNXEstimator": ONNXEstimator,
@@ -42,6 +43,20 @@ class Model:
 
     estimator: Estimator
     metadata: Metadata
+
+    @property
+    def key(self) -> ModelKey:
+        """This model's intrinsic, version-less identity.
+
+        Derived from metadata (``make``/``model``/``year`` + the derived
+        ``config_slug``), so it is always available — even for a freshly-trained
+        model that has never been placed in a registry. The registry
+        ``version`` is *not* part of this; it is assigned only by registry
+        operations (``save_to_registry`` returns a full ``ModelId``).
+        """
+        from routee.powertrain.registry.model_id import ModelKey
+
+        return ModelKey.from_metadata(self.metadata)
 
     @property
     def feature_set(self):
@@ -91,8 +106,8 @@ class Model:
     def save_to_registry(
         self,
         registry_root: Union[str, Path],
-        config_slug: str,
-        version: int = 1,
+        config_slug: Optional[str] = None,
+        version: Optional[int] = None,
         schema_version: str = SCHEMA_VERSION_STRING,
         overwrite: bool = False,
     ):
@@ -100,9 +115,10 @@ class Model:
         Save this model into a local registry directory tree.
 
         Builds the canonical ``<registry_root>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/``
-        layout from ``self.metadata.config`` plus the caller-supplied
-        ``config_slug`` and ``version``. See
-        ``routee.powertrain.io.archive.save_to_registry`` for full details.
+        layout from ``self.metadata.config``. The ``config_slug`` is derived from
+        metadata unless overridden, and ``version`` defaults to the next unused
+        version. See ``routee.powertrain.io.archive.save_to_registry`` for full
+        details.
 
         Returns: the ``ModelId`` that was written.
         """

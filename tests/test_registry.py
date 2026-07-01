@@ -10,6 +10,7 @@ from routee.powertrain.core.fuel_type import FuelType
 from routee.powertrain.io.archive import save_model_directory
 from routee.powertrain.registry.local import LocalRegistry
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
+from routee.powertrain.registry.slug import derive_config_slug
 from routee.powertrain.trainers.sklearn_random_forest import (
     SklearnRandomForestTrainer,
 )
@@ -78,9 +79,10 @@ class TestLocalRegistry(TestCase):
         self.model = trainer.train(df, config)
         self.df = df
 
-        # Save to registry path as a flat directory
-        model_id = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", 1)
-        rel_path = f"{self.schema_version}/{model_id.to_path()}"
+        # Save to registry path as a flat directory, under the derived slug.
+        self.slug = derive_config_slug(self.model.metadata)
+        self.model_id = ModelId("toyota", "camry_4cyl_fwd", 2016, self.slug, 1)
+        rel_path = f"{self.schema_version}/{self.model_id.to_path()}"
         full_path = self.root / rel_path
         save_model_directory(self.model, full_path)
 
@@ -107,18 +109,18 @@ class TestLocalRegistry(TestCase):
         self.assertEqual(len(results), 0)
 
     def test_load(self):
-        model_id = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", 1)
-        loaded = self.registry.load(model_id)
+        loaded = self.registry.load(self.model_id)
 
         r1 = self.model.predict(self.df)
         r2 = loaded.predict(self.df)
         self.assertTrue(
             math.isclose(r1.gallons_fastsim.sum(), r2.gallons_fastsim.sum())
         )
+        # A model always self-describes its version-less identity.
+        self.assertEqual(loaded.key, self.model_id.key)
 
     def test_get_metadata(self):
-        model_id = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", 1)
-        meta = self.registry.get_metadata(model_id)
+        meta = self.registry.get_metadata(self.model_id)
         self.assertIn("config", meta)
         self.assertIn("estimator_type", meta)
 
@@ -321,16 +323,23 @@ class TestVersionStrategyAndPartialLoad(TestCase):
         self.df = df
 
         # Save three versions of the same (make, model, year, config_slug).
+        self.slug = derive_config_slug(self.model.metadata)
         for version in (1, 2, 3):
-            mid = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", version)
+            mid = ModelId("toyota", "camry_4cyl_fwd", 2016, self.slug, version)
             save_model_directory(
                 self.model, self.root / self.schema_version / mid.to_path()
             )
 
-        # Also save a second config_slug so we can test ambiguity safeguards.
-        mid_other = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_speed_grade", 1)
+        # A second config that shares architecture + feature set but carries a
+        # variant, so it derives a distinct slug — exercises multi-slug grouping
+        # and ambiguity safeguards.
+        model_other = trainer.train(
+            df, config.model_copy(update={"variant": "speed_grade"})
+        )
+        self.slug_other = derive_config_slug(model_other.metadata)
+        mid_other = ModelId("toyota", "camry_4cyl_fwd", 2016, self.slug_other, 1)
         save_model_directory(
-            self.model, self.root / self.schema_version / mid_other.to_path()
+            model_other, self.root / self.schema_version / mid_other.to_path()
         )
 
         self.registry = LocalRegistry(
@@ -345,18 +354,19 @@ class TestVersionStrategyAndPartialLoad(TestCase):
     def test_query_default_returns_latest_only(self):
         """Default strategy keeps only the highest version per group."""
         results = self.registry.query(make="toyota", model="camry_4cyl_fwd")
-        # rf_default v3 + rf_speed_grade v1 = 2 groups
+        # slug v3 + slug_other v1 = 2 groups
         self.assertEqual(len(results), 2)
         versions_by_slug = {r.model_id.config_slug: r.model_id.version for r in results}
-        self.assertEqual(versions_by_slug["rf_default"], 3)
-        self.assertEqual(versions_by_slug["rf_speed_grade"], 1)
+        self.assertEqual(versions_by_slug[self.slug], 3)
+        self.assertEqual(versions_by_slug[self.slug_other], 1)
 
     def test_query_version_strategy_all(self):
         """version_strategy='all' returns every version."""
         results = self.registry.query(
             make="toyota",
-            config_slug="rf_default",
+            config_slug=self.slug,
             version_strategy="all",
+            fuzzy=False,
         )
         self.assertEqual(len(results), 3)
         versions = sorted(r.model_id.version for r in results)
@@ -364,16 +374,17 @@ class TestVersionStrategyAndPartialLoad(TestCase):
 
     def test_query_version_filter_exact(self):
         """version=2 returns only v2 of matching models."""
-        results = self.registry.query(config_slug="rf_default", version=2)
+        results = self.registry.query(config_slug=self.slug, version=2, fuzzy=False)
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].model_id.version, 2)
 
     def test_query_version_filter_overrides_strategy(self):
         """When version is set, version_strategy should be ignored."""
         results = self.registry.query(
-            config_slug="rf_default",
+            config_slug=self.slug,
             version=1,
             version_strategy="latest",
+            fuzzy=False,
         )
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].model_id.version, 1)
@@ -383,7 +394,7 @@ class TestVersionStrategyAndPartialLoad(TestCase):
         ids = self.registry.list_models()
         self.assertEqual(len(ids), 2)
         by_slug = {mid.config_slug: mid.version for mid in ids}
-        self.assertEqual(by_slug["rf_default"], 3)
+        self.assertEqual(by_slug[self.slug], 3)
 
     def test_list_models_all(self):
         """list_models with version_strategy='all' returns every version."""
@@ -393,7 +404,7 @@ class TestVersionStrategyAndPartialLoad(TestCase):
     def test_load_model_partial_id_resolves_latest(self):
         """A 4-segment string loads the highest-versioned model."""
         loaded = pt.load_model(
-            "toyota/camry_4cyl_fwd/2016/rf_default", registry=self.registry
+            f"toyota/camry_4cyl_fwd/2016/{self.slug}", registry=self.registry
         )
         r1 = self.model.predict(self.df)
         r2 = loaded.predict(self.df)
@@ -404,7 +415,7 @@ class TestVersionStrategyAndPartialLoad(TestCase):
     def test_load_model_explicit_version_still_works(self):
         """A 5-segment path pins the specific version."""
         loaded = pt.load_model(
-            "toyota/camry_4cyl_fwd/2016/rf_default/v1", registry=self.registry
+            f"toyota/camry_4cyl_fwd/2016/{self.slug}/v1", registry=self.registry
         )
         self.assertIsNotNone(loaded)
 

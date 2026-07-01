@@ -9,6 +9,7 @@ import pandas as pd
 
 import routee.powertrain as pt
 from routee.powertrain.registry.local import LocalRegistry
+from routee.powertrain.registry.slug import derive_config_slug
 from routee.powertrain.trainers.sklearn_random_forest import (
     SklearnRandomForestTrainer,
 )
@@ -46,6 +47,7 @@ class TestSaveToRegistry(TestCase):
         )
         self.df = df
         self.model = SklearnRandomForestTrainer().train(df, config)
+        self.slug = derive_config_slug(self.model.metadata)
         self.registry_root = Path("tmp_registry")
 
     def tearDown(self) -> None:
@@ -55,12 +57,11 @@ class TestSaveToRegistry(TestCase):
     def test_save_and_load_round_trip(self) -> None:
         model_id = self.model.save_to_registry(
             registry_root=self.registry_root,
-            config_slug="rf_default",
             version=1,
         )
 
         expected_dir = (
-            self.registry_root / "v2" / "test" / "sedan" / "2024" / "rf_default" / "v1"
+            self.registry_root / "v2" / "test" / "sedan" / "2024" / self.slug / "v1"
         )
         self.assertTrue(expected_dir.is_dir())
         self.assertTrue((expected_dir / "metadata.json").exists())
@@ -69,7 +70,7 @@ class TestSaveToRegistry(TestCase):
         self.assertEqual(model_id.make, "test")
         self.assertEqual(model_id.model, "sedan")
         self.assertEqual(model_id.year, 2024)
-        self.assertEqual(model_id.config_slug, "rf_default")
+        self.assertEqual(model_id.config_slug, self.slug)
         self.assertEqual(model_id.version, 1)
 
         loaded = LocalRegistry(self.registry_root).load(model_id)
@@ -80,26 +81,22 @@ class TestSaveToRegistry(TestCase):
     def test_existing_slot_raises_without_overwrite(self) -> None:
         self.model.save_to_registry(
             registry_root=self.registry_root,
-            config_slug="rf_default",
             version=1,
         )
         with self.assertRaises(FileExistsError):
             self.model.save_to_registry(
                 registry_root=self.registry_root,
-                config_slug="rf_default",
                 version=1,
             )
 
     def test_overwrite_replaces_existing(self) -> None:
         self.model.save_to_registry(
             registry_root=self.registry_root,
-            config_slug="rf_default",
             version=1,
         )
         # Second call with overwrite=True must succeed.
         model_id = self.model.save_to_registry(
             registry_root=self.registry_root,
-            config_slug="rf_default",
             version=1,
             overwrite=True,
         )
@@ -110,16 +107,14 @@ class TestSaveToRegistry(TestCase):
         with self.assertRaises(ValueError):
             self.model.save_to_registry(
                 registry_root=self.registry_root,
-                config_slug="rf_default",
                 version=0,
             )
 
     def test_query_finds_published_model(self) -> None:
         self.model.save_to_registry(
             registry_root=self.registry_root,
-            config_slug="rf_default",
             version=1,
         )
         infos = LocalRegistry(self.registry_root).query(make="test", model="sedan")
         self.assertEqual(len(infos), 1)
-        self.assertEqual(infos[0].model_id.config_slug, "rf_default")
+        self.assertEqual(infos[0].model_id.config_slug, self.slug)
