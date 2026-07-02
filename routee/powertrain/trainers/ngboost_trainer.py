@@ -35,8 +35,8 @@ class NGBoostTrainer(Trainer):
         features: pd.DataFrame,
         target: pd.DataFrame,
         config: ModelConfig,
-        test_features: pd.DataFrame | None = None,
-        test_target: pd.DataFrame | None = None,
+        validation_features: pd.DataFrame | None = None,
+        validation_target: pd.DataFrame | None = None,
     ) -> Estimator:
         """
         Uses a ngboost model to predict the energy rate values

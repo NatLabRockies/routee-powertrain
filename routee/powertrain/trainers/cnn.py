@@ -46,6 +46,8 @@ class CNNTrainer(Trainer):
     """
 
     architecture_tag: str = "cnn"
+    default_test_size: float = 0.1
+    default_validation_size: float = 0.1
 
     @property
     def required_extra_columns(self):
@@ -104,8 +106,8 @@ class CNNTrainer(Trainer):
         features: pd.DataFrame,
         target: pd.DataFrame,
         config: ModelConfig,
-        test_features: pd.DataFrame | None = None,
-        test_target: pd.DataFrame | None = None,
+        validation_features: pd.DataFrame | None = None,
+        validation_target: pd.DataFrame | None = None,
     ) -> Estimator:
         try:
             import torch
@@ -175,17 +177,21 @@ class CNNTrainer(Trainer):
         y_cpu = torch.from_numpy(y_matrix)
         X_val_cpu: torch.Tensor | None = None
         y_val_cpu: torch.Tensor | None = None
-        if test_features is not None and test_target is not None:
-            if self.grouping_column not in test_features.columns:
+        if validation_features is not None and validation_target is not None:
+            if self.grouping_column not in validation_features.columns:
                 raise ValueError(
                     f"CNNTrainer requires a '{self.grouping_column}' column in the "
                     f"validation features so windows can be built per route."
                 )
-            test_matrix = test_features[feature_cols].to_numpy(dtype=np.float32)
-            y_val_matrix = test_target.to_numpy(dtype=np.float32)
+            validation_matrix = validation_features[feature_cols].to_numpy(
+                dtype=np.float32
+            )
+            y_val_matrix = validation_target.to_numpy(dtype=np.float32)
             if y_val_matrix.ndim == 1:
                 y_val_matrix = y_val_matrix.reshape(-1, 1)
-            X_val_cpu = torch.from_numpy(_build_windows(test_features, test_matrix))
+            X_val_cpu = torch.from_numpy(
+                _build_windows(validation_features, validation_matrix)
+            )
             y_val_cpu = torch.from_numpy(y_val_matrix)
 
         n_train = X_cpu.shape[0]
