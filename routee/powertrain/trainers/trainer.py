@@ -22,7 +22,7 @@ class Trainer(ABC):
     #: Coarse architecture family, used in Metadata for registry-level filtering.
     #: Subclasses override (e.g. ``"random_forest"``, ``"cnn"``, ``"ngboost"``).
     architecture_tag: str = "unknown"
-    
+
     #: Default split sizes used when ModelConfig leaves them unspecified.
     default_test_size: float = 0.2
     default_validation_size: float = 0.0
