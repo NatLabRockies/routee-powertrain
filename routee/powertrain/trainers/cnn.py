@@ -234,8 +234,10 @@ class CNNTrainer(Trainer):
                     start_factor=1e-8,
                     total_iters=warmup_steps,
                 )
-                scheduler = torch.optim.lr_scheduler.ChainedScheduler(
-                    [warmup_scheduler, cosine_scheduler]
+                scheduler = torch.optim.lr_scheduler.SequentialLR(
+                    optimizer,
+                    schedulers=[warmup_scheduler, cosine_scheduler],
+                    milestones=[warmup_steps],
                 )
             else:
                 scheduler = cosine_scheduler
