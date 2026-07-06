@@ -49,7 +49,8 @@ class ModelConfig:
 
     predict_method: PredictMethod = PredictMethod.RATE
 
-    test_size: float = 0.2
+    test_size: Optional[float] = None
+    validation_size: Optional[float] = None
     random_seed: int = 42
 
     trip_column: str = "trip_id"
@@ -96,6 +97,17 @@ class ModelConfig:
 
         if isinstance(self.drivetrain, str):
             self.drivetrain = Drivetrain.from_string(self.drivetrain)
+
+        if self.test_size is not None and not 0 <= self.test_size < 1:
+            raise ValueError("test_size must be in the range [0, 1)")
+        if self.validation_size is not None and not 0 <= self.validation_size < 1:
+            raise ValueError("validation_size must be in the range [0, 1)")
+        if self.test_size is not None and self.validation_size is not None:
+            if self.test_size + self.validation_size >= 1:
+                raise ValueError(
+                    "test_size + validation_size must be less than 1 "
+                    "to leave room for training data"
+                )
 
         # now check all the types
         if not isinstance(self.feature_set, FeatureSet):

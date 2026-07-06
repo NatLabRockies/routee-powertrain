@@ -46,6 +46,8 @@ class CNNTrainer(Trainer):
     """
 
     architecture_tag: str = "cnn"
+    default_test_size: float = 0.1
+    default_validation_size: float = 0.1
 
     @property
     def required_extra_columns(self):
@@ -72,6 +74,9 @@ class CNNTrainer(Trainer):
         normalize_features: bool = True,
         random_seed: int = 52,
         device: str | None = None,
+        early_stopping_patience: int | None = None,
+        early_stopping_min_delta: float = 1e-6,
+        warmup_epochs: int = 0,
     ):
         self.lookback = lookback
         self.grouping_column = grouping_column
@@ -92,12 +97,17 @@ class CNNTrainer(Trainer):
         self.normalize_features = normalize_features
         self.random_seed = random_seed
         self.device = device
+        self.early_stopping_patience = early_stopping_patience
+        self.early_stopping_min_delta = early_stopping_min_delta
+        self.warmup_epochs = warmup_epochs
 
     def inner_train(
         self,
         features: pd.DataFrame,
         target: pd.DataFrame,
         config: ModelConfig,
+        validation_features: pd.DataFrame | None = None,
+        validation_target: pd.DataFrame | None = None,
     ) -> Estimator:
         try:
             import torch
@@ -143,24 +153,47 @@ class CNNTrainer(Trainer):
             feat_mean = np.zeros(n_features, dtype=np.float32)
             feat_std = np.ones(n_features, dtype=np.float32)
 
-        windows = np.zeros((len(features), self.lookback, n_features), dtype=np.float32)
-        groups = features.groupby(self.grouping_column, sort=False).indices
-        for idx_array in groups.values():
-            idx_array = np.asarray(idx_array)
-            group_features = feature_matrix[idx_array]
-            if self.pad_strategy == "repeat_first":
-                pad_row = group_features[:1]
-            else:
-                pad_row = np.zeros((1, n_features), dtype=np.float32)
-            padded = np.concatenate(
-                [np.repeat(pad_row, self.lookback - 1, axis=0), group_features],
-                axis=0,
-            )
-            for i, row_pos in enumerate(idx_array):
-                windows[row_pos] = padded[i : i + self.lookback]
+        def _build_windows(df: pd.DataFrame, matrix: np.ndarray) -> np.ndarray:
+            windows = np.zeros((len(df), self.lookback, n_features), dtype=np.float32)
+            groups = df.groupby(self.grouping_column, sort=False).indices
+            for idx_array in groups.values():
+                idx_array = np.asarray(idx_array)
+                group_features = matrix[idx_array]
+                if self.pad_strategy == "repeat_first":
+                    pad_row = group_features[:1]
+                else:
+                    pad_row = np.zeros((1, n_features), dtype=np.float32)
+                padded = np.concatenate(
+                    [np.repeat(pad_row, self.lookback - 1, axis=0), group_features],
+                    axis=0,
+                )
+                for i, row_pos in enumerate(idx_array):
+                    windows[row_pos] = padded[i : i + self.lookback]
+            return windows
+
+        windows = _build_windows(features, feature_matrix)
 
         X_cpu = torch.from_numpy(windows)
         y_cpu = torch.from_numpy(y_matrix)
+        X_val_cpu: torch.Tensor | None = None
+        y_val_cpu: torch.Tensor | None = None
+        if validation_features is not None and validation_target is not None:
+            if self.grouping_column not in validation_features.columns:
+                raise ValueError(
+                    f"CNNTrainer requires a '{self.grouping_column}' column in the "
+                    f"validation features so windows can be built per route."
+                )
+            validation_matrix = validation_features[feature_cols].to_numpy(
+                dtype=np.float32
+            )
+            y_val_matrix = validation_target.to_numpy(dtype=np.float32)
+            if y_val_matrix.ndim == 1:
+                y_val_matrix = y_val_matrix.reshape(-1, 1)
+            X_val_cpu = torch.from_numpy(
+                _build_windows(validation_features, validation_matrix)
+            )
+            y_val_cpu = torch.from_numpy(y_val_matrix)
+
         n_train = X_cpu.shape[0]
         log.info("CNN training rows: %d", n_train)
 
@@ -169,6 +202,8 @@ class CNNTrainer(Trainer):
             # Move the full training tensors to the target device once.
             X_dev = X_cpu.to(dev)
             y_dev = y_cpu.to(dev)
+            X_val_dev = X_val_cpu.to(dev) if X_val_cpu is not None else None
+            y_val_dev = y_val_cpu.to(dev) if y_val_cpu is not None else None
             m = _CNN1D(
                 n_features=n_features,
                 hidden_channels=self.hidden_channels,
@@ -185,12 +220,27 @@ class CNNTrainer(Trainer):
                 weight_decay=self.weight_decay,
             )
             steps_per_epoch = max(1, (n_train + self.batch_size - 1) // self.batch_size)
-            total_steps = max(1, steps_per_epoch * self.epochs)
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            warmup_steps = self.warmup_epochs * steps_per_epoch
+            cosine_epochs = max(1, self.epochs - self.warmup_epochs)
+            cosine_steps = max(1, cosine_epochs * steps_per_epoch)
+            cosine_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                 optimizer,
-                T_max=total_steps,
+                T_max=cosine_steps,
                 eta_min=self.min_learning_rate,
             )
+            if warmup_steps > 0:
+                warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
+                    optimizer,
+                    start_factor=1e-8,
+                    total_iters=warmup_steps,
+                )
+                scheduler = torch.optim.lr_scheduler.SequentialLR(
+                    optimizer,
+                    schedulers=[warmup_scheduler, cosine_scheduler],
+                    milestones=[warmup_steps],
+                )
+            else:
+                scheduler = cosine_scheduler
             loss_fn = nn.MSELoss()
             m.train()
             log.info(
@@ -202,6 +252,10 @@ class CNNTrainer(Trainer):
                 self.n_conv_layers,
             )
             rng = np.random.default_rng(self.random_seed)
+            best_val_loss = float("inf")
+            best_state: dict | None = None
+            patience_counter = 0
+            stopped_early = False
             for epoch_idx in range(self.epochs):
                 epoch_start = time.time()
                 perm = torch.from_numpy(rng.permutation(n_train)).to(dev)
@@ -224,14 +278,42 @@ class CNNTrainer(Trainer):
                     loss_accum += loss.detach()
                     n_batches += 1
                 avg_loss = (loss_accum / max(1, n_batches)).item()
+                val_loss = float("nan")
+                if X_val_dev is not None and y_val_dev is not None:
+                    m.eval()
+                    with torch.no_grad():
+                        val_loss = loss_fn(m(X_val_dev), y_val_dev).item()
+                    m.train()
+                    if self.early_stopping_patience is not None:
+                        if val_loss < best_val_loss - self.early_stopping_min_delta:
+                            best_val_loss = val_loss
+                            best_state = {
+                                k: v.clone() for k, v in m.state_dict().items()
+                            }
+                            patience_counter = 0
+                        else:
+                            patience_counter += 1
+                        if patience_counter >= self.early_stopping_patience:
+                            log.info(
+                                "  Early stopping at epoch %d/%d (no improvement for %d epochs)",
+                                epoch_idx + 1,
+                                self.epochs,
+                                self.early_stopping_patience,
+                            )
+                            stopped_early = True
                 log.info(
-                    "  epoch %d/%d  loss=%.6f  lr=%.2e  elapsed=%.1fs",
+                    "  epoch %d/%d  loss=%.6f  val_loss=%.6f  lr=%.2e  elapsed=%.1fs",
                     epoch_idx + 1,
                     self.epochs,
                     avg_loss,
+                    val_loss,
                     optimizer.param_groups[0]["lr"],
                     time.time() - epoch_start,
                 )
+                if stopped_early:
+                    break
+            if best_state is not None:
+                m.load_state_dict(best_state)
             return m
 
         model = _train_on(device)
