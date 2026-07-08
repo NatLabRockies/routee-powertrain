@@ -10,7 +10,7 @@ from routee.powertrain.core.metadata import Metadata
 from routee.powertrain.core.model import Model
 from routee.powertrain.core.model_config import ModelConfig, PredictMethod
 from routee.powertrain.estimators.estimator_interface import Estimator
-from routee.powertrain.trainers.utils import test_train_split
+from routee.powertrain.trainers.utils import test_train_validation_split
 from routee.powertrain.validation.errors import compute_errors
 
 ENERGY_RATE_NAME = "energy_rate"
@@ -22,6 +22,10 @@ class Trainer(ABC):
     #: Coarse architecture family, used in Metadata for registry-level filtering.
     #: Subclasses override (e.g. ``"random_forest"``, ``"cnn"``, ``"ngboost"``).
     architecture_tag: str = "unknown"
+
+    #: Default split sizes used when ModelConfig leaves them unspecified.
+    default_test_size: float = 0.2
+    default_validation_size: float = 0.0
 
     @property
     def required_extra_columns(self) -> List[str]:
@@ -54,9 +58,20 @@ class Trainer(ABC):
                 energy_rate_name = f"{energy_target.name}_rate"
                 data[energy_rate_name] = data[energy_target.name] / data[distance_name]
 
-        train, test = test_train_split(
+        effective_test_size = (
+            config.test_size if config.test_size is not None else self.default_test_size
+        )
+        effective_validation_size = (
+            config.validation_size
+            if config.validation_size is not None
+            else self.default_validation_size
+        )
+        use_validation_split = effective_validation_size > 0
+
+        train, validation, test = test_train_validation_split(
             data,
-            test_size=config.test_size,
+            test_size=effective_test_size,
+            validation_size=effective_validation_size,
             seed=config.random_seed,
             grouping_column=self.split_grouping_column,
         )
@@ -90,8 +105,21 @@ class Trainer(ABC):
             if extra not in name_list:
                 name_list.append(extra)
         sub_features = train[name_list]
+        validation_sub_features: pd.DataFrame | None = None
+        validation_target: pd.DataFrame | None = None
+        if use_validation_split and not validation.empty:
+            validation_sub_features = validation[name_list]
+            if config.predict_method == PredictMethod.RATE:
+                validation_target = validation[config.target.target_rate_name_list]
+            else:
+                validation_target = validation[config.target.target_name_list]
+
         estimator = self.inner_train(
-            features=sub_features, target=target, config=config
+            features=sub_features,
+            target=target,
+            config=config,
+            validation_features=validation_sub_features,
+            validation_target=validation_target,
         )
 
         model_errors = compute_errors(test, estimator, config)
@@ -115,6 +143,8 @@ class Trainer(ABC):
         features: pd.DataFrame,
         target: pd.DataFrame,
         config: ModelConfig,
+        validation_features: pd.DataFrame | None = None,
+        validation_target: pd.DataFrame | None = None,
     ) -> Estimator:
         """
         Builds an estimator from the given data.

@@ -36,7 +36,12 @@ class SklearnRandomForestTrainer(Trainer):
         self.output_type = output_type
 
     def inner_train(
-        self, features: pd.DataFrame, target: pd.DataFrame, config: ModelConfig
+        self,
+        features: pd.DataFrame,
+        target: pd.DataFrame,
+        config: ModelConfig,
+        validation_features: pd.DataFrame | None = None,
+        validation_target: pd.DataFrame | None = None,
     ) -> Estimator:
         """
         Uses a random forest to predict the energy rate values

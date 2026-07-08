@@ -83,6 +83,7 @@ class Metadata(BaseModel):
             predict_method=self.contract.predict_method,
             real_world_adjustment_factor=self.contract.real_world_adjustment_factor,
             test_size=self.training.test_size,
+            validation_size=self.training.validation_size,
             random_seed=self.training.random_seed,
             trip_column=self.training.trip_column,
         )

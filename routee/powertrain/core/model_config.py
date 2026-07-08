@@ -52,7 +52,8 @@ class ModelConfig(BaseModel):
 
     predict_method: PredictMethodField = PredictMethod.RATE
 
-    test_size: float = 0.2
+    test_size: Optional[float] = None
+    validation_size: Optional[float] = None
     random_seed: int = 42
 
     trip_column: str = "trip_id"
@@ -277,7 +278,8 @@ class TrainingConfig(BaseModel):
     model. Safe to drop from a shipped artifact without affecting prediction.
     """
 
-    test_size: float = 0.2
+    test_size: Optional[float] = None
+    validation_size: Optional[float] = None
     random_seed: int = 42
     trip_column: str = "trip_id"
 
@@ -285,6 +287,7 @@ class TrainingConfig(BaseModel):
     def from_config(cls, config: ModelConfig) -> TrainingConfig:
         return cls(
             test_size=config.test_size,
+            validation_size=config.validation_size,
             random_seed=config.random_seed,
             trip_column=config.trip_column,
         )
