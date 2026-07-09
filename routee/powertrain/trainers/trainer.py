@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
+from datetime import date
 from typing import List
 
 import pandas as pd
@@ -131,6 +132,7 @@ class Trainer(ABC):
             model_file="model" + estimator.file_extension,
             architecture_tag=self.architecture_tag,
             input_spec=estimator.input_spec.model_dump(mode="json"),
+            trained_date=date.today().isoformat(),
         )
 
         vehicle_model = Model(estimator, metadata)

@@ -283,6 +283,11 @@ class TrainingConfig(BaseModel):
     random_seed: int = 42
     trip_column: str = "trip_id"
 
+    #: Calendar date the model was trained, as an ISO ``YYYY-MM-DD`` string.
+    #: Stamped at training time by ``Trainer.train``; ``None`` when unknown
+    #: (e.g. legacy models converted from the v1 format).
+    trained_date: Optional[str] = None
+
     @classmethod
     def from_config(cls, config: ModelConfig) -> TrainingConfig:
         return cls(

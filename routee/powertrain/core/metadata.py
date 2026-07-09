@@ -98,6 +98,7 @@ class Metadata(BaseModel):
         architecture_tag: str = "unknown",
         input_spec: Optional[dict] = None,
         routee_version: Optional[str] = None,
+        trained_date: Optional[str] = None,
     ) -> Metadata:
         """Build grouped metadata from a flat ``ModelConfig`` and estimator facts.
 
@@ -106,12 +107,16 @@ class Metadata(BaseModel):
         pairs them with the ``estimator`` descriptor. ``routee_version`` defaults
         to the running package version; pass it explicitly to preserve the
         provenance of a model trained under an older version (e.g. when
-        converting legacy archives).
+        converting legacy archives). ``trained_date`` (ISO ``YYYY-MM-DD``) is
+        stamped onto the ``training`` section; leave it ``None`` when the
+        training date is unknown (e.g. converting legacy archives).
         """
+        training = TrainingConfig.from_config(config)
+        training.trained_date = trained_date
         fields: dict = dict(
             vehicle=Vehicle.from_config(config),
             contract=Contract.from_config(config),
-            training=TrainingConfig.from_config(config),
+            training=training,
             estimator=EstimatorInfo(
                 estimator_type=estimator_type,
                 model_file=model_file,

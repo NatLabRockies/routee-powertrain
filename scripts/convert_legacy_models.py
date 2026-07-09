@@ -341,6 +341,9 @@ def convert_legacy_json(
                 "pad_strategy": "zero",
             },
             routee_version=old_routee_version,
+            # Legacy v1 archives don't record when the model was trained, so we
+            # leave trained_date null rather than guessing.
+            trained_date=None,
         )
         model_id = ModelId.from_metadata(metadata_obj, version)
 
