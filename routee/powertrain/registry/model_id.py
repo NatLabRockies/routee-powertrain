@@ -237,6 +237,10 @@ class ModelInfo(BaseModel):
     drivetrain: Optional[str] = None
     engine: Optional[str] = None
     trim: Optional[str] = None
+    #: The model's registry-independent instance identity (``sha256:<hex>``),
+    #: read from ``metadata.json``. ``None`` for models published before
+    #: digests existed.
+    model_digest: Optional[str] = None
 
     def __repr__(self) -> str:
         lines = [
@@ -258,4 +262,8 @@ class ModelInfo(BaseModel):
             f"  engine:         {self.engine}",
             f"  trim:           {self.trim}",
         ]
+        if self.model_digest is not None:
+            from routee.powertrain.core.digest import short_digest
+
+            lines.append(f"  digest:         {short_digest(self.model_digest)}")
         return "\n".join(lines)

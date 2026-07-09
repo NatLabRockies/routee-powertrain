@@ -27,8 +27,11 @@ __all__ = [
     "save_to_registry",
     "visualize_features",
     "contour_plot",
+    "compute_model_digest",
+    "hash_dataframe",
 ]
 
+from .core.digest import compute_model_digest, hash_dataframe
 from .core.drivetrain import Drivetrain
 from .core.features import DataColumn, FeatureSet, Constraints, TargetSet
 from .core.fuel_type import FuelType

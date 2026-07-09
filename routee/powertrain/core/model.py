@@ -59,6 +59,19 @@ class Model:
         return ModelKey.from_metadata(self.metadata)
 
     @property
+    def digest(self) -> Optional[str]:
+        """This model's registry-independent instance identity.
+
+        The ``sha256:<hex>`` content digest minted at train time (see
+        ``routee.powertrain.core.digest``). Unlike ``key``, which groups all
+        retrains of the same configuration, the digest is unique per trained
+        artifact — two models trained the same day on different data get
+        distinct digests. ``None`` for legacy models saved before digests
+        existed.
+        """
+        return self.metadata.model_digest
+
+    @property
     def feature_set(self):
         return self.metadata.config.feature_set
 

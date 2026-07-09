@@ -139,8 +139,21 @@ class TestLoadDriftValidation(TestCase):
         self.assertEqual(self.model.key, self.model_id.key)
         self.assertEqual(self.model.key, ModelKey.from_metadata(self.model.metadata))
 
-    def test_next_version_auto_increments(self) -> None:
+    def test_republish_same_model_is_idempotent(self) -> None:
+        # Re-publishing an identical model (same model_digest) resolves to the
+        # existing version instead of minting a duplicate.
         second = self.model.save_to_registry(registry_root=self.registry_root)
+        self.assertEqual(second, self.model_id)
+
+    def test_next_version_auto_increments(self) -> None:
+        # A genuinely different model under the same key gets the next version.
+        data_path = this_dir / "routee-powertrain-test-data" / "sample_train_data.csv"
+        df = pd.read_csv(data_path)
+        retrained = SklearnRandomForestTrainer().train(
+            df.sample(frac=0.8, random_state=7).reset_index(drop=True), _config()
+        )
+        self.assertNotEqual(retrained.digest, self.model.digest)
+        second = retrained.save_to_registry(registry_root=self.registry_root)
         self.assertEqual(second.version, 2)
 
     def test_drift_raises_on_load(self) -> None:

@@ -84,6 +84,7 @@ def _model_info_from_metadata(
         drivetrain=vehicle.get("drivetrain"),
         engine=vehicle.get("engine"),
         trim=vehicle.get("trim"),
+        model_digest=metadata_dict.get("model_digest"),
     )
 
 
@@ -170,6 +171,7 @@ class LocalRegistry(ModelRegistry):
         engine: Optional[str] = None,
         trim: Optional[str] = None,
         version: Optional[int] = None,
+        model_digest: Optional[str] = None,
         version_strategy: VersionStrategy = "latest",
         custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
         fuzzy: bool = True,
@@ -187,6 +189,7 @@ class LocalRegistry(ModelRegistry):
             drivetrain=drivetrain,
             engine=engine,
             trim=trim,
+            model_digest=model_digest,
             version=version,
             version_strategy=version_strategy,
             custom_filters=custom_filters,

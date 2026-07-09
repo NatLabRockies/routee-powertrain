@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import tarfile
 import warnings
@@ -22,6 +23,8 @@ if TYPE_CHECKING:
 METADATA_FILENAME = "metadata.json"
 
 _VERSION_DIR_RE = re.compile(r"^v(\d+)$")
+
+log = logging.getLogger(__name__)
 
 
 def _get_estimator_registry():
@@ -57,6 +60,75 @@ def _build_metadata_dict(model: Model) -> dict:
     return model.metadata.model_dump(mode="json")
 
 
+def _ensure_digest(model: Model, model_bytes: bytes) -> None:
+    """Guarantee the digest fields are consistent with the bytes being written.
+
+    Every save path funnels through this so that any artifact on disk carries
+    an ``estimator_sha256`` matching its own binary and a ``model_digest``
+    matching its own metadata. Absent fields are stamped (legacy or
+    hand-constructed models); a previously-set value that no longer matches —
+    re-serialization drift on a load→save round trip, or an identity-relevant
+    metadata edit — is re-stamped with a warning, since it means the model's
+    instance identity has changed.
+    """
+    from routee.powertrain.core.digest import compute_model_digest, estimator_sha256
+
+    metadata = model.metadata
+    current_sha = estimator_sha256(model_bytes)
+    prior_sha = metadata.estimator.estimator_sha256
+    if prior_sha is not None and prior_sha != current_sha:
+        warnings.warn(
+            "estimator bytes differ from the recorded estimator_sha256 "
+            "(re-serialization drift or a replaced estimator); re-stamping the "
+            "model's digest — its instance identity has changed."
+        )
+    metadata.estimator.estimator_sha256 = current_sha
+
+    current_digest = compute_model_digest(metadata)
+    prior_digest = metadata.model_digest
+    if (
+        prior_digest is not None
+        and prior_digest != current_digest
+        and prior_sha == current_sha
+    ):
+        warnings.warn(
+            "identity-relevant metadata changed since model_digest was minted; "
+            "re-stamping — the model's instance identity has changed."
+        )
+    metadata.model_digest = current_digest
+
+
+def _verify_digest(metadata: Metadata, model_bytes: bytes) -> None:
+    """Verify a loaded artifact against its recorded digests, when present.
+
+    A binary that does not hash to its recorded ``estimator_sha256`` is corrupt
+    or tampered with — raise. A ``model_digest`` that no longer matches a
+    recomputation from the (validated) metadata means identity-relevant fields
+    were edited after minting — warn. Models saved before digests existed have
+    neither field and skip both checks.
+    """
+    from routee.powertrain.core.digest import compute_model_digest, estimator_sha256
+
+    expected_sha = metadata.estimator.estimator_sha256
+    if expected_sha is not None:
+        actual_sha = estimator_sha256(model_bytes)
+        if actual_sha != expected_sha:
+            raise ValueError(
+                "Estimator binary does not match its recorded estimator_sha256 "
+                f"(expected {expected_sha}, got {actual_sha}). "
+                "The artifact is corrupt or was modified after saving."
+            )
+
+    if metadata.model_digest is not None:
+        recomputed = compute_model_digest(metadata)
+        if recomputed != metadata.model_digest:
+            warnings.warn(
+                f"model_digest mismatch: stored {metadata.model_digest}, "
+                f"recomputed {recomputed}. Identity-relevant metadata was "
+                "edited after the digest was minted."
+            )
+
+
 def _model_from_metadata_and_bytes(metadata_dict: dict, model_bytes: bytes) -> Model:
     """Reconstruct a Model from a parsed metadata dict and raw model bytes."""
     from routee.powertrain.core.model import Model
@@ -83,8 +155,11 @@ def _model_from_metadata_and_bytes(metadata_dict: dict, model_bytes: bytes) -> M
             f"Available types: {list(registry.keys())}"
         )
 
-    estimator = estimator_cls.from_bytes(model_bytes)
     metadata = Metadata.model_validate(metadata_dict)
+    # Verify against the raw bytes as read, before deserializing the binary.
+    _verify_digest(metadata, model_bytes)
+
+    estimator = estimator_cls.from_bytes(model_bytes)
 
     return Model(estimator=estimator, metadata=metadata)
 
@@ -105,11 +180,14 @@ def save_model_directory(model: Model, path: Union[str, Path]) -> None:
     path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
 
+    model_bytes = model.estimator.to_bytes()
+    _ensure_digest(model, model_bytes)
+
     metadata_dict = _build_metadata_dict(model)
     model_filename = _model_filename(metadata_dict)
 
     (path / METADATA_FILENAME).write_text(json.dumps(metadata_dict, indent=2))
-    (path / model_filename).write_bytes(model.estimator.to_bytes())
+    (path / model_filename).write_bytes(model_bytes)
 
 
 def _next_version(config_dir: Path) -> int:
@@ -122,6 +200,30 @@ def _next_version(config_dir: Path) -> int:
         if p.is_dir() and (m := _VERSION_DIR_RE.match(p.name))
     ]
     return max(versions, default=0) + 1
+
+
+def _find_existing_version_by_digest(config_dir: Path, digest: str) -> Optional[int]:
+    """Return the version under a config_slug directory whose stored
+    ``model_digest`` matches, or ``None``. Makes registry publish idempotent:
+    re-publishing an identical model resolves to its existing version instead
+    of minting a duplicate.
+    """
+    if not config_dir.exists():
+        return None
+    for p in sorted(config_dir.iterdir()):
+        m = _VERSION_DIR_RE.match(p.name)
+        if m is None or not p.is_dir():
+            continue
+        meta_path = p / METADATA_FILENAME
+        if not meta_path.exists():
+            continue
+        try:
+            existing = json.loads(meta_path.read_text()).get("model_digest")
+        except (OSError, json.JSONDecodeError):
+            continue
+        if existing is not None and existing == digest:
+            return int(m.group(1))
+    return None
 
 
 def save_to_registry(
@@ -154,7 +256,10 @@ def save_to_registry(
             configs that share an architecture and feature set.
         version: positive integer version. Bump when retraining the same
             ``config_slug``. Defaults to the next unused version (max+1) under
-            the slug directory when ``None``.
+            the slug directory when ``None`` — unless an existing version
+            already holds an identical model (same ``model_digest``), in which
+            case that version's ``ModelId`` is returned without writing
+            (idempotent publish).
         schema_version: registry schema directory name (default ``"v2"``)
         overwrite: if False (default), raise ``FileExistsError`` when the
             target directory already contains a saved model. If True, the
@@ -198,6 +303,28 @@ def save_to_registry(
         / effective_slug.lower()
     )
     if version is None:
+        # Idempotent publish: an identical model (same instance digest) already
+        # under this key resolves to its existing version instead of a new one.
+        _ensure_digest(model, model.estimator.to_bytes())
+        assert model.metadata.model_digest is not None
+        existing_version = _find_existing_version_by_digest(
+            config_dir, model.metadata.model_digest
+        )
+        if existing_version is not None:
+            model_id = ModelId(
+                make=config.make,
+                model=config.model,
+                year=config.year,
+                config_slug=effective_slug,
+                version=existing_version,
+            )
+            log.info(
+                "model with digest %s already published at %s; returning the "
+                "existing version instead of writing a new one",
+                model.metadata.short_digest,
+                model_id.to_path(),
+            )
+            return model_id
         version = _next_version(config_dir)
 
     model_id = ModelId(
@@ -275,9 +402,11 @@ def save_archive(model: Model, path: Union[str, Path]) -> None:
     if path.suffix != ".zip":
         raise ValueError("Model archive must be a .zip file")
 
+    model_bytes = model.estimator.to_bytes()
+    _ensure_digest(model, model_bytes)
+
     metadata_dict = _build_metadata_dict(model)
     model_filename = _model_filename(metadata_dict)
-    model_bytes = model.estimator.to_bytes()
 
     with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         zf.writestr(METADATA_FILENAME, json.dumps(metadata_dict))
@@ -349,9 +478,11 @@ def save_tar_archive(model: Model, path: Union[str, Path]) -> None:
     """
     path = Path(path)
 
+    model_bytes = model.estimator.to_bytes()
+    _ensure_digest(model, model_bytes)
+
     metadata_dict = _build_metadata_dict(model)
     model_filename = _model_filename(metadata_dict)
-    model_bytes = model.estimator.to_bytes()
     metadata_bytes = json.dumps(metadata_dict).encode()
 
     with tarfile.open(path, "w:gz") as tf:

@@ -102,6 +102,7 @@ def _model_info_from_metadata(
         drivetrain=vehicle.get("drivetrain"),
         engine=vehicle.get("engine"),
         trim=vehicle.get("trim"),
+        model_digest=metadata_dict.get("model_digest"),
     )
 
 
@@ -227,6 +228,7 @@ class S3Registry(ModelRegistry):
         engine: Optional[str] = None,
         trim: Optional[str] = None,
         version: Optional[int] = None,
+        model_digest: Optional[str] = None,
         version_strategy: VersionStrategy = "latest",
         custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
         fuzzy: bool = True,
@@ -245,6 +247,7 @@ class S3Registry(ModelRegistry):
             engine=engine,
             trim=trim,
             version=version,
+            model_digest=model_digest,
             version_strategy=version_strategy,
             custom_filters=custom_filters,
             fuzzy=fuzzy,

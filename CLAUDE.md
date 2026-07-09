@@ -92,6 +92,18 @@ The Registry system abstracts model discovery and retrieval, allowing pre-traine
 - `ModelId.version` is an int (`v<N>` in paths). The default `version_strategy="latest"` collapses to the highest version per `(make, model, year, config_slug)` group; pass `"all"` to see every version.
 - The package version is tracked in `routee/powertrain/__about__.py` and written into `metadata.routee_version` automatically at save time.
 
+### Instance identity (digests)
+
+Two-layer identity, mirroring OCI/MLflow: an immutable **instance digest** minted at train time lives inside the artifact; the registry path (`v<N>`) is a **coordinate** assigned at publish. The registry maps coordinate → digest, never the reverse.
+
+- `Metadata.model_digest` (`sha256:<64 hex>`) — minted by `Trainer.train` via `core/digest.py:stamp_digest`, computed over a frozen canonical payload (`digest_spec: 1`) of identity fields: vehicle key, contract, `estimator_sha256`, and training provenance (`trained_date`, seed, splits, `dataset_name`/`dataset_hash`). Recomputable from `metadata.json` alone. Descriptive fields (description, mass, engine, trim) and `errors` are deliberately excluded.
+- `EstimatorInfo.estimator_sha256` — bare-hex sha256 of the exact estimator binary bytes. On load, a mismatch **raises** (corrupt binary); a `model_digest` mismatch **warns** (post-mint metadata edit). Both `None` on legacy models → checks skipped.
+- The spec-1 payload builder in `core/digest.py` is frozen — never edit it; a payload change ships as spec 2. A golden test in `tests/test_digest.py` pins the exact hash.
+- `save_to_registry` is **idempotent**: with `version=None`, an existing version holding the same `model_digest` is returned instead of minting v<N+1>.
+- Coordinate lookup: `registry.find_by_digest(digest)` / `query(model_digest=...)` / `query_available_models(model_digest=...)` resolve a metadata file in hand back to its registry entry (exact match, `sha256:` prefix optional).
+- `ModelConfig.dataset_name`/`dataset_hash` (optional) record training-data provenance; `pt.hash_dataframe(df)` computes a fingerprint. Both feed the digest.
+- `scripts/backfill_digests.py` stamps digests onto pre-digest registry entries (requires the binaries).
+
 ## Coding Conventions
 
 - `from __future__ import annotations` in all source files

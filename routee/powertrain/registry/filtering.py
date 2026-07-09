@@ -4,6 +4,7 @@ from typing import Callable, Dict, List, Literal, Optional, Sequence
 
 from rapidfuzz import fuzz
 
+from routee.powertrain.core.digest import normalize_digest
 from routee.powertrain.core.year import year_contains
 from routee.powertrain.registry.model_id import ModelId, ModelInfo, ModelKey
 
@@ -36,6 +37,7 @@ def filter_models(
     engine: Optional[str] = None,
     trim: Optional[str] = None,
     version: Optional[int] = None,
+    model_digest: Optional[str] = None,
     version_strategy: VersionStrategy = "latest",
     custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
     fuzzy: bool = True,
@@ -52,6 +54,11 @@ def filter_models(
     is ignored. ``version_strategy`` collapses multiple versions of the same
     ``(make, model, year, config_slug)`` group to the highest version when set
     to ``"latest"`` (default), or returns all versions when set to ``"all"``.
+
+    ``model_digest`` pins results to an exact instance identity (always exact
+    match, never fuzzy; accepted with or without the ``sha256:`` prefix). Like
+    ``version``, it identifies specific registry entries, so ``version_strategy``
+    is ignored when set.
     """
     results = models
     if make is not None:
@@ -119,14 +126,22 @@ def filter_models(
         ]
     if version is not None:
         results = [m for m in results if m.model_id.version == version]
+    if model_digest is not None:
+        target_digest = normalize_digest(model_digest)
+        results = [
+            m
+            for m in results
+            if m.model_digest is not None
+            and normalize_digest(m.model_digest) == target_digest
+        ]
     if custom_filters is not None:
         for fn in custom_filters:
             results = [m for m in results if fn(m)]
 
-    # An explicit version filter overrides the strategy — the caller is
-    # asking for exactly that version.
+    # An explicit version or digest filter overrides the strategy — the caller
+    # is asking for exactly those registry entries.
     effective_strategy: VersionStrategy = (
-        "all" if version is not None else version_strategy
+        "all" if (version is not None or model_digest is not None) else version_strategy
     )
     if effective_strategy == "all":
         return results

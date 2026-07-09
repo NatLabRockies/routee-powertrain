@@ -27,6 +27,7 @@ def _fake_metadata(
             "estimator_type": "some-type",
             "model_file": "model.onnx",
         },
+        "model_digest": "sha256:" + "ab" * 32,
     }
 
 
@@ -92,6 +93,9 @@ class TestS3Index(TestCase):
                 )
                 self.assertEqual(len(idx["models"]), 1)
                 self.assertEqual(idx["models"][0]["model_id"]["make"], "toyota")
+                self.assertEqual(
+                    idx["models"][0]["model_digest"], "sha256:" + "ab" * 32
+                )
 
                 # Verify it was uploaded
                 client_mock.put_object.assert_called_once()

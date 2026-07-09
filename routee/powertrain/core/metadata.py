@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import re
 import warnings
 from typing import Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from routee.powertrain.core.model_config import (
     Contract,
@@ -16,6 +17,9 @@ from routee.powertrain.validation.errors import ModelErrors
 
 SCHEMA_VERSION = 2
 SCHEMA_VERSION_STRING = f"v{SCHEMA_VERSION}"
+
+_MODEL_DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+_ESTIMATOR_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 class EstimatorInfo(BaseModel):
@@ -32,6 +36,23 @@ class EstimatorInfo(BaseModel):
     #: Serialized ``Estimator.input_spec`` (lookback, grouping_column, pad_strategy).
     #: Allows a registry consumer to see lookback requirements before loading the binary.
     input_spec: Optional[dict] = None
+    #: Bare lowercase-hex sha256 of the exact serialized estimator bytes (the
+    #: file named by ``model_file``). A pure content address, stamped at train
+    #: time and verified against the raw bytes on load. ``None`` for legacy
+    #: models saved before digests existed.
+    estimator_sha256: Optional[str] = None
+
+    @field_validator("estimator_sha256", mode="after")
+    @classmethod
+    def _valid_estimator_sha256(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip().lower()
+        if not _ESTIMATOR_SHA256_RE.match(v):
+            raise ValueError(
+                f"estimator_sha256 must be 64 lowercase hex characters, got '{v}'"
+            )
+        return v
 
 
 class Metadata(BaseModel):
@@ -55,6 +76,32 @@ class Metadata(BaseModel):
     errors: ModelErrors
     routee_version: str = Field(default_factory=get_version)
     schema_version: int = SCHEMA_VERSION
+    #: Registry-independent instance identity, minted at train time:
+    #: ``sha256:<64 hex>`` over the frozen spec-1 identity payload (see
+    #: ``core.digest``), which embeds ``estimator.estimator_sha256`` — so the
+    #: digest pins the binary transitively while remaining recomputable from
+    #: metadata alone. Registry versions (``v<N>``) are coordinates that map to
+    #: this identity, never the reverse. ``None`` for legacy models.
+    model_digest: Optional[str] = None
+
+    @field_validator("model_digest", mode="after")
+    @classmethod
+    def _valid_model_digest(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip().lower()
+        if not _MODEL_DIGEST_RE.match(v):
+            raise ValueError(
+                f"model_digest must have the form 'sha256:<64 hex chars>', got '{v}'"
+            )
+        return v
+
+    @property
+    def short_digest(self) -> Optional[str]:
+        """Truncated display form of ``model_digest`` (``sha256:<12 hex>``)."""
+        from routee.powertrain.core.digest import short_digest
+
+        return short_digest(self.model_digest)
 
     @property
     def config(self) -> ModelConfig:
@@ -86,6 +133,8 @@ class Metadata(BaseModel):
             validation_size=self.training.validation_size,
             random_seed=self.training.random_seed,
             trip_column=self.training.trip_column,
+            dataset_name=self.training.dataset_name,
+            dataset_hash=self.training.dataset_hash,
         )
 
     @classmethod

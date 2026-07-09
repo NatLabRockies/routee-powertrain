@@ -58,6 +58,15 @@ class ModelConfig(BaseModel):
 
     trip_column: str = "trip_id"
 
+    #: Optional human-readable identifier of the training dataset (e.g. a file
+    #: name or dataset release label). Feeds the model digest, so two models
+    #: trained on differently-named data get distinct identities.
+    dataset_name: Optional[str] = None
+    #: Optional fingerprint of the training data — use
+    #: ``routee.powertrain.hash_dataframe(df)`` to compute one. Feeds the model
+    #: digest.
+    dataset_hash: Optional[str] = None
+
     #: Multiplicative factor applied to predicted energy to correct for
     #: real-world conditions (e.g. temperature). Defaults to the
     #: powertrain-type factor in ``ADJUSTMENT_FACTORS``; set to ``1.0`` to
@@ -288,6 +297,11 @@ class TrainingConfig(BaseModel):
     #: (e.g. legacy models converted from the v1 format).
     trained_date: Optional[str] = None
 
+    #: Optional identifier of the training dataset (see ``ModelConfig``).
+    dataset_name: Optional[str] = None
+    #: Optional fingerprint of the training data (see ``ModelConfig``).
+    dataset_hash: Optional[str] = None
+
     @classmethod
     def from_config(cls, config: ModelConfig) -> TrainingConfig:
         return cls(
@@ -295,4 +309,6 @@ class TrainingConfig(BaseModel):
             validation_size=config.validation_size,
             random_seed=config.random_seed,
             trip_column=config.trip_column,
+            dataset_name=config.dataset_name,
+            dataset_hash=config.dataset_hash,
         )

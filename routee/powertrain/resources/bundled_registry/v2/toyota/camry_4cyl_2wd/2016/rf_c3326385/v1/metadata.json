@@ -64,12 +64,17 @@
       "lookback": 0,
       "grouping_column": null,
       "pad_strategy": "zero"
-    }
+    },
+    "estimator_sha256": "970db5ad5a358820208179c0f4811f78da10a2e51443de0c3a598956c220524c"
   },
   "training": {
     "test_size": 0.2,
+    "validation_size": null,
     "random_seed": 42,
-    "trip_column": "journey_id"
+    "trip_column": "journey_id",
+    "trained_date": null,
+    "dataset_name": null,
+    "dataset_hash": null
   },
   "errors": {
     "estimator_errors": {
@@ -97,5 +102,6 @@
     }
   },
   "routee_version": "1.0.0",
-  "schema_version": 2
+  "schema_version": 2,
+  "model_digest": "sha256:5fd1ec51dac53dd5167acf6235e4f95c10b6013720c8cebb4de0f415a7e86b66"
 }
