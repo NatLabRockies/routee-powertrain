@@ -30,8 +30,11 @@ GOLDEN_FAKE_BYTES = b"golden fake estimator bytes"
 #: canonicalization drifted — that breaks every digest already published, so
 #: fix the drift; do NOT update this constant. A deliberate payload change
 #: must ship as digest spec 2 with its own builder.
+#: (Recomputed 2026-07 for the pre-release spec-1 amendment that settled the
+#: vehicle section on the coordinate-feeding fields — make/model/year/variant/
+#: powertrain_type — before any digest shipped.)
 GOLDEN_MODEL_DIGEST = (
-    "sha256:18cf52ec36604fbc003b7d79c3580a4752912475feec5359f6228147200d5c9c"
+    "sha256:4b60edf44bbe052155d9da94f3e9e2942160b6d200d7fc6aad1c39b5aef1b663"
 )
 
 
@@ -103,6 +106,9 @@ class TestDigestSpec(TestCase):
             "variant": _golden_config(variant="steady"),
             "dataset_hash": _golden_config(dataset_hash="cd" * 32),
             "dataset_name": _golden_config(dataset_name="other-dataset"),
+            # powertrain_type feeds the derived vehicle_slug family token (the
+            # registry path), so it is an identity field.
+            "powertrain_type": _golden_config(powertrain_type=pt.PowertrainType.HEV),
         }
         for label, config in changed_configs.items():
             metadata = _golden_metadata(config)
@@ -136,11 +142,16 @@ class TestDigestSpec(TestCase):
         base = _golden_metadata()
         stamp_digest(base, GOLDEN_FAKE_BYTES)
 
+        # engine/drivetrain/trim/fuel_type are descriptive and correctable on a
+        # published model — they don't feed identity (only the model name and
+        # powertrain family compose the vehicle_slug).
         config = _golden_config(
             vehicle_description="A different description",
             mass_lbs=3500.0,
             engine="4cyl",
+            drivetrain="AWD",
             trim="sport",
+            fuel_type="GASOLINE",
         )
         metadata = _golden_metadata(config)
         stamp_digest(metadata, GOLDEN_FAKE_BYTES)

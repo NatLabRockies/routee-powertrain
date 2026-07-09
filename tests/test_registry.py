@@ -20,18 +20,18 @@ this_dir = Path(__file__).parent
 
 class TestModelId(TestCase):
     def test_to_path(self):
-        mid = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", 1)
+        mid = ModelId("toyota", "camry_ice", 2016, "rf_default", 1)
         path = mid.to_path()
-        self.assertEqual(path, "toyota/camry_4cyl_fwd/2016/rf_default/v1")
+        self.assertEqual(path, "toyota/camry_ice/2016/rf_default/v1")
 
     def test_lowercase_normalization(self):
-        mid = ModelId("Toyota", "Camry_4Cyl_FWD", 2016, "RF_Default", 1)
+        mid = ModelId("Toyota", "Camry_ICE", 2016, "RF_Default", 1)
         self.assertEqual(mid.make, "toyota")
-        self.assertEqual(mid.model, "camry_4cyl_fwd")
+        self.assertEqual(mid.vehicle_slug, "camry_ice")
         self.assertEqual(mid.config_slug, "rf_default")
 
     def test_roundtrip_dict(self):
-        mid = ModelId("toyota", "camry_4cyl_fwd", 2016, "rf_default", 1)
+        mid = ModelId("toyota", "camry_ice", 2016, "rf_default", 1)
         d = mid.model_dump(mode="json")
         mid2 = ModelId.model_validate(d)
         self.assertEqual(mid, mid2)
@@ -72,16 +72,20 @@ class TestLocalRegistry(TestCase):
                 ],
             ),
             make="Toyota",
-            model="Camry_4cyl_fwd",
+            model="Camry",
+            engine="4cyl",
+            drivetrain="FWD",
             year=2016,
         )
         trainer = SklearnRandomForestTrainer()
         self.model = trainer.train(df, config)
         self.df = df
 
-        # Save to registry path as a flat directory, under the derived slug.
+        # Save to registry path as a flat directory, under the derived slugs
+        # (vehicle_slug "camry_ice" comes from model + powertrain family;
+        # engine/drivetrain are descriptive metadata only).
         self.slug = derive_config_slug(self.model.metadata)
-        self.model_id = ModelId("toyota", "camry_4cyl_fwd", 2016, self.slug, 1)
+        self.model_id = ModelId("toyota", "camry_ice", 2016, self.slug, 1)
         rel_path = f"{self.schema_version}/{self.model_id.to_path()}"
         full_path = self.root / rel_path
         save_model_directory(self.model, full_path)
@@ -98,7 +102,8 @@ class TestLocalRegistry(TestCase):
     def test_query(self):
         results = self.registry.query(make="toyota")
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].model_id.model, "camry_4cyl_fwd")
+        self.assertEqual(results[0].model_id.vehicle_slug, "camry_ice")
+        self.assertEqual(results[0].vehicle_model, "camry")
 
     def test_query_all(self):
         results = self.registry.query()
@@ -141,10 +146,19 @@ class TestLocalRegistry(TestCase):
         self.assertEqual(results[0].model_id.make, "toyota")
 
     def test_fuzzy_partial_model(self):
-        """Partial model name like 'camry' should match 'camry_4cyl_fwd'."""
+        """Partial model name like 'camry' should match 'camry_ice'."""
         results = self.registry.query(model="camry")
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].model_id.model, "camry_4cyl_fwd")
+        self.assertEqual(results[0].model_id.vehicle_slug, "camry_ice")
+
+    def test_model_filter_matches_bare_name_and_slug(self):
+        """query(model=...) exact-matches either the bare metadata model name
+        or the derived vehicle_slug."""
+        by_name = self.registry.query(model="camry", fuzzy=False)
+        self.assertEqual(len(by_name), 1)
+        by_slug = self.registry.query(model="camry_ice", fuzzy=False)
+        self.assertEqual(len(by_slug), 1)
+        self.assertEqual(by_name[0].model_id, by_slug[0].model_id)
 
     def test_fuzzy_disabled_exact_match(self):
         """With fuzzy=False, exact match is required."""
@@ -317,17 +331,19 @@ class TestVersionStrategyAndPartialLoad(TestCase):
                 ],
             ),
             make="Toyota",
-            model="Camry_4cyl_fwd",
+            model="Camry",
+            engine="4cyl",
+            drivetrain="FWD",
             year=2016,
         )
         trainer = SklearnRandomForestTrainer()
         self.model = trainer.train(df, config)
         self.df = df
 
-        # Save three versions of the same (make, model, year, config_slug).
+        # Save three versions of the same (make, vehicle_slug, year, config_slug).
         self.slug = derive_config_slug(self.model.metadata)
         for version in (1, 2, 3):
-            mid = ModelId("toyota", "camry_4cyl_fwd", 2016, self.slug, version)
+            mid = ModelId("toyota", "camry_ice", 2016, self.slug, version)
             save_model_directory(
                 self.model, self.root / self.schema_version / mid.to_path()
             )
@@ -339,7 +355,7 @@ class TestVersionStrategyAndPartialLoad(TestCase):
             df, config.model_copy(update={"variant": "speed_grade"})
         )
         self.slug_other = derive_config_slug(model_other.metadata)
-        mid_other = ModelId("toyota", "camry_4cyl_fwd", 2016, self.slug_other, 1)
+        mid_other = ModelId("toyota", "camry_ice", 2016, self.slug_other, 1)
         save_model_directory(
             model_other, self.root / self.schema_version / mid_other.to_path()
         )
@@ -355,7 +371,7 @@ class TestVersionStrategyAndPartialLoad(TestCase):
 
     def test_query_default_returns_latest_only(self):
         """Default strategy keeps only the highest version per group."""
-        results = self.registry.query(make="toyota", model="camry_4cyl_fwd")
+        results = self.registry.query(make="toyota", model="camry_ice")
         # slug v3 + slug_other v1 = 2 groups
         self.assertEqual(len(results), 2)
         versions_by_slug = {r.model_id.config_slug: r.model_id.version for r in results}
@@ -406,7 +422,7 @@ class TestVersionStrategyAndPartialLoad(TestCase):
     def test_load_model_partial_id_resolves_latest(self):
         """A 4-segment string loads the highest-versioned model."""
         loaded = pt.load_model(
-            f"toyota/camry_4cyl_fwd/2016/{self.slug}", registry=self.registry
+            f"toyota/camry_ice/2016/{self.slug}", registry=self.registry
         )
         r1 = self.model.predict(self.df)
         r2 = loaded.predict(self.df)
@@ -417,7 +433,7 @@ class TestVersionStrategyAndPartialLoad(TestCase):
     def test_load_model_explicit_version_still_works(self):
         """A 5-segment path pins the specific version."""
         loaded = pt.load_model(
-            f"toyota/camry_4cyl_fwd/2016/{self.slug}/v1", registry=self.registry
+            f"toyota/camry_ice/2016/{self.slug}/v1", registry=self.registry
         )
         self.assertIsNotNone(loaded)
 
@@ -425,7 +441,7 @@ class TestVersionStrategyAndPartialLoad(TestCase):
         """Partial id with no match raises ValueError naming the path."""
         with self.assertRaises(ValueError) as ctx:
             pt.load_model(
-                "toyota/camry_4cyl_fwd/2016/does_not_exist", registry=self.registry
+                "toyota/camry_ice/2016/does_not_exist", registry=self.registry
             )
         self.assertIn("No model found", str(ctx.exception))
 
@@ -434,7 +450,7 @@ class TestVersionStrategyAndPartialLoad(TestCase):
         # 'rf' would fuzzy-match both 'rf_default' and 'rf_speed_grade', but
         # the resolver pins fuzzy=False, so no model should match.
         with self.assertRaises(ValueError) as ctx:
-            pt.load_model("toyota/camry_4cyl_fwd/2016/rf", registry=self.registry)
+            pt.load_model("toyota/camry_ice/2016/rf", registry=self.registry)
         self.assertIn("No model found", str(ctx.exception))
 
     def test_load_model_bad_segment_count_raises(self):
@@ -442,7 +458,7 @@ class TestVersionStrategyAndPartialLoad(TestCase):
         with self.assertRaises(ValueError) as ctx:
             pt.load_model("toyota/camry", registry=self.registry)
         msg = str(ctx.exception)
-        self.assertIn("<make>/<model>/<year>/<config_slug>", msg)
+        self.assertIn("<make>/<vehicle_slug>/<year>/<config_slug>", msg)
 
 
 class TestMassLbsModelConfig(TestCase):
@@ -600,7 +616,7 @@ class TestVehicleAttributeFields(TestCase):
                 ],
             ),
             make="Chevrolet",
-            model="colorado_2wd_diesel",
+            model="colorado",
             year=2020,
             fuel_type=FuelType.DIESEL,
             drivetrain=Drivetrain.FOURWD,
@@ -610,13 +626,10 @@ class TestVehicleAttributeFields(TestCase):
         trainer = SklearnRandomForestTrainer()
         model = trainer.train(df, config)
 
-        model_id = ModelId(
-            "chevrolet",
-            "colorado_2wd_diesel",
-            2020,
-            "rf_default",
-            1,
-        )
+        # Build the save path from the derived identity so the fixture can't
+        # silently drift from the slug derivation (vehicle_slug is
+        # "colorado_ice" — model + powertrain family).
+        model_id = ModelId.from_metadata(model.metadata, 1)
         rel_path = f"{self.schema_version}/{model_id.to_path()}"
         full_path = self.root / rel_path
         save_model_directory(model, full_path)
@@ -642,6 +655,12 @@ class TestVehicleAttributeFields(TestCase):
     def test_engine_in_model_info(self):
         results = self.registry.query()
         self.assertEqual(results[0].engine, "4cyl")
+
+    def test_vehicle_slug_is_model_plus_family(self):
+        results = self.registry.query()
+        info = results[0]
+        self.assertEqual(info.vehicle_model, "colorado")
+        self.assertEqual(info.model_id.vehicle_slug, "colorado_ice")
 
     def test_trim_in_model_info(self):
         results = self.registry.query()
@@ -760,7 +779,7 @@ class TestVehicleAttributeFields(TestCase):
         d = {
             "model_id": {
                 "make": "test",
-                "model": "test",
+                "vehicle_slug": "test",
                 "year": 2020,
                 "config_slug": "rf_default",
                 "version": 1,
@@ -774,6 +793,7 @@ class TestVehicleAttributeFields(TestCase):
         info = ModelInfo.model_validate(d)
         self.assertIsNone(info.fuel_type)
         self.assertIsNone(info.drivetrain)
+        self.assertIsNone(info.vehicle_model)
         self.assertIsNone(info.engine)
         self.assertIsNone(info.trim)
 

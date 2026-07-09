@@ -8,11 +8,16 @@ JSON filenames, then delegates to ``convert_legacy_models.convert_legacy_json``
 for the actual conversion.
 
 The v2 on-disk layout is
-``v2/<make>/<model>/<year>/<config_slug>/v<N>/``. ``variant`` is stored on the
-model config and folded into the derived ``config_slug`` (e.g.
-``rf_charge_depleting_c3326385``) rather than being its own path segment. The
-slug is derived from metadata by the package (``ModelId.from_metadata``); see
-``convert_legacy_models.py``.
+``v2/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/``. Both slugs are
+derived from metadata by the package (``ModelId.from_metadata``): the
+``vehicle_slug`` is the model name plus the coarse powertrain family (e.g.
+``camry_ice``, ``leaf_24_kwh_bev``, ``volt_phev``), and ``variant`` is folded
+into the derived ``config_slug`` (e.g. ``rf_charge_depleting_c3326385``)
+rather than being its own path segment. Legacy filenames lump spec tokens
+into the vehicle name; this script keeps the commercial designation in the
+model name, strips bare spec tokens (``4cyl``, drivetrain markers, redundant
+trailing powertrain flavors), and records engine/drivetrain/trim as
+descriptive, non-identity metadata. See ``convert_legacy_models.py``.
 
 Usage
 -----
@@ -26,6 +31,7 @@ from __future__ import annotations
 import argparse
 import logging
 import re
+from dataclasses import replace
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -86,41 +92,43 @@ _KNOWN_TRIMS = {
 }
 
 
-def _extract_drivetrain(make: str, model: str) -> Optional[str]:
+def _extract_drivetrain(make: str, model: str) -> tuple[Optional[str], Optional[str]]:
     """Extract drivetrain from the model name.
 
-    Returns a Drivetrain enum name string or None.
+    Returns ``(drivetrain, strip_token)``: the Drivetrain enum name string (or
+    None) plus the literal name token to strip from the model name (or None
+    when the marker is part of the model designation, e.g. ``xdrive40``).
     """
     name = model.lower()
 
     # Explicit drivetrain patterns
     if "_rwd" in name or name.endswith("_rwd"):
-        return "RWD"
+        return "RWD", "rwd"
     if "_fwd" in name or name.endswith("_fwd"):
-        return "FWD"
+        return "FWD", "fwd"
     if "_4wd" in name or name.endswith("_4wd"):
-        return "FOURWD"
+        return "FOURWD", "4wd"
     if "xdrive" in name:
-        return "AWD"
+        return "AWD", None  # xdrive<NN> is part of the model designation
     if "dual_motor" in name:
-        return "AWD"
+        return "AWD", "dual_motor"
     if name.endswith("_twin"):
-        return "AWD"
+        return "AWD", "twin"
 
     # 2WD: resolve per vehicle using lookup table
     if "_2wd" in name or name.endswith("_2wd"):
         # Find the base model by stripping everything after common suffixes
         for (m, base), dt in _2WD_DRIVETRAIN_MAP.items():
             if make.lower() == m and base in name:
-                return dt
+                return dt, "2wd"
         log.warning(
             "Could not resolve 2wd drivetrain for %s/%s; leaving as None",
             make,
             model,
         )
-        return None
+        return None, "2wd"
 
-    return None
+    return None, None
 
 
 def _extract_engine(model: str) -> Optional[str]:
@@ -140,9 +148,20 @@ def _extract_engine(model: str) -> Optional[str]:
     return None
 
 
+# Models whose name contains a _KNOWN_TRIMS token that is actually part of the
+# model designation, not a trim (e.g. the Pajero Sport is a distinct vehicle,
+# not a Pajero with a "sport" trim).
+_MODELS_WITHOUT_TRIM_EXTRACTION = {
+    ("mitsubishi", "pajero_sport"),
+}
+
+
 def _extract_trim(make: str, model: str) -> Optional[str]:
     """Extract trim level from the model name using known trim values."""
     name = model.lower()
+
+    if (make.lower(), name) in _MODELS_WITHOUT_TRIM_EXTRACTION:
+        return None
 
     # Heavy duty: cab type is trim
     if make.lower() == "generic_heavy_duty":
@@ -166,6 +185,80 @@ def _extract_trim(make: str, model: str) -> Optional[str]:
                 return trim
 
     return None
+
+
+# Powertrain-flavor tokens that are redundant with the vehicle_slug's family
+# suffix — stripped from the END of a model name only (e.g. spark_ev → spark,
+# which derives to spark_bev; optima_hybrid → optima → optima_hev).
+_FLAVOR_TOKENS = {"ev", "phev", "hev", "bev", "hybrid"}
+
+# Names whose trailing flavor token is part of the designation itself and must
+# not be stripped (e.g. "Panda Mild Hybrid" is the commercial name of an
+# ICE-typed mild hybrid — stripping would leave "panda_mild").
+_FLAVOR_KEEP = {
+    ("fiat", "panda_mild_hybrid"),
+}
+
+
+def _strip_token(name: str, token: str) -> str:
+    """Remove the first occurrence of *token* from an ``_``-separated name,
+    matching whole segment runs only (so stripping ``le`` can't damage
+    ``lightning``). Returns the name unchanged if the token isn't present as a
+    segment run or if stripping would leave the name empty.
+    """
+    segments = name.split("_")
+    token_segments = token.split("_")
+    for i in range(len(segments) - len(token_segments) + 1):
+        if segments[i : i + len(token_segments)] == token_segments:
+            remaining = segments[:i] + segments[i + len(token_segments) :]
+            stripped = "_".join(remaining).strip("_")
+            return stripped if stripped else name
+    return name
+
+
+def _extract_structured_fields(
+    make: str, name: str
+) -> tuple[str, Optional[str], Optional[str], Optional[str]]:
+    """Split a legacy lumped vehicle name into a model name + descriptive fields.
+
+    Extracts engine / drivetrain / trim into their structured metadata fields
+    (filterable, correctable — they do NOT feed identity). The model name keeps
+    the vehicle's commercial designation — engine designations like ``1.5tsi``
+    and trims like ``24_kwh`` stay in it, since ``derive_vehicle_slug`` is only
+    ``<model>_<powertrain_family>`` and the model name must distinguish
+    same-year stablemates (``golf_1.5tsi`` vs ``golf_2.0tdi``). Stripped from
+    the name: bare spec tokens that aren't part of any designation (``4cyl``,
+    drivetrain markers like ``2wd``/``dual_motor``), and a trailing powertrain
+    flavor token that the family suffix makes redundant (``spark_ev`` →
+    ``spark`` → slug ``spark_bev``).
+
+    Returns ``(model, engine, drivetrain, trim)``.
+    """
+    engine = _extract_engine(name)
+    drivetrain, drivetrain_token = _extract_drivetrain(make, name)
+    trim = _extract_trim(make, name)
+
+    model = name
+    if engine == "4cyl":
+        # A cylinder count is a spec, not part of the commercial designation;
+        # displacement/motor designations (1.5tsi, 3.5_l, 300kw) stay in the name.
+        model = _strip_token(model, engine)
+    if engine is None and "diesel" in model.split("_"):
+        # Names like colorado_2wd_diesel carry the powerplant designation —
+        # record it as the engine (kept in the name).
+        engine = "diesel"
+    if drivetrain_token is not None:
+        model = _strip_token(model, drivetrain_token)
+
+    segments = model.split("_")
+    if (
+        len(segments) > 1
+        and segments[-1] in _FLAVOR_TOKENS
+        and (make, model) not in _FLAVOR_KEEP
+    ):
+        model = "_".join(segments[:-1])
+
+    return model, engine, drivetrain, trim
 
 
 # ---------------------------------------------------------------------------
@@ -222,6 +315,10 @@ def _parse_library_filename(filename: str) -> VehicleIdentity:
             year = "2010-2020"
         else:
             year = 0
+        # The cab type and power rating ARE the designation of these generic
+        # truck classes, so they stay in the model name (the slug appends only
+        # the powertrain family: class_8_daycab_300kw_heavy_duty). They are
+        # also recorded as descriptive engine/trim metadata for filtering.
         model = f"class_8_{cab_type}"
         if power_rating:
             model = f"{model}_{power_rating}"
@@ -230,6 +327,8 @@ def _parse_library_filename(filename: str) -> VehicleIdentity:
             model=model,
             year=year,
             variant=variant,
+            engine=power_rating or None,
+            trim=cab_type,
         )
 
     # --- Transit Bus ---
@@ -245,6 +344,9 @@ def _parse_library_filename(filename: str) -> VehicleIdentity:
         )
 
     # --- Standard vehicles: try to extract year from prefix ---
+    # Parentheses in legacy names (e.g. "C-MAX_(PHEV)") are dropped — they'd
+    # otherwise land in the derived vehicle_slug path segment.
+    stem = stem.replace("(", "").replace(")", "")
     parts = stem.split("_")
     year = 0
     start_idx = 0
@@ -256,22 +358,27 @@ def _parse_library_filename(filename: str) -> VehicleIdentity:
 
     remaining = "_".join(parts[start_idx:])
 
-    # Parse make/model/trim from the remaining string
-    make, model, trim = _parse_vehicle_name(remaining)
-
-    # Fold trim into model when it's not default
-    if trim != "default":
-        model = f"{model}_{trim}"
+    # Parse make and the (still-lumped) vehicle name, then split the lump into
+    # bare model + structured engine/drivetrain/trim fields.
+    make, base_model, suffix = _parse_vehicle_name(remaining)
+    lumped = base_model if suffix == "default" else f"{base_model}_{suffix}"
 
     # Strip temperature range patterns (e.g. "_0f_110f") from model names
     # that appear in steady/transient variants
-    model = re.sub(r"_\d+f_\d+f$", "", model)
+    lumped = re.sub(r"_\d+f_\d+f$", "", lumped)
+
+    model, engine, drivetrain, trim = _extract_structured_fields(make, lumped)
 
     return VehicleIdentity(
         make=make,
         model=model,
         year=year,
         variant=variant,
+        # fuel_type is inferred later in convert_legacy_json from the
+        # powertrain type and target metrics in the model JSON itself.
+        engine=engine,
+        drivetrain=drivetrain,
+        trim=trim,
     )
 
 
@@ -348,7 +455,12 @@ _TRIM_PATTERNS = [
 
 def _parse_vehicle_name(name: str) -> tuple:
     """
-    Parse a vehicle name string into (make, model, trim).
+    Parse a vehicle name string into (make, base_model, suffix).
+
+    The suffix is the trailing engine/drivetrain token run from
+    ``_TRIM_PATTERNS`` (historically called "trim"); the caller re-joins it
+    with the base model and hands the lump to ``_extract_structured_fields``,
+    which does the real engine/drivetrain/trim split.
 
     Examples::
 
@@ -446,40 +558,10 @@ def _resolve_year(identity: VehicleIdentity, original_stem: str) -> VehicleIdent
 
     guessed = _YEARLESS_MODEL_YEARS.get(lookup, 0)
     if guessed:
-        log.info("Guessed year %d for %s", guessed, original_stem)
-        return VehicleIdentity(
-            make=identity.make,
-            model=identity.model,
-            year=guessed,
-            variant=identity.variant,
-        )
+        log.info("Guessed year %s for %s", guessed, original_stem)
+        return replace(identity, year=guessed)
 
     return identity
-
-
-# ---------------------------------------------------------------------------
-# Enrich identity with vehicle attributes
-# ---------------------------------------------------------------------------
-
-
-def _enrich_vehicle_attributes(identity: VehicleIdentity) -> VehicleIdentity:
-    """Populate fuel_type, drivetrain, engine, and trim on the identity.
-
-    fuel_type is left as None here — it is auto-inferred inside
-    ``convert_legacy_json`` from the powertrain_type and target metrics
-    in the actual model JSON (which has more information than the filename).
-    """
-    return VehicleIdentity(
-        make=identity.make,
-        model=identity.model,
-        year=identity.year,
-        variant=identity.variant,
-        # fuel_type is inferred later in convert_legacy_json
-        fuel_type=None,
-        drivetrain=_extract_drivetrain(identity.make, identity.model),
-        engine=_extract_engine(identity.model),
-        trim=_extract_trim(identity.make, identity.model),
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -508,7 +590,6 @@ def convert_library(
         try:
             identity = _parse_library_filename(json_path.name)
             identity = _resolve_year(identity, json_path.name)
-            identity = _enrich_vehicle_attributes(identity)
 
             created = convert_legacy_json(
                 json_path=json_path,

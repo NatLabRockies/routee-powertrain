@@ -44,7 +44,7 @@ def _parse_model_id_from_key(
     Derive a ModelId from an S3 key.
 
     Expected key format:
-        [<root_prefix>/]<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/metadata.json
+        [<root_prefix>/]<schema_version>/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/metadata.json
     """
     if root_prefix:
         full_prefix = root_prefix + "/" + schema_version + "/"
@@ -55,21 +55,21 @@ def _parse_model_id_from_key(
 
     rel = key[len(full_prefix) :]
     parts = rel.split("/")
-    # parts: [make, model, year, config_slug, vN, metadata.json]
+    # parts: [make, vehicle_slug, year, config_slug, vN, metadata.json]
     if len(parts) != 6 or parts[-1] != METADATA_FILENAME:
         raise ValueError(
-            f"Unexpected S3 key structure: {key}. "
-            f"Expected <schema>/<make>/<model>/<year>/<config_slug>/v<N>/{METADATA_FILENAME}"
+            f"Unexpected S3 key structure: {key}. Expected <schema>/<make>/"
+            f"<vehicle_slug>/<year>/<config_slug>/v<N>/{METADATA_FILENAME}"
         )
 
-    make, model, year_str, config_slug, version_dir, _ = parts
+    make, vehicle_slug, year_str, config_slug, version_dir, _ = parts
     match = VERSION_RE.match(version_dir)
     if not match:
         raise ValueError(f"Version directory '{version_dir}' does not match v<N>")
 
     return ModelId(
         make=make,
-        model=model,
+        vehicle_slug=vehicle_slug,
         year=parse_year(year_str),
         config_slug=config_slug,
         version=int(match.group(1)),
@@ -89,6 +89,7 @@ def _model_info_from_metadata(
 
     return ModelInfo(
         model_id=model_id,
+        vehicle_model=vehicle.get("model"),
         estimator_type=estimator["estimator_type"],
         architecture_tag=estimator.get("architecture_tag", "unknown"),
         input_spec=estimator.get("input_spec"),
@@ -122,7 +123,7 @@ class S3Registry(ModelRegistry):
 
         s3://<bucket>/<root_prefix>/<schema_version>/
             index.json
-            <make>/<model>/<year>/<config_slug>/v<N>/
+            <make>/<vehicle_slug>/<year>/<config_slug>/v<N>/
                 metadata.json
                 model.onnx
 

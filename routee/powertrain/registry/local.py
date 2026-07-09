@@ -29,7 +29,7 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
     """
     Derive a ModelId from the directory path relative to the schema root.
 
-    Expected structure: <make>/<model>/<year>/<config_slug>/v<N>/
+    Expected structure: <make>/<vehicle_slug>/<year>/<config_slug>/v<N>/
     """
     rel = model_dir.relative_to(schema_root)
     parts = list(rel.parts)
@@ -37,11 +37,11 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
     if len(parts) != 5:
         raise ValueError(
             f"Unexpected path depth for {model_dir}. "
-            f"Expected <make>/<model>/<year>/<config_slug>/v<N>, "
+            f"Expected <make>/<vehicle_slug>/<year>/<config_slug>/v<N>, "
             f"got {'/'.join(parts)}"
         )
 
-    make, model, year_str, config_slug, version_dir = parts
+    make, vehicle_slug, year_str, config_slug, version_dir = parts
 
     match = VERSION_RE.match(version_dir)
     if not match:
@@ -51,7 +51,7 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
 
     return ModelId(
         make=make,
-        model=model,
+        vehicle_slug=vehicle_slug,
         year=parse_year(year_str),
         config_slug=config_slug,
         version=int(match.group(1)),
@@ -71,6 +71,7 @@ def _model_info_from_metadata(
 
     return ModelInfo(
         model_id=model_id,
+        vehicle_model=vehicle.get("model"),
         estimator_type=estimator["estimator_type"],
         architecture_tag=estimator.get("architecture_tag", "unknown"),
         input_spec=estimator.get("input_spec"),
@@ -98,7 +99,7 @@ class LocalRegistry(ModelRegistry):
 
     Directory layout::
 
-        <root>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/
+        <root>/<schema_version>/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/
             metadata.json
             model.onnx  (or other binary)
 

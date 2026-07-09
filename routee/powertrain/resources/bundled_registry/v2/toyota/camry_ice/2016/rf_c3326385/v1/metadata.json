@@ -3,13 +3,13 @@
     "vehicle_description": "2016_TOYOTA_Camry_4cyl_2WD trained July 2024",
     "powertrain_type": "ICE",
     "make": "toyota",
-    "model": "camry_4cyl_2wd",
+    "model": "camry",
     "year": 2016,
     "variant": null,
     "mass_lbs": null,
     "fuel_type": null,
-    "drivetrain": null,
-    "engine": null,
+    "drivetrain": "FWD",
+    "engine": "4cyl",
     "trim": null
   },
   "contract": {
@@ -103,5 +103,5 @@
   },
   "routee_version": "1.0.0",
   "schema_version": 2,
-  "model_digest": "sha256:5fd1ec51dac53dd5167acf6235e4f95c10b6013720c8cebb4de0f415a7e86b66"
+  "model_digest": "sha256:086121c31e4d6c60d9415f4e584a3e5eeb0c70a825e1a25a95beb78fb92e966c"
 }

@@ -41,12 +41,16 @@ def digest_payload(metadata: Metadata) -> dict:
 
     The payload is constructed field-by-field (never from a full pydantic
     ``model_dump``) so its byte layout stays under our control as the schema
-    evolves. Inclusion rule: *what the model is + what produced it*.
-    Deliberately excluded: ``errors`` (derived metrics), ``routee_version``
-    (environment), descriptive vehicle attributes (legitimately editable),
-    ``input_spec`` (already baked into the estimator bytes), ``model_file``
-    and ``schema_version`` (storage details), and ``trip_column`` (only feeds
-    the excluded errors).
+    evolves. Inclusion rule: *what the model is + what produced it*. The
+    vehicle section carries every field that feeds the derived registry
+    coordinates (make/model/year/variant plus powertrain_type, which feeds
+    the ``vehicle_slug`` family token). Deliberately excluded: ``errors``
+    (derived metrics), ``routee_version`` (environment),
+    ``vehicle_description``, ``mass_lbs``, ``engine``, ``drivetrain``,
+    ``trim``, and ``fuel_type`` (descriptive attributes, legitimately
+    correctable on a published model), ``input_spec`` (already baked into the
+    estimator bytes), ``model_file`` and ``schema_version`` (storage details),
+    and ``trip_column`` (only feeds the excluded errors).
 
     Args:
         metadata: the model metadata to derive the payload from. Its
@@ -69,6 +73,7 @@ def digest_payload(metadata: Metadata) -> dict:
             "model": vehicle.model,
             "year": format_year(vehicle.year),
             "variant": vehicle.variant,
+            "powertrain_type": vehicle.powertrain_type.name,
         },
         "contract": {
             "features": [

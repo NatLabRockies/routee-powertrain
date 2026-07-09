@@ -61,14 +61,14 @@ class TestSaveToRegistry(TestCase):
         )
 
         expected_dir = (
-            self.registry_root / "v2" / "test" / "sedan" / "2024" / self.slug / "v1"
+            self.registry_root / "v2" / "test" / "sedan_ice" / "2024" / self.slug / "v1"
         )
         self.assertTrue(expected_dir.is_dir())
         self.assertTrue((expected_dir / "metadata.json").exists())
         self.assertTrue((expected_dir / "model.onnx").exists())
 
         self.assertEqual(model_id.make, "test")
-        self.assertEqual(model_id.model, "sedan")
+        self.assertEqual(model_id.vehicle_slug, "sedan_ice")
         self.assertEqual(model_id.year, 2024)
         self.assertEqual(model_id.config_slug, self.slug)
         self.assertEqual(model_id.version, 1)

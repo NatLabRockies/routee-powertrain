@@ -16,7 +16,7 @@ First, let's load a few different models to demonstrate lookup table generation.
 We'll use models with different feature sets to show the flexibility of the approach.
 """
 
-toyota_camry = pt.load_model("toyota/camry_4cyl_2wd/2016/rf_db8522fb/v1")
+toyota_camry = pt.load_model("toyota/camry_ice/2016/rf_db8522fb/v1")
 tesla_model3 = pt.load_model("tesla/model_3_rwd/2022/rf_c3326385/v1")
 tesla_with_temp = pt.load_model("tesla/model_3_rwd/2022/rf_steady_thermal_ab1db342/v1")
 """

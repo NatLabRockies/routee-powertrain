@@ -69,7 +69,8 @@ def query_available_models(
 
     Args:
         make: filter by vehicle make
-        model: filter by model name
+        model: filter by vehicle model — matches the bare metadata model name
+            (e.g. "camry") or the derived vehicle_slug (e.g. "camry_ice")
         year: filter by model year
         config_slug: filter by config slug (e.g. "rf_default", "cnn_5link")
         feature_names: filter to models whose feature set contains every listed
@@ -129,9 +130,9 @@ def _resolve_load_target(name_or_path: str, registry: ModelRegistry) -> ModelId:
 
     Accepts two forms:
 
-    - ``<make>/<model>/<year>/<config_slug>/v<N>`` — explicit version.
-    - ``<make>/<model>/<year>/<config_slug>`` — latest version is picked via
-      a ``fuzzy=False`` registry query.
+    - ``<make>/<vehicle_slug>/<year>/<config_slug>/v<N>`` — explicit version.
+    - ``<make>/<vehicle_slug>/<year>/<config_slug>`` — latest version is
+      picked via a ``fuzzy=False`` registry query.
 
     Raises ``ValueError`` with an actionable message on unknown shapes,
     zero matches, or ambiguous matches.
@@ -165,8 +166,8 @@ def _resolve_load_target(name_or_path: str, registry: ModelRegistry) -> ModelId:
         )
     raise ValueError(
         f"Could not parse '{name_or_path}'. Expected either "
-        "'<make>/<model>/<year>/<config_slug>/v<N>' (explicit version) or "
-        "'<make>/<model>/<year>/<config_slug>' (latest)."
+        "'<make>/<vehicle_slug>/<year>/<config_slug>/v<N>' (explicit version) "
+        "or '<make>/<vehicle_slug>/<year>/<config_slug>' (latest)."
     )
 
 

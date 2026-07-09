@@ -14,7 +14,9 @@ from routee.powertrain.registry.slug import (
     architecture_short_code,
     assert_metadata_matches_id,
     derive_config_slug,
+    derive_vehicle_slug,
 )
+from routee.powertrain.validation.errors import EstimatorErrors, ModelErrors
 from routee.powertrain.trainers.sklearn_random_forest import (
     SklearnRandomForestTrainer,
 )
@@ -47,6 +49,60 @@ def _config(variant: str | None = None) -> pt.ModelConfig:
         year=2024,
         variant=variant,
     )
+
+
+def _metadata(**config_overrides) -> pt.Metadata:
+    """Build metadata from a config without training — slug derivation only
+    reads identity fields, so a placeholder errors object suffices."""
+    config = _config().model_copy(update=config_overrides)
+    return pt.Metadata.from_config(
+        config,
+        errors=ModelErrors(estimator_errors=EstimatorErrors(error_by_target={})),
+        estimator_type="ONNXEstimator",
+        model_file="model.onnx",
+        architecture_tag="random_forest",
+    )
+
+
+class TestDeriveVehicleSlug(TestCase):
+    def test_model_plus_family(self) -> None:
+        # The default test config is ICE.
+        self.assertEqual(derive_vehicle_slug(_metadata()), "sedan_ice")
+        self.assertEqual(
+            derive_vehicle_slug(_metadata(powertrain_type=pt.PowertrainType.BEV)),
+            "sedan_bev",
+        )
+
+    def test_phev_modes_collapse_to_one_family(self) -> None:
+        # Charge-depleting/charge-sustaining models describe the same vehicle;
+        # that split lives in config.variant, not the vehicle identity.
+        cd = _metadata(powertrain_type=pt.PowertrainType.PHEV_EV_MODE)
+        cs = _metadata(powertrain_type=pt.PowertrainType.PHEV_HEV_MODE)
+        self.assertEqual(derive_vehicle_slug(cd), "sedan_phev")
+        self.assertEqual(derive_vehicle_slug(cs), "sedan_phev")
+
+    def test_undefined_powertrain_treated_as_unset(self) -> None:
+        metadata = _metadata(powertrain_type=pt.PowertrainType.UNDEFINED)
+        self.assertEqual(derive_vehicle_slug(metadata), "sedan")
+
+    def test_descriptive_fields_do_not_affect_slug(self) -> None:
+        metadata = _metadata(
+            engine="4cyl", drivetrain="FWD", trim="LE", fuel_type="GASOLINE"
+        )
+        self.assertEqual(derive_vehicle_slug(metadata), "sedan_ice")
+
+    def test_model_token_sanitization(self) -> None:
+        metadata = _metadata(model="Golf 1.5 TSI")
+        self.assertEqual(derive_vehicle_slug(metadata), "golf-1.5-tsi_ice")
+
+    def test_model_key_uses_vehicle_slug(self) -> None:
+        metadata = _metadata(powertrain_type=pt.PowertrainType.HEV)
+        key = ModelKey.from_metadata(metadata)
+        self.assertEqual(key.vehicle_slug, "sedan_hev")
+        self.assertEqual(
+            key.to_path(),
+            f"test/sedan_hev/2024/{derive_config_slug(metadata)}",
+        )
 
 
 class TestDeriveConfigSlug(TestCase):
@@ -93,7 +149,7 @@ class TestModelIdFromMetadata(TestCase):
     def test_round_trips_through_path(self) -> None:
         mid = ModelId.from_metadata(self.model.metadata, version=3)
         self.assertEqual(mid.make, "test")
-        self.assertEqual(mid.model, "sedan")
+        self.assertEqual(mid.vehicle_slug, "sedan_ice")
         self.assertEqual(mid.year, 2024)
         self.assertEqual(mid.config_slug, derive_config_slug(self.model.metadata))
         self.assertEqual(mid.version, 3)
@@ -102,7 +158,7 @@ class TestModelIdFromMetadata(TestCase):
     def test_key_is_version_less(self) -> None:
         key = ModelKey.from_metadata(self.model.metadata)
         slug = derive_config_slug(self.model.metadata)
-        self.assertEqual(key.to_path(), f"test/sedan/2024/{slug}")
+        self.assertEqual(key.to_path(), f"test/sedan_ice/2024/{slug}")
         # The same key yields different ModelIds per version.
         v1 = ModelId.from_key(key, 1)
         v2 = ModelId.from_key(key, 2)
@@ -167,6 +223,22 @@ class TestLoadDriftValidation(TestCase):
         with self.assertRaises(ValueError) as ctx:
             LocalRegistry(self.registry_root).load(self.model_id)
         self.assertIn("config_slug", str(ctx.exception))
+
+    def test_vehicle_slug_drift_raises_on_load(self) -> None:
+        # Editing an identity field that feeds the vehicle_slug (the powertrain
+        # family) makes the derived slug disagree with the path — loading must
+        # raise. Descriptive fields like engine are correctable without this.
+        import json
+
+        model_dir = self.registry_root / SCHEMA_VERSION_STRING / self.model_id.to_path()
+        meta_path = model_dir / "metadata.json"
+        metadata_dict = json.loads(meta_path.read_text())
+        metadata_dict["vehicle"]["powertrain_type"] = "BEV"
+        meta_path.write_text(json.dumps(metadata_dict))
+
+        with self.assertRaises(ValueError) as ctx:
+            LocalRegistry(self.registry_root).load(self.model_id)
+        self.assertIn("vehicle_slug", str(ctx.exception))
 
     def test_assert_helper_passes_for_consistent_pair(self) -> None:
         # Should not raise.

@@ -22,7 +22,7 @@ pt.list_available_models()
 # Use query_available_models for richer metadata with optional filters
 pt.query_available_models(make="toyota")
 
-camry = pt.load_model("toyota/camry_4cyl_2wd/2016/rf_c3326385/v1")
+camry = pt.load_model("toyota/camry_ice/2016/rf_c3326385/v1")
 """
 After loading a model, we can inspect it to see what features (and units) the model expects.
 Each model contains a single estimator trained on a specific feature set.

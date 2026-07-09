@@ -13,7 +13,7 @@ BASE = f"{ROOT}/{SCHEMA}"
 
 def _fake_metadata(
     make: str = "toyota",
-    model: str = "camry_4cyl_fwd",
+    model: str = "camry_ice",
     year: int = 2016,
     powertrain: str = "ICE",
 ) -> dict:
@@ -70,11 +70,12 @@ def _index_entry(
     return {
         "model_id": {
             "make": make,
-            "model": model,
+            "vehicle_slug": model,
             "year": year,
             "config_slug": config_slug,
             "version": version,
         },
+        "vehicle_model": model,
         "estimator_type": "ONNXEstimator",
         "feature_names": feature_names or ["speed_mph", "grade_dec"],
         "target_names": ["gallons_fastsim"],
@@ -121,7 +122,7 @@ class TestQueryViaIndex(TestCase):
         )
         results = registry.query(make="chevrolet", model="bolt_ev")
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].model_id.model, "bolt_ev")
+        self.assertEqual(results[0].model_id.vehicle_slug, "bolt_ev")
 
     def test_query_by_year(self):
         registry = _build_registry(

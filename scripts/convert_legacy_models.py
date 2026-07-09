@@ -33,6 +33,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
+from routee.powertrain.core.digest import stamp_digest
 from routee.powertrain.core.metadata import Metadata
 from routee.powertrain.core.model_config import ModelConfig
 from routee.powertrain.registry.model_id import ModelId
@@ -180,19 +181,25 @@ def convert_legacy_json(
         Root directory under which model dirs will be created.  The directory
         layout follows the v2 registry convention::
 
-            {output_dir}/v{schema_version}/{make}/{model}/{year}/{config_slug}/v{version}/
+            {output_dir}/v{schema_version}/{make}/{vehicle_slug}/{year}/{config_slug}/v{version}/
 
-        ``config_slug`` is derived from the emitted metadata via the package's
-        ``ModelId.from_metadata`` (``{short_arch}_{variant?}_{feature_hash}``),
-        so the on-disk path always matches the slug the registry recomputes on
-        load. Distinct feature sets get distinct slugs automatically; the
-        ``variant`` (when not the ``"default"`` sentinel) is stored on the
-        config and folded into the slug.
+        Both slugs are derived from the emitted metadata via the package's
+        ``ModelId.from_metadata``: the ``vehicle_slug`` as the model name plus
+        the coarse powertrain family (e.g. ``camry_ice``), and the
+        ``config_slug`` as ``{short_arch}_{variant?}_{feature_hash}``. The
+        on-disk path therefore always matches the slugs the registry recomputes
+        on load. Distinct feature sets get distinct config slugs automatically;
+        the ``variant`` (when not the ``"default"`` sentinel) is stored on the
+        config and folded into the config slug.
 
     identity:
-        Vehicle identification (make / model / year / trim / variant).
-        ``variant`` is stored on the model config and feeds the derived
-        ``config_slug``; the sentinel ``"default"`` is treated as "no variant".
+        Vehicle identification. ``model`` should carry the vehicle's commercial
+        designation, including whatever distinguishes same-year stablemates
+        (e.g. ``golf_1.5tsi`` vs ``golf_2.0tdi``) — the powertrain family is
+        the only other field that feeds the derived ``vehicle_slug``.
+        ``engine``/``drivetrain``/``trim`` are descriptive, filterable
+        metadata, not identity. ``variant`` feeds the derived ``config_slug``;
+        the sentinel ``"default"`` is treated as "no variant".
     version:
         Model version number (default 1).
     schema_version:
@@ -345,6 +352,11 @@ def convert_legacy_json(
             # leave trained_date null rather than guessing.
             trained_date=None,
         )
+        # Mint the instance identity (estimator_sha256 + model_digest) so the
+        # converted library needs no separate digest backfill pass. The digest
+        # payload excludes the error metrics, so the infinity-sanitization of
+        # errors below does not invalidate it.
+        stamp_digest(metadata_obj, model_bytes)
         model_id = ModelId.from_metadata(metadata_obj, version)
 
         model_dir = output_dir / f"v{schema_version}" / model_id.to_path()
@@ -383,7 +395,11 @@ def main():
     parser.add_argument("output_dir", type=Path, help="Root output directory.")
     parser.add_argument("--make", required=True, help="Vehicle make (e.g. toyota).")
     parser.add_argument(
-        "--model", required=True, help="Vehicle model (e.g. camry_4cyl_2wd)."
+        "--model",
+        required=True,
+        help="Vehicle model designation (e.g. camry, golf_1.5tsi). The derived "
+        "vehicle_slug is this plus the powertrain family; engine/drivetrain/"
+        "trim flags are descriptive metadata only.",
     )
     parser.add_argument("--year", type=int, required=True, help="Model year.")
     parser.add_argument(

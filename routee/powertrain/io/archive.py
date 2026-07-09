@@ -238,11 +238,11 @@ def save_to_registry(
     Save a model into a local registry directory tree.
 
     Builds the canonical path
-    ``<registry_root>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/``
-    using ``make``/``model``/``year`` from ``model.metadata.config``. The
-    ``config_slug`` is *derived* from the model's metadata (architecture +
-    optional ``config.variant`` + feature-set hash) unless an explicit override
-    is passed. The resulting directory is directly loadable by ``LocalRegistry``
+    ``<registry_root>/<schema_version>/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/``
+    from ``model.metadata``. Both slugs are *derived* from metadata: the
+    ``vehicle_slug`` from the model name plus optional engine/drivetrain/trim,
+    and the ``config_slug`` from architecture + optional ``config.variant`` +
+    feature-set hash (unless an explicit override is passed). The resulting directory is directly loadable by ``LocalRegistry``
     — or by ``pt.load_model(...)`` when ``ROUTEE_REGISTRY_BACKEND=local`` and
     ``ROUTEE_LOCAL_REGISTRY_ROOT`` points at ``registry_root``.
 
@@ -279,11 +279,15 @@ def save_to_registry(
     # imports from this module.
     from routee.powertrain.core.year import format_year
     from routee.powertrain.registry.model_id import ModelId
-    from routee.powertrain.registry.slug import derive_config_slug
+    from routee.powertrain.registry.slug import (
+        derive_config_slug,
+        derive_vehicle_slug,
+    )
 
     if version is not None and version < 1:
         raise ValueError(f"version must be a positive integer, got {version}")
 
+    vehicle_slug = derive_vehicle_slug(model.metadata)
     derived_slug = derive_config_slug(model.metadata)
     if config_slug is not None and config_slug.lower() != derived_slug:
         warnings.warn(
@@ -298,7 +302,7 @@ def save_to_registry(
         Path(registry_root)
         / schema_version
         / config.make.lower()
-        / config.model.lower()
+        / vehicle_slug
         / format_year(config.year)
         / effective_slug.lower()
     )
@@ -313,7 +317,7 @@ def save_to_registry(
         if existing_version is not None:
             model_id = ModelId(
                 make=config.make,
-                model=config.model,
+                vehicle_slug=vehicle_slug,
                 year=config.year,
                 config_slug=effective_slug,
                 version=existing_version,
@@ -329,7 +333,7 @@ def save_to_registry(
 
     model_id = ModelId(
         make=config.make,
-        model=config.model,
+        vehicle_slug=vehicle_slug,
         year=config.year,
         config_slug=effective_slug,
         version=version,

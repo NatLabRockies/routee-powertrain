@@ -17,11 +17,14 @@ _VERSION_RE = re.compile(r"^v(\d+)$")
 class ModelKey(BaseModel):
     """A model's intrinsic, version-less identity.
 
-    ``make``/``model``/``year``/``config_slug`` are all pure functions of a
-    model's metadata, so a ``ModelKey`` is fully determined the moment a model
-    is trained — unlike ``version``, which is a registry coordinate assigned
-    when the model is placed into a registry. ``Model.key`` exposes this, so
-    every model self-describes its identity without needing a registry.
+    ``make``/``vehicle_slug``/``year``/``config_slug`` are all pure functions
+    of a model's metadata, so a ``ModelKey`` is fully determined the moment a
+    model is trained — unlike ``version``, which is a registry coordinate
+    assigned when the model is placed into a registry. ``vehicle_slug`` is
+    *derived* (via ``derive_vehicle_slug``) as the ``model`` name plus the
+    coarse powertrain family — e.g. ``camry_ice``, ``volt_phev``.
+    ``Model.key`` exposes this, so every model self-describes its identity
+    without needing a registry.
 
     Frozen (and therefore hashable) so it can be used as a grouping key that
     collapses the versions of one model.
@@ -30,11 +33,11 @@ class ModelKey(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     make: str
-    model: str
+    vehicle_slug: str
     year: YearField
     config_slug: str
 
-    @field_validator("make", "model", "config_slug", mode="after")
+    @field_validator("make", "vehicle_slug", "config_slug", mode="after")
     @classmethod
     def _lowercase(cls, v: str) -> str:
         return v.lower()
@@ -42,36 +45,42 @@ class ModelKey(BaseModel):
     @classmethod
     def from_metadata(cls, metadata: Metadata) -> ModelKey:
         """Derive the version-less identity from a model's metadata."""
-        from routee.powertrain.registry.slug import derive_config_slug
+        from routee.powertrain.registry.slug import (
+            derive_config_slug,
+            derive_vehicle_slug,
+        )
 
         return cls(
             make=metadata.vehicle.make,
-            model=metadata.vehicle.model,
+            vehicle_slug=derive_vehicle_slug(metadata),
             year=metadata.vehicle.year,
             config_slug=derive_config_slug(metadata),
         )
 
     @classmethod
     def from_path(cls, path: str) -> ModelKey:
-        """Parse a ModelKey from a ``make/model/year/config_slug`` path string."""
+        """Parse a ModelKey from a ``make/vehicle_slug/year/config_slug`` path."""
         parts = [p for p in path.strip("/").split("/") if p]
         if len(parts) != 4:
             raise ValueError(
                 f"Cannot parse model key from path '{path}'. "
-                f"Expected <make>/<model>/<year>/<config_slug>, "
+                f"Expected <make>/<vehicle_slug>/<year>/<config_slug>, "
                 f"got {len(parts)} segments."
             )
-        make, model, year_str, config_slug = parts
+        make, vehicle_slug, year_str, config_slug = parts
         return cls(
             make=make,
-            model=model,
+            vehicle_slug=vehicle_slug,
             year=parse_year(year_str),
             config_slug=config_slug,
         )
 
     def to_path(self) -> str:
         """Build the version-less registry path prefix for this model."""
-        return f"{self.make}/{self.model}/{format_year(self.year)}/{self.config_slug}"
+        return (
+            f"{self.make}/{self.vehicle_slug}/"
+            f"{format_year(self.year)}/{self.config_slug}"
+        )
 
     def __str__(self) -> str:
         return self.to_path()
@@ -96,7 +105,7 @@ class ModelId(BaseModel):
     """
 
     make: str
-    model: str
+    vehicle_slug: str
     year: YearField
     config_slug: str
     version: int
@@ -104,18 +113,19 @@ class ModelId(BaseModel):
     def __init__(
         self,
         make: object = None,
-        model: object = None,
+        vehicle_slug: object = None,
         year: object = None,
         config_slug: object = None,
         version: object = None,
         **data: object,
     ) -> None:
-        # Preserve positional construction (make, model, year, config_slug, version)
+        # Preserve positional construction
+        # (make, vehicle_slug, year, config_slug, version)
         # while still routing through pydantic validation.
         if make is not None:
             data["make"] = make
-        if model is not None:
-            data["model"] = model
+        if vehicle_slug is not None:
+            data["vehicle_slug"] = vehicle_slug
         if year is not None:
             data["year"] = year
         if config_slug is not None:
@@ -124,7 +134,7 @@ class ModelId(BaseModel):
             data["version"] = version
         super().__init__(**data)
 
-    @field_validator("make", "model", "config_slug", mode="after")
+    @field_validator("make", "vehicle_slug", "config_slug", mode="after")
     @classmethod
     def _lowercase(cls, v: str) -> str:
         return v.lower()
@@ -134,7 +144,7 @@ class ModelId(BaseModel):
         """The version-less identity — everything except the registry version."""
         return ModelKey(
             make=self.make,
-            model=self.model,
+            vehicle_slug=self.vehicle_slug,
             year=self.year,
             config_slug=self.config_slug,
         )
@@ -144,7 +154,7 @@ class ModelId(BaseModel):
         """Attach a registry ``version`` to a version-less ``ModelKey``."""
         return cls(
             make=key.make,
-            model=key.model,
+            vehicle_slug=key.vehicle_slug,
             year=key.year,
             config_slug=key.config_slug,
             version=version,
@@ -170,7 +180,7 @@ class ModelId(BaseModel):
     def from_path(cls, path: str) -> ModelId:
         """Parse a ModelId from a path string.
 
-        Expected format: ``make/model/year/config_slug/v<N>``
+        Expected format: ``make/vehicle_slug/year/config_slug/v<N>``
 
         Args:
             path: a ``/``-separated path string
@@ -185,11 +195,11 @@ class ModelId(BaseModel):
         if len(parts) != 5:
             raise ValueError(
                 f"Cannot parse model id from path '{path}'. "
-                f"Expected <make>/<model>/<year>/<config_slug>/v<N>, "
+                f"Expected <make>/<vehicle_slug>/<year>/<config_slug>/v<N>, "
                 f"got {len(parts)} segments."
             )
 
-        make, model, year_str, config_slug, version_dir = parts
+        make, vehicle_slug, year_str, config_slug, version_dir = parts
 
         match = _VERSION_RE.match(version_dir)
         if not match:
@@ -199,7 +209,7 @@ class ModelId(BaseModel):
 
         return cls(
             make=make,
-            model=model,
+            vehicle_slug=vehicle_slug,
             year=parse_year(year_str),
             config_slug=config_slug,
             version=int(match.group(1)),
@@ -209,13 +219,13 @@ class ModelId(BaseModel):
         """
         Build the registry path for this model.
 
-        Returns: e.g. "toyota/camry_4cyl_fwd/2016/rf_default/v1"
+        Returns: e.g. "toyota/camry_ice/2016/rf_default/v1"
         """
         return f"{self.key.to_path()}/v{self.version}"
 
     def __str__(self) -> str:
         return (
-            f"{self.make}/{self.model}/{format_year(self.year)}/"
+            f"{self.make}/{self.vehicle_slug}/{format_year(self.year)}/"
             f"{self.config_slug}/v{self.version}"
         )
 
@@ -224,6 +234,11 @@ class ModelInfo(BaseModel):
     """Lightweight model summary returned from registry queries (no binary data)."""
 
     model_id: ModelId
+    #: The bare metadata ``vehicle.model`` name (e.g. ``"camry"``), as distinct
+    #: from the derived ``model_id.vehicle_slug`` (e.g. ``"camry_ice"``).
+    #: ``query(model=...)`` matches either. ``None`` for entries indexed before
+    #: this field existed.
+    vehicle_model: Optional[str] = None
     estimator_type: str
     feature_names: List[str]
     target_names: List[str]
@@ -249,7 +264,8 @@ class ModelInfo(BaseModel):
             f"  description:    {self.vehicle_description}",
             f"  year:           {format_year(self.model_id.year)}",
             f"  make:           {self.model_id.make}",
-            f"  model:          {self.model_id.model}",
+            f"  model:          {self.vehicle_model}",
+            f"  vehicle_slug:   {self.model_id.vehicle_slug}",
             f"  powertrain:     {self.powertrain_type}",
             f"  config_slug:    {self.model_id.config_slug}",
             f"  architecture:   {self.architecture_tag}",

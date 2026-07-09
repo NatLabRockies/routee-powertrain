@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from typing import TYPE_CHECKING
 
+from routee.powertrain.core.powertrain_type import PowertrainType
 from routee.powertrain.core.year import format_year
 
 if TYPE_CHECKING:
@@ -61,6 +63,69 @@ def derive_config_slug(metadata: Metadata) -> str:
     return "_".join(parts)
 
 
+def _slug_token(value: str) -> str:
+    """Sanitize one vehicle-slug token: lowercase, strip, collapse whitespace
+    runs to ``-``, replace ``/`` with ``-``. Tokens may contain ``_`` — the
+    composed slug is never parsed back into tokens, only re-derived from
+    metadata and compared.
+    """
+    token = re.sub(r"\s+", "-", value.strip().lower())
+    return token.replace("/", "-")
+
+
+#: Maps fine-grained ``PowertrainType`` members to the coarse family token
+#: used in a ``vehicle_slug``. The PHEV operating modes collapse to one family
+#: because charge-depleting/charge-sustaining models describe the *same
+#: vehicle* — that split lives in ``config.variant`` (and thus the
+#: ``config_slug``), not in the vehicle identity.
+_POWERTRAIN_FAMILIES = {
+    PowertrainType.PHEV_EV_MODE: "phev",
+    PowertrainType.PHEV_HEV_MODE: "phev",
+}
+
+
+def powertrain_family(powertrain_type: PowertrainType) -> str | None:
+    """Return the coarse family slug token for a powertrain type.
+
+    ``None`` for UNDEFINED (treated as "no information", like an unset sparse
+    field); otherwise the mapped family or the enum name lowercased
+    (``ice``, ``hev``, ``bev``, ``phev``, ``heavy_duty``).
+    """
+    if powertrain_type == PowertrainType.UNDEFINED:
+        return None
+    return _POWERTRAIN_FAMILIES.get(powertrain_type, powertrain_type.name.lower())
+
+
+def derive_vehicle_slug(metadata: Metadata) -> str:
+    """
+    Derive the canonical vehicle path segment from a model's metadata.
+
+    Like ``derive_config_slug``, this is a pure function of metadata — never
+    stored redundantly. It composes the sanitized ``model`` name with the
+    coarse powertrain family token (``ice``, ``hev``, ``bev``, ``phev``,
+    ``heavy_duty``), e.g. ``camry_ice``, ``leaf_24_kwh_bev``, ``volt_phev``.
+
+    The model name is the only free-form identity input: it should carry the
+    vehicle's full commercial designation when needed to distinguish
+    same-year stablemates (e.g. ``golf_1.5tsi`` vs ``golf_2.0tdi``). The
+    remaining vehicle attributes — ``engine``, ``drivetrain``, ``trim``,
+    ``fuel_type`` — are deliberately *not* identity: they stay filterable,
+    descriptive metadata that can be corrected on a published model without
+    renaming its registry path.
+
+    Args:
+        metadata: the model metadata to derive a slug from
+
+    Returns: the derived vehicle slug
+    """
+    vehicle = metadata.vehicle
+    tokens = [_slug_token(vehicle.model)]
+    family = powertrain_family(vehicle.powertrain_type)
+    if family:
+        tokens.append(family)
+    return "_".join(t for t in tokens if t)
+
+
 def assert_metadata_matches_id(metadata: Metadata, model_id: ModelId) -> None:
     """
     Raise if a path-derived ``ModelId`` is inconsistent with the metadata.
@@ -78,12 +143,16 @@ def assert_metadata_matches_id(metadata: Metadata, model_id: ModelId) -> None:
     """
     vehicle = metadata.vehicle
     derived_slug = derive_config_slug(metadata)
+    derived_vehicle_slug = derive_vehicle_slug(metadata)
 
     mismatches = []
     if model_id.make != vehicle.make:
         mismatches.append(f"make: path='{model_id.make}' metadata='{vehicle.make}'")
-    if model_id.model != vehicle.model:
-        mismatches.append(f"model: path='{model_id.model}' metadata='{vehicle.model}'")
+    if model_id.vehicle_slug != derived_vehicle_slug:
+        mismatches.append(
+            f"vehicle_slug: path='{model_id.vehicle_slug}' "
+            f"derived='{derived_vehicle_slug}'"
+        )
     if format_year(model_id.year) != format_year(vehicle.year):
         mismatches.append(
             f"year: path='{format_year(model_id.year)}' "

@@ -50,10 +50,14 @@ def filter_models(
     ``feature_names`` filters to models whose ``feature_names`` contains every
     listed name (subset match, exact column name).
 
+    ``model`` matches either the derived ``vehicle_slug`` or the bare metadata
+    model name (``ModelInfo.vehicle_model``).
+
     ``version`` pins results to an exact version. When set, ``version_strategy``
     is ignored. ``version_strategy`` collapses multiple versions of the same
-    ``(make, model, year, config_slug)`` group to the highest version when set
-    to ``"latest"`` (default), or returns all versions when set to ``"all"``.
+    ``(make, vehicle_slug, year, config_slug)`` group to the highest version
+    when set to ``"latest"`` (default), or returns all versions when set to
+    ``"all"``.
 
     ``model_digest`` pins results to an exact instance identity (always exact
     match, never fuzzy; accepted with or without the ``sha256:`` prefix). Like
@@ -68,10 +72,17 @@ def filter_models(
             if _matches(make, m.model_id.make, fuzzy, fuzzy_threshold)
         ]
     if model is not None:
+        # Match the derived vehicle_slug (path segment, e.g. "camry_ice")
+        # OR the bare metadata model name (e.g. "camry") — so users can filter
+        # on the name they know while path resolution exact-matches the slug.
         results = [
             m
             for m in results
-            if _matches(model, m.model_id.model, fuzzy, fuzzy_threshold)
+            if _matches(model, m.model_id.vehicle_slug, fuzzy, fuzzy_threshold)
+            or (
+                m.vehicle_model is not None
+                and _matches(model, m.vehicle_model, fuzzy, fuzzy_threshold)
+            )
         ]
     if year is not None:
         results = [m for m in results if year_contains(m.model_id.year, year)]

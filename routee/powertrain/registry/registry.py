@@ -52,7 +52,9 @@ class ModelRegistry(ABC):
 
         Args:
             make: filter by vehicle make
-            model: filter by model name
+            model: filter by vehicle model — matches the bare metadata model
+                name (e.g. ``"camry"``) or the derived ``vehicle_slug`` path
+                segment (e.g. ``"camry_ice"``)
             year: filter by model year
             config_slug: filter by config slug (e.g. "rf_default", "cnn_5link")
             feature_names: filter to models whose feature set contains every
@@ -72,8 +74,8 @@ class ModelRegistry(ABC):
                 ``version_strategy`` is ignored.
             version_strategy: how to collapse multiple versions of the same
                 model. ``"latest"`` (default) keeps only the highest version
-                per (make, model, year, config_slug) group; ``"all"`` returns
-                every version. Ignored when ``version`` is specified.
+                per (make, vehicle_slug, year, config_slug) group; ``"all"``
+                returns every version. Ignored when ``version`` is specified.
             custom_filters: optional list of callables that accept a ModelInfo
                 and return True to keep the model or False to exclude it
             fuzzy: if True, use fuzzy string matching for string
