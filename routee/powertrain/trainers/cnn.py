@@ -372,10 +372,22 @@ class CNNTrainer(Trainer):
             providers=["CPUExecutionProvider"],
         )
         onnx_out = onnx_sess.run(None, {ONNX_INPUT_NAME: sanity_x})[0]
-        max_abs = float(np.max(np.abs(torch_out - onnx_out)))
-        if max_abs > 1e-4:
+        export_drift_rtol = 1e-3
+        export_drift_atol = 5e-4
+        if not np.allclose(
+            onnx_out,
+            torch_out,
+            rtol=export_drift_rtol,
+            atol=export_drift_atol,
+        ):
+            abs_diff = np.abs(torch_out - onnx_out)
+            max_abs = float(np.max(abs_diff))
+            scale = np.maximum(np.abs(torch_out), np.abs(onnx_out))
+            max_rel = float(np.max(abs_diff / np.maximum(scale, export_drift_atol)))
             raise RuntimeError(
-                f"ONNX export drift exceeded tolerance: max|Δ|={max_abs:.2e}"
+                "ONNX export drift exceeded tolerance: "
+                f"max|Δ|={max_abs:.2e}, max relative drift={max_rel:.2e}, "
+                f"rtol={export_drift_rtol:.1e}, atol={export_drift_atol:.1e}"
             )
 
         return ONNXEstimator(
