@@ -9,6 +9,7 @@ from routee.powertrain.core.metadata import SCHEMA_VERSION_STRING
 from routee.powertrain.core.model import Model
 from routee.powertrain.core.year import parse_year
 from routee.powertrain.io.archive import (
+    _model_filename,
     _model_from_metadata_and_bytes,
     METADATA_FILENAME,
 )
@@ -19,6 +20,7 @@ from routee.powertrain.registry.filtering import (
 )
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
+from routee.powertrain.registry.slug import assert_metadata_matches_id
 from routee.powertrain.registry.default import (
     DEFAULT_BUCKET,
     DEFAULT_REGION,
@@ -42,7 +44,7 @@ def _parse_model_id_from_key(
     Derive a ModelId from an S3 key.
 
     Expected key format:
-        [<root_prefix>/]<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/metadata.json
+        [<root_prefix>/]<schema_version>/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/metadata.json
     """
     if root_prefix:
         full_prefix = root_prefix + "/" + schema_version + "/"
@@ -53,21 +55,21 @@ def _parse_model_id_from_key(
 
     rel = key[len(full_prefix) :]
     parts = rel.split("/")
-    # parts: [make, model, year, config_slug, vN, metadata.json]
+    # parts: [make, vehicle_slug, year, config_slug, vN, metadata.json]
     if len(parts) != 6 or parts[-1] != METADATA_FILENAME:
         raise ValueError(
-            f"Unexpected S3 key structure: {key}. "
-            f"Expected <schema>/<make>/<model>/<year>/<config_slug>/v<N>/{METADATA_FILENAME}"
+            f"Unexpected S3 key structure: {key}. Expected <schema>/<make>/"
+            f"<vehicle_slug>/<year>/<config_slug>/v<N>/{METADATA_FILENAME}"
         )
 
-    make, model, year_str, config_slug, version_dir, _ = parts
+    make, vehicle_slug, year_str, config_slug, version_dir, _ = parts
     match = VERSION_RE.match(version_dir)
     if not match:
         raise ValueError(f"Version directory '{version_dir}' does not match v<N>")
 
     return ModelId(
         make=make,
-        model=model,
+        vehicle_slug=vehicle_slug,
         year=parse_year(year_str),
         config_slug=config_slug,
         version=int(match.group(1)),
@@ -78,26 +80,30 @@ def _model_info_from_metadata(
     metadata_dict: dict, model_id: ModelId, path: str
 ) -> ModelInfo:
     """Convert an archive metadata dict + ModelId into a ModelInfo."""
-    config = metadata_dict["config"]
+    vehicle = metadata_dict["vehicle"]
+    contract = metadata_dict["contract"]
+    estimator = metadata_dict["estimator"]
 
-    feature_names = [f["name"] for f in config["feature_set"]["features"]]
-    target_names = [t["name"] for t in config["target"]["targets"]]
+    feature_names = [f["name"] for f in contract["feature_set"]]
+    target_names = [t["name"] for t in contract["target"]]
 
     return ModelInfo(
         model_id=model_id,
-        estimator_type=metadata_dict["estimator_type"],
-        architecture_tag=metadata_dict.get("architecture_tag", "unknown"),
-        input_spec=metadata_dict.get("input_spec"),
+        vehicle_model=vehicle.get("model"),
+        estimator_type=estimator["estimator_type"],
+        architecture_tag=estimator.get("architecture_tag", "unknown"),
+        input_spec=estimator.get("input_spec"),
         feature_names=feature_names,
         target_names=target_names,
-        powertrain_type=config["powertrain_type"],
-        vehicle_description=config["vehicle_description"],
+        powertrain_type=vehicle["powertrain_type"],
+        vehicle_description=vehicle["vehicle_description"],
         path=path,
-        mass_lbs=config.get("mass_lbs"),
-        fuel_type=config.get("fuel_type"),
-        drivetrain=config.get("drivetrain"),
-        engine=config.get("engine"),
-        trim=config.get("trim"),
+        mass_lbs=vehicle.get("mass_lbs"),
+        fuel_type=vehicle.get("fuel_type"),
+        drivetrain=vehicle.get("drivetrain"),
+        engine=vehicle.get("engine"),
+        trim=vehicle.get("trim"),
+        model_digest=metadata_dict.get("model_digest"),
     )
 
 
@@ -117,7 +123,7 @@ class S3Registry(ModelRegistry):
 
         s3://<bucket>/<root_prefix>/<schema_version>/
             index.json
-            <make>/<model>/<year>/<config_slug>/v<N>/
+            <make>/<vehicle_slug>/<year>/<config_slug>/v<N>/
                 metadata.json
                 model.onnx
 
@@ -197,7 +203,7 @@ class S3Registry(ModelRegistry):
             ) from exc
         try:
             index_dict = json.loads(data)
-            return [ModelInfo.from_dict(m) for m in index_dict.get("models", [])]
+            return [ModelInfo.model_validate(m) for m in index_dict.get("models", [])]
         except Exception as exc:
             raise IndexMissingError(f"Could not parse index at '{key}': {exc}") from exc
 
@@ -223,6 +229,7 @@ class S3Registry(ModelRegistry):
         engine: Optional[str] = None,
         trim: Optional[str] = None,
         version: Optional[int] = None,
+        model_digest: Optional[str] = None,
         version_strategy: VersionStrategy = "latest",
         custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
         fuzzy: bool = True,
@@ -241,6 +248,7 @@ class S3Registry(ModelRegistry):
             engine=engine,
             trim=trim,
             version=version,
+            model_digest=model_digest,
             version_strategy=version_strategy,
             custom_filters=custom_filters,
             fuzzy=fuzzy,
@@ -255,13 +263,13 @@ class S3Registry(ModelRegistry):
         meta_bytes = self._fetch_bytes(meta_key)
         metadata_dict = json.loads(meta_bytes)
 
-        model_filename = metadata_dict.get("model_file")
-        if model_filename is None:
-            raise ValueError("metadata.json must contain 'model_file'")
+        model_filename = _model_filename(metadata_dict)
 
         model_key = f"{dir_key}/{model_filename}"
         model_bytes = self._fetch_bytes(model_key)
-        return _model_from_metadata_and_bytes(metadata_dict, model_bytes)
+        model = _model_from_metadata_and_bytes(metadata_dict, model_bytes)
+        assert_metadata_matches_id(model.metadata, model_id)
+        return model
 
     def get_metadata(self, model_id: Union[str, ModelId]) -> dict:
         model_id = _resolve_model_id(model_id)
@@ -301,7 +309,7 @@ def build_index(
             # path is the directory prefix (key without /metadata.json)
             dir_key = key[: -len(f"/{METADATA_FILENAME}")]
             info = _model_info_from_metadata(metadata_dict, model_id, dir_key)
-            models.append(info.to_dict())
+            models.append(info.model_dump(mode="json"))
         except Exception:
             continue
 

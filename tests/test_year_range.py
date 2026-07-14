@@ -113,7 +113,7 @@ class TestModelConfigYearRange(TestCase):
             year=2020,
         )
         self.assertEqual(config.year, 2020)
-        d = config.to_dict()
+        d = config.model_dump(mode="json")
         self.assertEqual(d["year"], 2020)
 
     def test_year_range_tuple(self):
@@ -130,8 +130,8 @@ class TestModelConfigYearRange(TestCase):
             year=(2020, 2026),
         )
         self.assertEqual(config.year, (2020, 2026))
-        d = config.to_dict()
-        self.assertEqual(d["year"], "2020-2026")
+        d = config.model_dump(mode="json")
+        self.assertEqual(d["year"], [2020, 2026])
 
     def test_year_range_string(self):
         config = pt.ModelConfig(
@@ -161,8 +161,8 @@ class TestModelConfigYearRange(TestCase):
             model="model",
             year=(2020, 2026),
         )
-        d = config.to_dict()
-        restored = pt.ModelConfig.from_dict(d)
+        d = config.model_dump(mode="json")
+        restored = pt.ModelConfig.model_validate(d)
         self.assertEqual(restored.year, (2020, 2026))
 
 
@@ -183,14 +183,14 @@ class TestModelIdYearRange(TestCase):
 
     def test_year_range_dict_roundtrip(self):
         mid = ModelId("generic", "sedan", (2020, 2026), "rf_default", 1)
-        d = mid.to_dict()
-        restored = ModelId.from_dict(d)
+        d = mid.model_dump(mode="json")
+        restored = ModelId.model_validate(d)
         self.assertEqual(restored.year, (2020, 2026))
 
     def test_single_year_dict_roundtrip(self):
         mid = ModelId("toyota", "camry", 2016, "rf_default", 1)
-        d = mid.to_dict()
-        restored = ModelId.from_dict(d)
+        d = mid.model_dump(mode="json")
+        restored = ModelId.model_validate(d)
         self.assertEqual(restored.year, 2016)
 
 

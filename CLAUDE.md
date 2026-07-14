@@ -33,7 +33,7 @@ Package source lives under `routee/powertrain/`.
 
 ### Core layers
 
-- **`core/`** — Central data types: `Model`, `ModelConfig`, `FeatureSet`, `DataColumn`, `TargetSet`, `Constraints`, `PowertrainType` (enum), `Metadata`, `PredictMethod`, `Drivetrain`, `FuelType`, `Year` (type alias)
+- **`core/`** — Central data types: `Model` (with a computed `key` → `ModelKey`), `ModelConfig`, `FeatureSet`, `DataColumn`, `TargetSet`, `Constraints`, `PowertrainType` (enum), `Metadata`, `PredictMethod`, `Drivetrain`, `FuelType`, `Year` (type alias)
 - **`estimators/`** — `Estimator` ABC + `InputSpec` dataclass, with implementations:
   - `ONNXEstimator` — wraps any ONNX model via onnxruntime. Handles both plain tabular input (`(N, F)`) and windowed sequence input (`(N, lookback, F)`) driven by an `InputSpec` embedded in the model's ONNX `metadata_props` (keys `routee_lookback`, `routee_grouping_column`, `routee_pad_strategy`).
   - `NGBoostEstimator` — wraps NGBoost models (joblib + base64); emits both a point prediction and a per-row standard deviation column.
@@ -48,8 +48,9 @@ Package source lives under `routee/powertrain/`.
   - `ModelRegistry` (ABC) — Interface with `query()`, `load()`, `list_models()`, `get_metadata()`
   - `S3Registry` — Fetches models from a public S3 bucket (`routeecore-bucket`). Uses optional `index.json` for fast queries and hierarchical prefix walking for filtered searches
   - `LocalRegistry` — Reads models from a local directory tree using glob-based scanning
-  - `ModelId` — Identifier with five segments: `make/model/year/config_slug/v<N>` (e.g. `toyota/camry_4cyl_2wd/2016/rf_default/v1`). `config_slug` (e.g. `rf_default`, `cnn_5link`, `rf_steady_temp`) disambiguates multiple trained configurations for the same vehicle/year; the full feature composition lives in `metadata.json`.
-  - `ModelInfo` — Lightweight summary returned by `query()` with metadata but no binary data
+  - `ModelId` — Identifier with five segments: `make/vehicle_slug/year/config_slug/v<N>` (e.g. `toyota/camry_ice/2016/rf_c3326385/v1`). It composes a `ModelKey` (the version-less identity) plus a registry-assigned `version`. Both slugs are **derived** from metadata (`registry/slug.py`), not user-supplied: `derive_vehicle_slug` is `<model>_<powertrain_family>` (family via `powertrain_family()`: `ice`/`hev`/`bev`/`phev`/`heavy_duty`; both PHEV modes collapse to `phev` since CD/CS models describe the same vehicle — that split lives in `config.variant`; UNDEFINED omitted; model token lowercased, whitespace/`/` → `-`), and `derive_config_slug` composes `<arch_short>_<variant?>_<feature_hash>`. The model name should carry the vehicle's full commercial designation (`golf_1.5tsi` vs `golf_2.0tdi`); `engine`/`drivetrain`/`trim`/`fuel_type` are descriptive metadata — filterable and correctable without renaming paths, NOT identity. So `make/vehicle_slug/year/config_slug` are all pure functions of a model's metadata; only `version` is a registry coordinate. `ModelId.from_metadata(metadata, version)` / `ModelId.from_key(key, version)` mint one.
+  - `ModelKey` — The version-less identity (`make/vehicle_slug/year/config_slug`), frozen/hashable. `Model.key` (`ModelKey.from_metadata`) exposes it on any trained or loaded model; `filter_models` groups versions by it. Registry `load()` re-derives both slugs and **raises on any mismatch** with the on-disk path (`assert_metadata_matches_id`).
+  - `ModelInfo` — Lightweight summary returned by `query()` with metadata but no binary data. Carries `vehicle_model` (the bare metadata model name, e.g. `"camry"`) alongside `model_id.vehicle_slug`; the `model` query filter matches either.
   - `get_default_registry()` — Factory that selects backend based on `ROUTEE_REGISTRY_BACKEND` env var (`"s3"` or `"local"`, default `"s3"`)
   - `filter_models()` / `latest_model_ids()` — Filtering supports exact + fuzzy matching (via `rapidfuzz`) on `make`, `model`, `year`, `config_slug`, `feature_names`, `powertrain_type`, `fuel_type`, `drivetrain`, `engine`, `trim`, `version`, plus optional `custom_filters` callables.
 
@@ -57,10 +58,10 @@ Package source lives under `routee/powertrain/`.
 
 The Registry system abstracts model discovery and retrieval, allowing pre-trained models to be served from S3 or the local filesystem with an identical API.
 
-- **Directory/bucket layout**: `<root>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/` containing `metadata.json` + a binary estimator file (e.g. `model.onnx` or a `.joblib` blob)
-- **Bundled models**: `routee/powertrain/resources/bundled_registry/v2/` (currently 2016 Toyota Camry 4cyl 2WD and 2017 Chevy Bolt, both `rf_default/v1`)
+- **Directory/bucket layout**: `<root>/<schema_version>/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/` containing `metadata.json` + a binary estimator file (e.g. `model.onnx` or a `.joblib` blob)
+- **Bundled models**: `routee/powertrain/resources/bundled_registry/v2/` (currently `toyota/camry_ice` 2016 and `chevrolet/bolt_bev` 2017, both `rf_c3326385/v1` — the derived slug for a random forest over speed & grade)
 - **Public entry points** (in `io/load.py`):
-  - `list_available_models(registry=None, version_strategy="latest")` — Returns all `ModelId`s. `version_strategy="all"` returns every version; default keeps only the latest per `(make, model, year, config_slug)` group.
+  - `list_available_models(registry=None, version_strategy="latest")` — Returns all `ModelId`s. `version_strategy="all"` returns every version; default keeps only the latest per `(make, vehicle_slug, year, config_slug)` group.
   - `query_available_models(...)` — Filtered search returning `ModelInfo` objects; supports fuzzy matching (`fuzzy=True`, `fuzzy_threshold=80`) and the same filter set as `filter_models()`.
   - `load_model(name_or_path, registry=None)` — Loads from a local path/zip/tar if it exists, otherwise resolves the string as a `ModelId` (`v<N>` segment optional → latest) and fetches from the registry.
 - **Environment variables**:
@@ -74,7 +75,7 @@ The Registry system abstracts model discovery and retrieval, allowing pre-traine
 ### Key abstractions
 
 - **`Model`** — Main user-facing object. Holds a single `estimator: Estimator` + `metadata: Metadata`; `metadata.errors` exposes the `ModelErrors`. Supports `from_file`, `to_file` (directory / `.zip` / `.tar.gz` auto-detected from suffix), `predict`, `visualize_features`, `contour`, `to_lookup_table`.
-- **`ModelConfig`** — Vehicle description, powertrain type, feature set, distance column, energy target(s), predict method, plus optional `mass_lbs`, `fuel_type`, `drivetrain`, `engine`, `trim`, `apply_real_world_adjustment` (default `True`).
+- **`ModelConfig`** — Vehicle description, powertrain type, feature set, distance column, energy target(s), predict method, plus optional `mass_lbs`, `fuel_type`, `drivetrain`, `engine`, `trim` (the latter three fold into the derived `vehicle_slug` — set them as structured fields instead of lumping into the `model` name), `variant` (short label — e.g. `steady`/`warmup` — folded into the derived `config_slug` to distinguish configs sharing architecture + feature set), `dataset_name`/`dataset_hash` (provenance, feed the digest), `apply_real_world_adjustment` (default `True`).
 - **`Estimator`** (ABC) — Stateless prediction interface. All implementations provide `predict()`, `from_dict()`/`to_dict()`, `from_file()`/`to_file()`, and expose an `input_spec: InputSpec` (lookback / grouping_column / pad_strategy) describing whether they want pointwise or windowed inputs.
 - **`Trainer`** (ABC) — `train()` splits data, delegates to `inner_train()`, computes errors, returns a `Model`. Each subclass sets an `architecture_tag` (e.g. `random_forest`, `ngboost`, `cnn`) used in `metadata.json` and registry filtering.
 - **`FeatureSetId`** — String alias (`core/features.py`) holding the sorted-`&`-joined feature column names. Used as a hashable feature-set fingerprint for registry queries; v2 models hold a single estimator per file, so there's no runtime feature-set dispatch inside `Model`.
@@ -90,6 +91,18 @@ The Registry system abstracts model discovery and retrieval, allowing pre-traine
 - `metadata.json` carries `schema_version: 2`; v1 model files raise on load.
 - `ModelId.version` is an int (`v<N>` in paths). The default `version_strategy="latest"` collapses to the highest version per `(make, model, year, config_slug)` group; pass `"all"` to see every version.
 - The package version is tracked in `routee/powertrain/__about__.py` and written into `metadata.routee_version` automatically at save time.
+
+### Instance identity (digests)
+
+Two-layer identity, mirroring OCI/MLflow: an immutable **instance digest** minted at train time lives inside the artifact; the registry path (`v<N>`) is a **coordinate** assigned at publish. The registry maps coordinate → digest, never the reverse.
+
+- `Metadata.model_digest` (`sha256:<64 hex>`) — minted by `Trainer.train` via `core/digest.py:stamp_digest`, computed over a frozen canonical payload (`digest_spec: 1`) of identity fields: vehicle identity (make/model/year/variant/powertrain_type — everything feeding the derived path slugs), contract, `estimator_sha256`, and training provenance (`trained_date`, seed, splits, `dataset_name`/`dataset_hash`). Recomputable from `metadata.json` alone. Descriptive fields (`vehicle_description`, `mass_lbs`, `engine`, `drivetrain`, `trim`, `fuel_type`) and `errors` are deliberately excluded so they stay correctable.
+- `EstimatorInfo.estimator_sha256` — bare-hex sha256 of the exact estimator binary bytes. On load, a mismatch **raises** (corrupt binary); a `model_digest` mismatch **warns** (post-mint metadata edit). Both `None` on legacy models → checks skipped.
+- The spec-1 payload builder in `core/digest.py` is frozen — never edit it; a payload change ships as spec 2. A golden test in `tests/test_digest.py` pins the exact hash.
+- `save_to_registry` is **idempotent**: with `version=None`, an existing version holding the same `model_digest` is returned instead of minting v<N+1>.
+- Coordinate lookup: `registry.find_by_digest(digest)` / `query(model_digest=...)` / `query_available_models(model_digest=...)` resolve a metadata file in hand back to its registry entry (exact match, `sha256:` prefix optional).
+- `ModelConfig.dataset_name`/`dataset_hash` (optional) record training-data provenance; `pt.hash_dataframe(df)` computes a fingerprint. Both feed the digest.
+- `scripts/backfill_digests.py` stamps digests onto pre-digest registry entries (requires the binaries).
 
 ## Coding Conventions
 

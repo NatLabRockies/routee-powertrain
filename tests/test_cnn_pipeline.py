@@ -82,8 +82,8 @@ class TestCNNPipeline(TestCase):
         self.assertEqual(spec.grouping_column, "route_id")
 
         # Metadata carries architecture_tag and input_spec
-        self.assertEqual(model.metadata.architecture_tag, "cnn")
-        self.assertEqual(model.metadata.input_spec["lookback"], 5)
+        self.assertEqual(model.metadata.estimator.architecture_tag, "cnn")
+        self.assertEqual(model.metadata.estimator.input_spec["lookback"], 5)
 
         r1 = model.predict(self.df)
         self.assertEqual(len(r1), len(self.df))

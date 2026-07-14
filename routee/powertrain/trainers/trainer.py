@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
+from datetime import date
 from typing import List
 
 import pandas as pd
 
+from routee.powertrain.core.digest import stamp_digest
 from routee.powertrain.core.metadata import Metadata
 from routee.powertrain.core.model import Model
 from routee.powertrain.core.model_config import ModelConfig, PredictMethod
@@ -124,14 +126,19 @@ class Trainer(ABC):
 
         model_errors = compute_errors(test, estimator, config)
 
-        metadata = Metadata(
-            config=config,
+        metadata = Metadata.from_config(
+            config,
             errors=model_errors,
             estimator_type=estimator.__class__.__name__,
             model_file="model" + estimator.file_extension,
             architecture_tag=self.architecture_tag,
-            input_spec=estimator.input_spec.to_dict(),
+            input_spec=estimator.input_spec.model_dump(mode="json"),
+            trained_date=date.today().isoformat(),
         )
+
+        # Mint the registry-independent instance identity (estimator_sha256 +
+        # model_digest) at train time, before any registry is involved.
+        stamp_digest(metadata, estimator.to_bytes())
 
         vehicle_model = Model(estimator, metadata)
 

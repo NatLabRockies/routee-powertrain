@@ -47,7 +47,7 @@ import routee.powertrain as pt
 print(pt.query_available_models(make="chevrolet", model="bolt", year=2017))
 
 # Load a pre-trained model
-model = pt.load_model("chevrolet/bolt/2017/rf_default/v1")
+model = pt.load_model("chevrolet/bolt/2017/rf_c3326385/v1")
 
 # Inspect the model to see what it expects for input
 print(model)

@@ -6,8 +6,7 @@ from typing import Dict, List, Optional, TYPE_CHECKING, Union
 
 import pandas as pd
 
-from routee.powertrain.core.metadata import Metadata
-from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
+from routee.powertrain.core.metadata import Metadata, SCHEMA_VERSION_STRING
 from routee.powertrain.estimators.estimator_interface import Estimator
 from routee.powertrain.estimators.onnx import ONNXEstimator
 from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
@@ -27,6 +26,7 @@ from routee.powertrain.validation.feature_visualization import (
 
 if TYPE_CHECKING:
     from pandas import Series
+    from routee.powertrain.registry.model_id import ModelKey
 
 REGISTERED_ESTIMATORS = {
     "ONNXEstimator": ONNXEstimator,
@@ -43,6 +43,33 @@ class Model:
 
     estimator: Estimator
     metadata: Metadata
+
+    @property
+    def key(self) -> ModelKey:
+        """This model's intrinsic, version-less identity.
+
+        Derived from metadata (``make``/``model``/``year`` + the derived
+        ``config_slug``), so it is always available — even for a freshly-trained
+        model that has never been placed in a registry. The registry
+        ``version`` is *not* part of this; it is assigned only by registry
+        operations (``save_to_registry`` returns a full ``ModelId``).
+        """
+        from routee.powertrain.registry.model_id import ModelKey
+
+        return ModelKey.from_metadata(self.metadata)
+
+    @property
+    def digest(self) -> Optional[str]:
+        """This model's registry-independent instance identity.
+
+        The ``sha256:<hex>`` content digest minted at train time (see
+        ``routee.powertrain.core.digest``). Unlike ``key``, which groups all
+        retrains of the same configuration, the digest is unique per trained
+        artifact — two models trained the same day on different data get
+        distinct digests. ``None`` for legacy models saved before digests
+        existed.
+        """
+        return self.metadata.model_digest
 
     @property
     def feature_set(self):
@@ -92,18 +119,19 @@ class Model:
     def save_to_registry(
         self,
         registry_root: Union[str, Path],
-        config_slug: str,
-        version: int = 1,
-        schema_version: str = "v2",
+        config_slug: Optional[str] = None,
+        version: Optional[int] = None,
+        schema_version: str = SCHEMA_VERSION_STRING,
         overwrite: bool = False,
     ):
         """
         Save this model into a local registry directory tree.
 
         Builds the canonical ``<registry_root>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/``
-        layout from ``self.metadata.config`` plus the caller-supplied
-        ``config_slug`` and ``version``. See
-        ``routee.powertrain.io.archive.save_to_registry`` for full details.
+        layout from ``self.metadata.config``. The ``config_slug`` is derived from
+        metadata unless overridden, and ``version`` defaults to the next unused
+        version. See ``routee.powertrain.io.archive.save_to_registry`` for full
+        details.
 
         Returns: the ``ModelId`` that was written.
         """
@@ -244,16 +272,9 @@ class Model:
         pred_energy_df = self.estimator.predict(links_df, config)
 
         for energy in config.target.targets:
-            if config.apply_real_world_adjustment:
-                adjustment_factor = ADJUSTMENT_FACTORS.get(config.powertrain_type)
-                if adjustment_factor is None:
-                    raise ValueError(
-                        f"Could not find an adjustment factor for powertrain type "
-                        f"{config.powertrain_type}"
-                    )
-                pred_energy_df[energy.name] = (
-                    pred_energy_df[energy.name] * adjustment_factor
-                )
+            pred_energy_df[energy.name] = (
+                pred_energy_df[energy.name] * config.real_world_adjustment_factor
+            )
 
         return pred_energy_df
 

@@ -20,8 +20,8 @@ import routee.powertrain as pt
 print(pt.list_available_models())
 
 # [
-#   toyota/camry_4cyl_2wd/2016/rf_default/v1,
-#   chevrolet/bolt/2017/rf_default/v1,
+#   toyota/camry_ice/2016/rf_c3326385/v1,
+#   chevrolet/bolt_bev/2017/rf_c3326385/v1,
 #   ...
 # ]
 
@@ -29,7 +29,7 @@ print(pt.list_available_models())
 results = pt.query_available_models(make="toyota", model="camry")
 
 # Load a pre-trained model using its registry path
-model = pt.load_model("toyota/camry_4cyl_2wd/2016/rf_default/v1")
+model = pt.load_model("toyota/camry_ice/2016/rf_c3326385/v1")
 
 # Inspect the model to see what it expects for input
 print(model)

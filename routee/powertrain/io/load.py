@@ -54,6 +54,7 @@ def query_available_models(
     engine: Optional[str] = None,
     trim: Optional[str] = None,
     version: Optional[int] = None,
+    model_digest: Optional[str] = None,
     version_strategy: VersionStrategy = "latest",
     custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
     registry: Optional[ModelRegistry] = None,
@@ -68,7 +69,8 @@ def query_available_models(
 
     Args:
         make: filter by vehicle make
-        model: filter by model name
+        model: filter by vehicle model — matches the bare metadata model name
+            (e.g. "camry") or the derived vehicle_slug (e.g. "camry_ice")
         year: filter by model year
         config_slug: filter by config slug (e.g. "rf_default", "cnn_5link")
         feature_names: filter to models whose feature set contains every listed
@@ -79,6 +81,11 @@ def query_available_models(
         engine: filter by engine specification (e.g. "4cyl", "2.0tdi")
         trim: filter by trim level (e.g. "sport", "active")
         version: pin results to an exact version (e.g. 2). When set,
+            ``version_strategy`` is ignored.
+        model_digest: pin results to an exact instance identity — the
+            ``model_digest`` from a model's ``metadata.json`` (with or without
+            the ``sha256:`` prefix; always matched exactly). Use this to
+            resolve a model file in hand back to its registry entry. When set,
             ``version_strategy`` is ignored.
         version_strategy: how to collapse multiple versions of the same
             model. ``"latest"`` (default) keeps only the highest version
@@ -110,6 +117,7 @@ def query_available_models(
         engine=engine,
         trim=trim,
         version=version,
+        model_digest=model_digest,
         version_strategy=version_strategy,
         custom_filters=custom_filters,
         fuzzy=fuzzy,
@@ -122,9 +130,9 @@ def _resolve_load_target(name_or_path: str, registry: ModelRegistry) -> ModelId:
 
     Accepts two forms:
 
-    - ``<make>/<model>/<year>/<config_slug>/v<N>`` — explicit version.
-    - ``<make>/<model>/<year>/<config_slug>`` — latest version is picked via
-      a ``fuzzy=False`` registry query.
+    - ``<make>/<vehicle_slug>/<year>/<config_slug>/v<N>`` — explicit version.
+    - ``<make>/<vehicle_slug>/<year>/<config_slug>`` — latest version is
+      picked via a ``fuzzy=False`` registry query.
 
     Raises ``ValueError`` with an actionable message on unknown shapes,
     zero matches, or ambiguous matches.
@@ -158,8 +166,8 @@ def _resolve_load_target(name_or_path: str, registry: ModelRegistry) -> ModelId:
         )
     raise ValueError(
         f"Could not parse '{name_or_path}'. Expected either "
-        "'<make>/<model>/<year>/<config_slug>/v<N>' (explicit version) or "
-        "'<make>/<model>/<year>/<config_slug>' (latest)."
+        "'<make>/<vehicle_slug>/<year>/<config_slug>/v<N>' (explicit version) "
+        "or '<make>/<vehicle_slug>/<year>/<config_slug>' (latest)."
     )
 
 

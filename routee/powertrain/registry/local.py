@@ -19,6 +19,7 @@ from routee.powertrain.registry.filtering import (
 )
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
+from routee.powertrain.registry.slug import assert_metadata_matches_id
 
 # Pattern to extract version number from directory name like v1, v2
 VERSION_RE = re.compile(r"^v(\d+)$")
@@ -28,7 +29,7 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
     """
     Derive a ModelId from the directory path relative to the schema root.
 
-    Expected structure: <make>/<model>/<year>/<config_slug>/v<N>/
+    Expected structure: <make>/<vehicle_slug>/<year>/<config_slug>/v<N>/
     """
     rel = model_dir.relative_to(schema_root)
     parts = list(rel.parts)
@@ -36,11 +37,11 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
     if len(parts) != 5:
         raise ValueError(
             f"Unexpected path depth for {model_dir}. "
-            f"Expected <make>/<model>/<year>/<config_slug>/v<N>, "
+            f"Expected <make>/<vehicle_slug>/<year>/<config_slug>/v<N>, "
             f"got {'/'.join(parts)}"
         )
 
-    make, model, year_str, config_slug, version_dir = parts
+    make, vehicle_slug, year_str, config_slug, version_dir = parts
 
     match = VERSION_RE.match(version_dir)
     if not match:
@@ -50,7 +51,7 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
 
     return ModelId(
         make=make,
-        model=model,
+        vehicle_slug=vehicle_slug,
         year=parse_year(year_str),
         config_slug=config_slug,
         version=int(match.group(1)),
@@ -61,26 +62,30 @@ def _model_info_from_metadata(
     metadata_dict: dict, model_id: ModelId, path: str
 ) -> ModelInfo:
     """Convert an archive metadata dict + ModelId into a ModelInfo."""
-    config = metadata_dict["config"]
+    vehicle = metadata_dict["vehicle"]
+    contract = metadata_dict["contract"]
+    estimator = metadata_dict["estimator"]
 
-    feature_names = [f["name"] for f in config["feature_set"]["features"]]
-    target_names = [t["name"] for t in config["target"]["targets"]]
+    feature_names = [f["name"] for f in contract["feature_set"]]
+    target_names = [t["name"] for t in contract["target"]]
 
     return ModelInfo(
         model_id=model_id,
-        estimator_type=metadata_dict["estimator_type"],
-        architecture_tag=metadata_dict.get("architecture_tag", "unknown"),
-        input_spec=metadata_dict.get("input_spec"),
+        vehicle_model=vehicle.get("model"),
+        estimator_type=estimator["estimator_type"],
+        architecture_tag=estimator.get("architecture_tag", "unknown"),
+        input_spec=estimator.get("input_spec"),
         feature_names=feature_names,
         target_names=target_names,
-        powertrain_type=config["powertrain_type"],
-        vehicle_description=config["vehicle_description"],
+        powertrain_type=vehicle["powertrain_type"],
+        vehicle_description=vehicle["vehicle_description"],
         path=path,
-        mass_lbs=config.get("mass_lbs"),
-        fuel_type=config.get("fuel_type"),
-        drivetrain=config.get("drivetrain"),
-        engine=config.get("engine"),
-        trim=config.get("trim"),
+        mass_lbs=vehicle.get("mass_lbs"),
+        fuel_type=vehicle.get("fuel_type"),
+        drivetrain=vehicle.get("drivetrain"),
+        engine=vehicle.get("engine"),
+        trim=vehicle.get("trim"),
+        model_digest=metadata_dict.get("model_digest"),
     )
 
 
@@ -94,7 +99,7 @@ class LocalRegistry(ModelRegistry):
 
     Directory layout::
 
-        <root>/<schema_version>/<make>/<model>/<year>/<config_slug>/v<N>/
+        <root>/<schema_version>/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/
             metadata.json
             model.onnx  (or other binary)
 
@@ -167,6 +172,7 @@ class LocalRegistry(ModelRegistry):
         engine: Optional[str] = None,
         trim: Optional[str] = None,
         version: Optional[int] = None,
+        model_digest: Optional[str] = None,
         version_strategy: VersionStrategy = "latest",
         custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
         fuzzy: bool = True,
@@ -184,6 +190,7 @@ class LocalRegistry(ModelRegistry):
             drivetrain=drivetrain,
             engine=engine,
             trim=trim,
+            model_digest=model_digest,
             version=version,
             version_strategy=version_strategy,
             custom_filters=custom_filters,
@@ -196,7 +203,9 @@ class LocalRegistry(ModelRegistry):
         full_path = self._schema_root / model_id.to_path()
         if not full_path.exists():
             raise FileNotFoundError(f"Model directory not found: {full_path}")
-        return load_model_directory(full_path)
+        model = load_model_directory(full_path)
+        assert_metadata_matches_id(model.metadata, model_id)
+        return model
 
     def get_metadata(self, model_id: Union[str, ModelId]) -> dict:
         model_id = _resolve_model_id(model_id)

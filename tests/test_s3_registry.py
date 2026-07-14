@@ -13,26 +13,26 @@ BASE = f"{ROOT}/{SCHEMA}"
 
 def _fake_metadata(
     make: str = "toyota",
-    model: str = "camry_4cyl_fwd",
+    model: str = "camry_ice",
     year: int = 2016,
     powertrain: str = "ICE",
 ) -> dict:
     """Return a minimal metadata dict that _model_info_from_metadata can parse."""
     return {
-        "estimator_type": "ONNXEstimator",
-        "model_file": "model.onnx",
-        "config": {
+        "vehicle": {
             "vehicle_description": f"{year} {make} {model}",
             "powertrain_type": powertrain,
-            "feature_set": {
-                "features": [
-                    {"name": "speed_mph", "units": "mph"},
-                    {"name": "grade_dec", "units": "decimal"},
-                ]
-            },
-            "target": {
-                "targets": [{"name": "gallons_fastsim", "units": "gallons_gasoline"}]
-            },
+        },
+        "contract": {
+            "feature_set": [
+                {"name": "speed_mph", "units": "mph"},
+                {"name": "grade_dec", "units": "decimal"},
+            ],
+            "target": [{"name": "gallons_fastsim", "units": "gallons_gasoline"}],
+        },
+        "estimator": {
+            "estimator_type": "ONNXEstimator",
+            "model_file": "model.onnx",
         },
         "errors": {
             "estimator_errors": {
@@ -70,11 +70,12 @@ def _index_entry(
     return {
         "model_id": {
             "make": make,
-            "model": model,
+            "vehicle_slug": model,
             "year": year,
             "config_slug": config_slug,
             "version": version,
         },
+        "vehicle_model": model,
         "estimator_type": "ONNXEstimator",
         "feature_names": feature_names or ["speed_mph", "grade_dec"],
         "target_names": ["gallons_fastsim"],
@@ -121,7 +122,7 @@ class TestQueryViaIndex(TestCase):
         )
         results = registry.query(make="chevrolet", model="bolt_ev")
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].model_id.model, "bolt_ev")
+        self.assertEqual(results[0].model_id.vehicle_slug, "bolt_ev")
 
     def test_query_by_year(self):
         registry = _build_registry(

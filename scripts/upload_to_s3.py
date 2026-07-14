@@ -69,7 +69,8 @@ def upload_model_dir(
 
     Returns the number of files uploaded.
     """
-    # Build the S3 key prefix from the relative path (e.g. v2/toyota/camry/2016/default/speed_grade/v1)
+    # Build the S3 key prefix from the relative path
+    # (e.g. v2/toyota/camry_ice/2016/rf_c3326385/v1)
     rel = model_dir.relative_to(root)
     uploaded = 0
 

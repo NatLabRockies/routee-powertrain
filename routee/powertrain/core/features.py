@@ -1,63 +1,46 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
 
 from typing import Dict, List, Optional
 
+from pydantic import (
+    BaseModel,
+    Field,
+    SerializationInfo,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
-@dataclass
-class Constraints:
+
+class Constraints(BaseModel):
     lower: Optional[float] = None
     upper: Optional[float] = None
 
-    def __post_init__(self):
+    @model_validator(mode="after")
+    def _check_bounds(self) -> Constraints:
         if (
             self.lower is not None
             and self.upper is not None
             and self.lower >= self.upper
         ):
             raise ValueError("lower bound must be less than upper bound")
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, float]) -> Constraints:
-        lower = float(d["lower"]) if "lower" in d and d["lower"] is not None else None
-        upper = float(d["upper"]) if "upper" in d and d["upper"] is not None else None
-        return Constraints(lower=lower, upper=upper)
-
-    def to_dict(self) -> dict:
-        return {"lower": self.lower, "upper": self.upper}
+        return self
 
 
-@dataclass
-class DataColumn:
+class DataColumn(BaseModel):
     name: str
     units: str
 
     dtype: str = "float32"
 
-    constraints: Constraints = field(default_factory=Constraints)
+    constraints: Constraints = Field(default_factory=Constraints)
 
-    def __post_init__(self):
-        if "&" in self.name:
-            raise ValueError("feature name cannot contain '&'")
-
+    @field_validator("name")
     @classmethod
-    def from_dict(cls, d: dict) -> DataColumn:
-        if "name" not in d:
-            raise ValueError("must provide feature name when building from dictionary")
-        elif "units" not in d:
-            raise ValueError("must provide feature units when building from dictionary")
-        elif "constraints" not in d:
-            raise ValueError("must provide constraints when building from dictionary")
-
-        constraints = Constraints.from_dict(d["constraints"])
-
-        return DataColumn(name=d["name"], units=d["units"], constraints=constraints)
-
-    def to_dict(self) -> dict:
-        out = self.__dict__.copy()
-        out["constraints"] = self.constraints.to_dict()
-
-        return out
+    def _name_no_ampersand(cls, v: str) -> str:
+        if "&" in v:
+            raise ValueError("feature name cannot contain '&'")
+        return v
 
 
 FeatureSetId = str
@@ -79,13 +62,21 @@ def feature_id_to_names(feature_id: FeatureSetId) -> List[str]:
     return feature_id.split("&")
 
 
-@dataclass
-class FeatureSet:
+class FeatureSet(BaseModel):
     features: List[DataColumn]
 
-    def __post_init__(self):
-        if isinstance(self.features, DataColumn):
-            self.features = [self.features]
+    @field_validator("features", mode="before")
+    @classmethod
+    def _wrap_single(cls, v: object) -> object:
+        if isinstance(v, DataColumn):
+            return [v]
+        return v
+
+    @model_serializer
+    def _serialize(self, info: SerializationInfo) -> list:
+        # Serialize as a bare list of feature columns (no nested "features" key);
+        # a model holds a single feature set, so the wrapper adds no information.
+        return [f.model_dump(mode=info.mode) for f in self.features]
 
     def __repr__(self) -> str:
         summary_lines = []
@@ -116,26 +107,21 @@ class FeatureSet:
         """
         return [f.name for f in self.features]
 
-    def to_dict(self) -> dict:
-        return {
-            "features": [f.to_dict() for f in self.features],
-        }
 
-    @classmethod
-    def from_dict(cls, json: dict) -> FeatureSet:
-        features = [DataColumn.from_dict(d) for d in json["features"]]
-        return FeatureSet(features)
-
-
-@dataclass
-class TargetSet:
+class TargetSet(BaseModel):
     targets: List[DataColumn]
 
-    def __post_init__(self):
-        if isinstance(self.targets, DataColumn):
-            self.targets = [self.targets]
-        elif isinstance(self.targets, dict):
-            self.targets = TargetSet.from_dict(self.targets)
+    @field_validator("targets", mode="before")
+    @classmethod
+    def _wrap_single(cls, v: object) -> object:
+        if isinstance(v, DataColumn):
+            return [v]
+        return v
+
+    @model_serializer
+    def _serialize(self, info: SerializationInfo) -> list:
+        # Serialize as a bare list of target columns (no nested "targets" key).
+        return [t.model_dump(mode=info.mode) for t in self.targets]
 
     @property
     def target_map(self) -> Dict[str, DataColumn]:
@@ -148,13 +134,3 @@ class TargetSet:
     @property
     def target_rate_name_list(self) -> List[str]:
         return [f"{t.name}_rate" for t in self.targets]
-
-    def to_dict(self) -> dict:
-        return {
-            "targets": [t.to_dict() for t in self.targets],
-        }
-
-    @classmethod
-    def from_dict(cls, json: dict) -> TargetSet:
-        targets = [DataColumn.from_dict(d) for d in json["targets"]]
-        return TargetSet(targets)

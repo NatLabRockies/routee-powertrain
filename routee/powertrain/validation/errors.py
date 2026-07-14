@@ -1,15 +1,14 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
+from pydantic import BaseModel
 
 from routee.powertrain.core.model_config import ModelConfig
 from routee.powertrain.estimators.estimator_interface import Estimator
 from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
-from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
 
 REPR_ROWS = {
     "target": "Target",
@@ -132,7 +131,7 @@ def calculate_combined_sd(target_std) -> float:
 
 def errors_to_html_lines(errors: Errors) -> List[str]:
     html_lines = []
-    for error_name, error_value in errors.to_dict().items():
+    for error_name, error_value in errors.model_dump().items():
         if error_value is None:
             # possible if there are not trip errors
             continue
@@ -141,16 +140,19 @@ def errors_to_html_lines(errors: Errors) -> List[str]:
     return html_lines
 
 
-@dataclass
-class Errors:
-    link_root_mean_squared_error: float
-    link_norm_root_mean_squared_error: float
-    link_weighted_relative_percent_difference: float
+class Errors(BaseModel):
+    # These link-level metrics are populated for every trained model, but are
+    # declared Optional so a degenerate/sanitized metric (e.g. an infinite
+    # dist-per-energy from zero predicted energy, replaced with null) never
+    # blocks a model from loading.
+    link_root_mean_squared_error: Optional[float] = None
+    link_norm_root_mean_squared_error: Optional[float] = None
+    link_weighted_relative_percent_difference: Optional[float] = None
 
-    net_error: float
-    actual_dist_per_energy: float
-    pred_dist_per_energy: float
-    real_world_pred_dist_per_energy: float
+    net_error: Optional[float] = None
+    actual_dist_per_energy: Optional[float] = None
+    pred_dist_per_energy: Optional[float] = None
+    real_world_pred_dist_per_energy: Optional[float] = None
 
     trip_relative_percent_difference: Optional[float] = None
     trip_weighted_relative_percent_difference: Optional[float] = None
@@ -164,17 +166,6 @@ class Errors:
     trip_negative_log_likelihood: Optional[float] = None
     trip_continuous_ranked_probability_score: Optional[float] = None
     trip_prediction_interval_coverage_probability: Optional[float] = None
-
-    @classmethod
-    def from_dict(self, d: dict) -> Errors:
-        return Errors(**d)
-
-    def to_dict(self) -> dict:
-        out_d = {}
-        for k, v in self.__dict__.items():
-            if v is not None:
-                out_d[k] = float(v)
-        return out_d
 
     def _repr_html_(self) -> str:
         html_lines = ["<table border='1' style='border-collapse: collapse;'>"]
@@ -200,23 +191,8 @@ def estimator_errors_to_html_lines(estimator_errors: EstimatorErrors) -> List[st
     return html_lines
 
 
-@dataclass
-class EstimatorErrors:
+class EstimatorErrors(BaseModel):
     error_by_target: Dict[str, Errors]
-
-    @classmethod
-    def from_dict(cls, d: dict) -> EstimatorErrors:
-        d["error_by_target"] = {
-            k: Errors.from_dict(v) for k, v in d["error_by_target"].items()
-        }
-        return EstimatorErrors(**d)
-
-    def to_dict(self) -> dict:
-        out_dict = self.__dict__.copy()
-        out_dict["error_by_target"] = {
-            k: v.to_dict() for k, v in self.error_by_target.items()
-        }
-        return out_dict
 
     def _repr_html_(self) -> str:
         html_lines = ['<table border="1" style="border-collapse: collapse;">']
@@ -225,19 +201,8 @@ class EstimatorErrors:
         return "".join(html_lines)
 
 
-@dataclass
-class ModelErrors:
+class ModelErrors(BaseModel):
     estimator_errors: EstimatorErrors
-
-    @classmethod
-    def from_dict(cls, d: dict) -> ModelErrors:
-        estimator_errors = EstimatorErrors.from_dict(d["estimator_errors"])
-        return ModelErrors(estimator_errors=estimator_errors)
-
-    def to_dict(self) -> dict:
-        return {
-            "estimator_errors": self.estimator_errors.to_dict(),
-        }
 
     def _repr_html_(self) -> str:
         html_lines = ['<table border="1" style="border-collapse: collapse;">']
@@ -258,7 +223,7 @@ class ModelErrors:
         estimator_error = self.estimator_errors
         for target, errors in estimator_error.error_by_target.items():
             summary_lines.append(f"{'Target:':<{max_key_length}} {target}")
-            for error_name, error_value in errors.to_dict().items():
+            for error_name, error_value in errors.model_dump().items():
                 if error_value is None:
                     # possible if there are not trip errors
                     continue
@@ -380,7 +345,7 @@ def compute_errors(
 
         total_dist = test_df[distance.name].sum()
 
-        real_word_pred = target_pred * ADJUSTMENT_FACTORS[config.powertrain_type]
+        real_word_pred = target_pred * config.real_world_adjustment_factor
 
         pred_energy = np.sum(target_pred)
         real_word_pred_energy = np.sum(real_word_pred)
@@ -394,8 +359,8 @@ def compute_errors(
 
         estimator_errors[energy_name] = errors_obj
 
-    estimator_errors_obj = EstimatorErrors(estimator_errors)
+    estimator_errors_obj = EstimatorErrors(error_by_target=estimator_errors)
 
-    model_errors_obj = ModelErrors(estimator_errors_obj)
+    model_errors_obj = ModelErrors(estimator_errors=estimator_errors_obj)
 
     return model_errors_obj

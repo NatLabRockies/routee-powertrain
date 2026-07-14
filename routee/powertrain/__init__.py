@@ -10,8 +10,14 @@ __all__ = [
     "TargetSet",
     "Model",
     "ModelConfig",
+    "Vehicle",
+    "Contract",
+    "TrainingConfig",
+    "Metadata",
+    "EstimatorInfo",
     "PowertrainType",
     "ModelId",
+    "ModelKey",
     "ModelInfo",
     "ModelRegistry",
     "list_available_models",
@@ -21,13 +27,17 @@ __all__ = [
     "save_to_registry",
     "visualize_features",
     "contour_plot",
+    "compute_model_digest",
+    "hash_dataframe",
 ]
 
+from .core.digest import compute_model_digest, hash_dataframe
 from .core.drivetrain import Drivetrain
 from .core.features import DataColumn, FeatureSet, Constraints, TargetSet
 from .core.fuel_type import FuelType
 from .core.model import Model
-from .core.model_config import ModelConfig
+from .core.model_config import ModelConfig, Vehicle, Contract, TrainingConfig
+from .core.metadata import Metadata, EstimatorInfo
 from .core.powertrain_type import PowertrainType
 from .io.archive import save_to_registry
 from .io.load import (
@@ -36,7 +46,7 @@ from .io.load import (
     load_model,
     load_sample_route,
 )
-from .registry.model_id import ModelId, ModelInfo
+from .registry.model_id import ModelId, ModelInfo, ModelKey
 from .registry.registry import ModelRegistry
 from .validation.feature_visualization import visualize_features, contour_plot
 

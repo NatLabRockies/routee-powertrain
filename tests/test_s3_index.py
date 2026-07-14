@@ -15,14 +15,19 @@ def _fake_metadata(
     year: int = 2016,
 ) -> dict:
     return {
-        "estimator_type": "some-type",
-        "model_file": "model.onnx",
-        "config": {
+        "vehicle": {
             "vehicle_description": f"{year} {make} {model}",
             "powertrain_type": "ICE",
-            "feature_set": {"features": [{"name": "speed"}]},
-            "target": {"targets": [{"name": "energy"}]},
         },
+        "contract": {
+            "feature_set": [{"name": "speed"}],
+            "target": [{"name": "energy"}],
+        },
+        "estimator": {
+            "estimator_type": "some-type",
+            "model_file": "model.onnx",
+        },
+        "model_digest": "sha256:" + "ab" * 32,
     }
 
 
@@ -39,7 +44,7 @@ class TestS3Index(TestCase):
             vehicle_description="2016 toyota camry",
             path=f"{BASE}/toyota/camry/2016/rf_default/v1",
         )
-        index = {"schema_version": SCHEMA, "models": [info.to_dict()]}
+        index = {"schema_version": SCHEMA, "models": [info.model_dump(mode="json")]}
 
         registry = S3Registry(
             bucket="test-bucket", schema_version=SCHEMA, root_prefix=ROOT
@@ -88,6 +93,9 @@ class TestS3Index(TestCase):
                 )
                 self.assertEqual(len(idx["models"]), 1)
                 self.assertEqual(idx["models"][0]["model_id"]["make"], "toyota")
+                self.assertEqual(
+                    idx["models"][0]["model_digest"], "sha256:" + "ab" * 32
+                )
 
                 # Verify it was uploaded
                 client_mock.put_object.assert_called_once()

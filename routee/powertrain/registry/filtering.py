@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Callable, Dict, List, Literal, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Literal, Optional, Sequence
 
 from rapidfuzz import fuzz
 
-from routee.powertrain.core.year import serialize_year, year_contains
-from routee.powertrain.registry.model_id import ModelId, ModelInfo
+from routee.powertrain.core.digest import normalize_digest
+from routee.powertrain.core.year import year_contains
+from routee.powertrain.registry.model_id import ModelId, ModelInfo, ModelKey
 
 VersionStrategy = Literal["latest", "all"]
 
@@ -18,14 +19,9 @@ def _matches(query: str, candidate: str, fuzzy: bool, threshold: int) -> bool:
     return fuzz.WRatio(query_lower, candidate) >= threshold
 
 
-def _group_key(model_id: ModelId) -> Tuple[str, str, object, str]:
-    """Build a hashable grouping key that collapses versions of the same model."""
-    return (
-        model_id.make,
-        model_id.model,
-        serialize_year(model_id.year),
-        model_id.config_slug,
-    )
+def _group_key(model_id: ModelId) -> ModelKey:
+    """The version-less identity, used to collapse versions of the same model."""
+    return model_id.key
 
 
 def filter_models(
@@ -41,6 +37,7 @@ def filter_models(
     engine: Optional[str] = None,
     trim: Optional[str] = None,
     version: Optional[int] = None,
+    model_digest: Optional[str] = None,
     version_strategy: VersionStrategy = "latest",
     custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
     fuzzy: bool = True,
@@ -53,10 +50,19 @@ def filter_models(
     ``feature_names`` filters to models whose ``feature_names`` contains every
     listed name (subset match, exact column name).
 
+    ``model`` matches either the derived ``vehicle_slug`` or the bare metadata
+    model name (``ModelInfo.vehicle_model``).
+
     ``version`` pins results to an exact version. When set, ``version_strategy``
     is ignored. ``version_strategy`` collapses multiple versions of the same
-    ``(make, model, year, config_slug)`` group to the highest version when set
-    to ``"latest"`` (default), or returns all versions when set to ``"all"``.
+    ``(make, vehicle_slug, year, config_slug)`` group to the highest version
+    when set to ``"latest"`` (default), or returns all versions when set to
+    ``"all"``.
+
+    ``model_digest`` pins results to an exact instance identity (always exact
+    match, never fuzzy; accepted with or without the ``sha256:`` prefix). Like
+    ``version``, it identifies specific registry entries, so ``version_strategy``
+    is ignored when set.
     """
     results = models
     if make is not None:
@@ -66,10 +72,17 @@ def filter_models(
             if _matches(make, m.model_id.make, fuzzy, fuzzy_threshold)
         ]
     if model is not None:
+        # Match the derived vehicle_slug (path segment, e.g. "camry_ice")
+        # OR the bare metadata model name (e.g. "camry") — so users can filter
+        # on the name they know while path resolution exact-matches the slug.
         results = [
             m
             for m in results
-            if _matches(model, m.model_id.model, fuzzy, fuzzy_threshold)
+            if _matches(model, m.model_id.vehicle_slug, fuzzy, fuzzy_threshold)
+            or (
+                m.vehicle_model is not None
+                and _matches(model, m.vehicle_model, fuzzy, fuzzy_threshold)
+            )
         ]
     if year is not None:
         results = [m for m in results if year_contains(m.model_id.year, year)]
@@ -124,19 +137,27 @@ def filter_models(
         ]
     if version is not None:
         results = [m for m in results if m.model_id.version == version]
+    if model_digest is not None:
+        target_digest = normalize_digest(model_digest)
+        results = [
+            m
+            for m in results
+            if m.model_digest is not None
+            and normalize_digest(m.model_digest) == target_digest
+        ]
     if custom_filters is not None:
         for fn in custom_filters:
             results = [m for m in results if fn(m)]
 
-    # An explicit version filter overrides the strategy — the caller is
-    # asking for exactly that version.
+    # An explicit version or digest filter overrides the strategy — the caller
+    # is asking for exactly those registry entries.
     effective_strategy: VersionStrategy = (
-        "all" if version is not None else version_strategy
+        "all" if (version is not None or model_digest is not None) else version_strategy
     )
     if effective_strategy == "all":
         return results
     if effective_strategy == "latest":
-        best: Dict[Tuple[str, str, object, str], ModelInfo] = {}
+        best: Dict[ModelKey, ModelInfo] = {}
         for m in results:
             key = _group_key(m.model_id)
             current = best.get(key)
@@ -151,7 +172,7 @@ def filter_models(
 
 def latest_model_ids(ids: List[ModelId]) -> List[ModelId]:
     """Reduce a list of ModelIds to the highest version per model group."""
-    best: Dict[Tuple[str, str, object, str], ModelId] = {}
+    best: Dict[ModelKey, ModelId] = {}
     for mid in ids:
         key = _group_key(mid)
         current = best.get(key)

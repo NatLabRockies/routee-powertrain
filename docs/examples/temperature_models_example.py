@@ -19,13 +19,12 @@ It's important to understand the distinction between steady-state and transient 
 - **Transient Temperature Models**: These models account for the period when the vehicle is still adjusting to the ambient temperature.
     For example, when a vehicle starts a trip in cold weather and has been sitting outside, it takes some time for the battery and cabin to warm up.
 """
-# TODO(v2-catalog): confirm the v2 config_slug names for these models once the
-# S3 catalog is published. Under the v2 5-segment scheme, paths are
-# <make>/<model>/<year>/<config_slug>/v<N>.
-tesla = pt.load_model("tesla/model_3_rwd/2022/rf_default/v1")
-tesla_with_temp_steady = pt.load_model("tesla/model_3_rwd/2022/rf_steady_temp/v1")
+tesla = pt.load_model("tesla/model_3_rwd/2022/rf_c3326385/v1")
+tesla_with_temp_steady = pt.load_model(
+    "tesla/model_3_rwd/2022/rf_steady_thermal_ab1db342/v1"
+)
 tesla_with_temp_transient = pt.load_model(
-    "tesla/model_3_rwd/2022/rf_transient_temp/v1"
+    "tesla/model_3_rwd/2022/rf_transient_thermal_ab1db342/v1"
 )
 
 """
@@ -106,13 +105,19 @@ Now let's compare the Tesla Model 3 with other electric vehicles to see how diff
 We'll load the Nissan Leaf and Chevrolet Bolt models and compare their energy consumption across different temperatures.
 """
 
-# TODO(v2-catalog): confirm the v2 config_slug names for the temperature-aware
-# Leaf and Bolt models once the S3 catalog is published.
-nissan_leaf_steady = pt.load_model("nissan/leaf_30_kwh/2016/rf_steady_temp/v1")
-nissan_leaf_transient = pt.load_model("nissan/leaf_30_kwh/2016/rf_transient_temp/v1")
+nissan_leaf_steady = pt.load_model(
+    "nissan/leaf_30_kwh/2016/rf_steady_thermal_ab1db342/v1"
+)
+nissan_leaf_transient = pt.load_model(
+    "nissan/leaf_30_kwh/2016/rf_transient_thermal_ab1db342/v1"
+)
 
-chevy_bolt_steady = pt.load_model("chevrolet/bolt_ev/2020/rf_steady_temp/v1")
-chevy_bolt_transient = pt.load_model("chevrolet/bolt_ev/2020/rf_transient_temp/v1")
+chevy_bolt_steady = pt.load_model(
+    "chevrolet/bolt_ev/2020/rf_steady_thermal_ab1db342/v1"
+)
+chevy_bolt_transient = pt.load_model(
+    "chevrolet/bolt_ev/2020/rf_transient_thermal_ab1db342/v1"
+)
 
 """
 ### Temperature Sensitivity Comparison

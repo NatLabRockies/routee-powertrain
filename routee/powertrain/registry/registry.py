@@ -38,6 +38,7 @@ class ModelRegistry(ABC):
         engine: Optional[str] = None,
         trim: Optional[str] = None,
         version: Optional[int] = None,
+        model_digest: Optional[str] = None,
         version_strategy: VersionStrategy = "latest",
         custom_filters: Optional[Sequence[Callable[[ModelInfo], bool]]] = None,
         fuzzy: bool = True,
@@ -51,7 +52,9 @@ class ModelRegistry(ABC):
 
         Args:
             make: filter by vehicle make
-            model: filter by model name
+            model: filter by vehicle model — matches the bare metadata model
+                name (e.g. ``"camry"``) or the derived ``vehicle_slug`` path
+                segment (e.g. ``"camry_ice"``)
             year: filter by model year
             config_slug: filter by config slug (e.g. "rf_default", "cnn_5link")
             feature_names: filter to models whose feature set contains every
@@ -63,10 +66,16 @@ class ModelRegistry(ABC):
             trim: filter by trim level (e.g. "sport", "active")
             version: pin results to an exact version (e.g. 2). When set,
                 ``version_strategy`` is ignored.
+            model_digest: pin results to an exact instance identity — the
+                ``model_digest`` minted at train time and stored in
+                ``metadata.json`` (accepted with or without the ``sha256:``
+                prefix; always matched exactly, never fuzzily). Resolves a
+                metadata file in hand back to its registry entry. When set,
+                ``version_strategy`` is ignored.
             version_strategy: how to collapse multiple versions of the same
                 model. ``"latest"`` (default) keeps only the highest version
-                per (make, model, year, config_slug) group; ``"all"`` returns
-                every version. Ignored when ``version`` is specified.
+                per (make, vehicle_slug, year, config_slug) group; ``"all"``
+                returns every version. Ignored when ``version`` is specified.
             custom_filters: optional list of callables that accept a ModelInfo
                 and return True to keep the model or False to exclude it
             fuzzy: if True, use fuzzy string matching for string
@@ -74,6 +83,25 @@ class ModelRegistry(ABC):
             fuzzy_threshold: minimum score (0–100) for a fuzzy match
                 to be accepted (default 80)
         """
+
+    def find_by_digest(self, digest: str) -> List[ModelInfo]:
+        """
+        Find the registry entries holding a model with the given instance
+        identity.
+
+        This is the coordinate lookup for a model you already have in hand:
+        given the ``model_digest`` from a ``metadata.json`` (or
+        ``Model.digest``), it returns every registry entry whose stored
+        digest matches — normally one, but a byte-identical model legitimately
+        published under multiple keys yields several.
+
+        Args:
+            digest: the instance digest, with or without the ``sha256:`` prefix
+
+        Returns: matching ModelInfo entries (empty if the model was never
+            published to this registry)
+        """
+        return self.query(model_digest=digest, fuzzy=False)
 
     @abstractmethod
     def load(self, model_id: Union[str, ModelId]) -> Model:

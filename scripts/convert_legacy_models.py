@@ -26,13 +26,18 @@ from __future__ import annotations
 
 import argparse
 import base64
-import hashlib
 import json
 import logging
 import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
+
+from routee.powertrain.core.digest import stamp_digest
+from routee.powertrain.core.metadata import Metadata
+from routee.powertrain.core.model_config import ModelConfig
+from routee.powertrain.registry.model_id import ModelId
+from routee.powertrain.validation.errors import ModelErrors
 
 log = logging.getLogger(__name__)
 
@@ -77,26 +82,12 @@ ESTIMATOR_FILE_MAP = {
 }
 
 # Legacy estimator class name -> v2 architecture_tag (matches values emitted by
-# routee/powertrain/trainers/*.py).
+# routee/powertrain/trainers/*.py). The architecture_tag feeds the derived
+# config_slug (via ModelId.from_metadata), so it must match the trainer values.
 ARCHITECTURE_TAG_MAP = {
     "ONNXEstimator": "random_forest",  # legacy ONNX exports are all sklearn RFs
     "NGBoostEstimator": "ngboost",
 }
-
-# architecture_tag -> short prefix used when building a config_slug. Mirrors the
-# "rf_default" pattern used by the bundled v2 models.
-ARCHITECTURE_SLUG_PREFIX = {
-    "random_forest": "rf",
-    "ngboost": "ngb",
-    "cnn": "cnn",
-}
-
-
-def _feature_hash(feature_names: List[str]) -> str:
-    """Short deterministic hash used to disambiguate config_slugs when a single
-    legacy JSON carries multiple feature sets for the same estimator type."""
-    joined = "&".join(sorted(feature_names)).encode("utf-8")
-    return hashlib.blake2b(joined, digest_size=4).hexdigest()
 
 
 def _extract_binary(estimator_dict: dict, estimator_type: str) -> bytes:
@@ -190,17 +181,25 @@ def convert_legacy_json(
         Root directory under which model dirs will be created.  The directory
         layout follows the v2 registry convention::
 
-            {output_dir}/v{schema_version}/{make}/{model}/{year}/{config_slug}/v{version}/
+            {output_dir}/v{schema_version}/{make}/{vehicle_slug}/{year}/{config_slug}/v{version}/
 
-        ``config_slug`` is derived as ``{short_arch}_{variant}`` (e.g.
-        ``rf_default``). If the legacy JSON carries multiple feature sets for
-        the same estimator type, a short feature-name hash is appended to keep
-        the slugs unique.
+        Both slugs are derived from the emitted metadata via the package's
+        ``ModelId.from_metadata``: the ``vehicle_slug`` as the model name plus
+        the coarse powertrain family (e.g. ``camry_ice``), and the
+        ``config_slug`` as ``{short_arch}_{variant?}_{feature_hash}``. The
+        on-disk path therefore always matches the slugs the registry recomputes
+        on load. Distinct feature sets get distinct config slugs automatically;
+        the ``variant`` (when not the ``"default"`` sentinel) is stored on the
+        config and folded into the config slug.
 
     identity:
-        Vehicle identification (make / model / year / trim / variant).
-        ``variant`` is now folded into ``config_slug`` rather than being its
-        own path segment.
+        Vehicle identification. ``model`` should carry the vehicle's commercial
+        designation, including whatever distinguishes same-year stablemates
+        (e.g. ``golf_1.5tsi`` vs ``golf_2.0tdi``) — the powertrain family is
+        the only other field that feeds the derived ``vehicle_slug``.
+        ``engine``/``drivetrain``/``trim`` are descriptive, filterable
+        metadata, not identity. ``variant`` feeds the derived ``config_slug``;
+        the sentinel ``"default"`` is treated as "no variant".
     version:
         Model version number (default 1).
     schema_version:
@@ -220,18 +219,11 @@ def convert_legacy_json(
 
     feature_sets: list = old_config["feature_sets"]
 
-    # Pre-compute how many valid estimator entries will land on the same
-    # base config_slug. When >1 share a base, all of them need a hash suffix
-    # to stay unique within (make, model, year).
-    base_slug_counts: dict = {}
-    for fs_id, est_entry in all_estimators.items():
-        et = est_entry["estimator_constructor_type"]
-        if et not in ESTIMATOR_FILE_MAP:
-            continue
-        arch = ARCHITECTURE_TAG_MAP[et]
-        prefix = ARCHITECTURE_SLUG_PREFIX[arch]
-        base = f"{prefix}_{identity.variant}"
-        base_slug_counts[base] = base_slug_counts.get(base, 0) + 1
+    # Treat the "default" placeholder as "no variant" so the common case matches
+    # the bundled v2 models (slug ``rf_<hash>`` rather than ``rf_default_<hash>``).
+    variant: Optional[str] = identity.variant
+    if variant is not None and variant.strip().lower() == "default":
+        variant = None
 
     created: List[Path] = []
 
@@ -250,8 +242,6 @@ def convert_legacy_json(
 
         model_filename, _ = ESTIMATOR_FILE_MAP[estimator_type]
         arch_tag = ARCHITECTURE_TAG_MAP[estimator_type]
-        slug_prefix = ARCHITECTURE_SLUG_PREFIX[arch_tag]
-        base_slug = f"{slug_prefix}_{identity.variant}"
 
         # Extract binary
         model_bytes = _extract_binary(estimator_dict, estimator_type)
@@ -294,13 +284,17 @@ def convert_legacy_json(
             "model": identity.model,
             "year": identity.year,
             "predict_method": old_config.get("predict_method", "rate"),
+            "variant": variant,
             "test_size": old_config.get("test_size", 0.2),
             "random_seed": old_config.get("random_seed", 42),
             "trip_column": old_config.get("trip_column", "trip_id"),
-            "apply_real_world_adjustment": old_config.get(
-                "apply_real_world_adjustment", True
-            ),
         }
+
+        # Legacy models stored a boolean flag; map it to the numeric factor.
+        # When the flag was False, force no adjustment (1.0); otherwise leave the
+        # factor unset so ModelConfig derives it from the powertrain type.
+        if old_config.get("apply_real_world_adjustment", True) is False:
+            new_config["real_world_adjustment_factor"] = 1.0
 
         # Add vehicle attribute fields
         fuel_type = identity.fuel_type
@@ -332,50 +326,48 @@ def convert_legacy_json(
         new_errors = {"estimator_errors": estimator_errors_dict}
 
         # Build metadata.json. Legacy models are all pointwise (no lookback),
-        # so input_spec is the default.
-        metadata = {
-            "schema_version": schema_version,
-            "estimator_type": estimator_type,
-            "architecture_tag": arch_tag,
-            "input_spec": {
+        # so input_spec is the default. The flat legacy config is decomposed into
+        # the grouped v2 sections (vehicle / contract / estimator / training) via
+        # Metadata.from_config.
+        #
+        # Validating through the pydantic ModelConfig + Metadata models keeps the
+        # emitted JSON schema-correct (single source of truth). The config_slug —
+        # and thus the registry path — is derived from this exact metadata via
+        # ModelId.from_metadata, so the on-disk path always matches the slug the
+        # registry recomputes (and validates) on load.
+        config_obj = ModelConfig.model_validate(new_config)
+        metadata_obj = Metadata.from_config(
+            config_obj,
+            errors=ModelErrors.model_validate(new_errors),
+            estimator_type=estimator_type,
+            model_file=model_filename,
+            architecture_tag=arch_tag,
+            input_spec={
                 "lookback": 0,
                 "grouping_column": None,
                 "pad_strategy": "zero",
             },
-            "model_file": model_filename,
-            "config": new_config,
-            "routee_version": old_routee_version,
-            "errors": new_errors,
-        }
-
-        # Compute config_slug. Append a feature-name hash only when multiple
-        # estimators in this JSON share the same base slug.
-        feature_names = [f["name"] for f in feature_set_dict["features"]]
-        if base_slug_counts[base_slug] > 1:
-            config_slug = f"{base_slug}_{_feature_hash(feature_names)}"
-        else:
-            config_slug = base_slug
-
-        model_dir = (
-            output_dir
-            / f"v{schema_version}"
-            / identity.make
-            / identity.model
-            / str(identity.year)
-            / config_slug
-            / f"v{version}"
+            routee_version=old_routee_version,
+            # Legacy v1 archives don't record when the model was trained, so we
+            # leave trained_date null rather than guessing.
+            trained_date=None,
         )
+        # Mint the instance identity (estimator_sha256 + model_digest) so the
+        # converted library needs no separate digest backfill pass. The digest
+        # payload excludes the error metrics, so the infinity-sanitization of
+        # errors below does not invalidate it.
+        stamp_digest(metadata_obj, model_bytes)
+        model_id = ModelId.from_metadata(metadata_obj, version)
 
+        model_dir = output_dir / f"v{schema_version}" / model_id.to_path()
         model_dir.mkdir(parents=True, exist_ok=True)
 
-        # Write metadata.json
-        metadata = _sanitize_infinities(metadata)
-        metadata_path = model_dir / "metadata.json"
-        metadata_path.write_text(json.dumps(metadata, indent=2))
+        # Sanitize any infinite error metrics to null before writing.
+        metadata_out = _sanitize_infinities(metadata_obj.model_dump(mode="json"))
+        (model_dir / "metadata.json").write_text(json.dumps(metadata_out, indent=2))
 
         # Write binary model file
-        binary_path = model_dir / model_filename
-        binary_path.write_bytes(model_bytes)
+        (model_dir / model_filename).write_bytes(model_bytes)
 
         created.append(model_dir)
         log.info("Created model: %s", model_dir)
@@ -403,7 +395,11 @@ def main():
     parser.add_argument("output_dir", type=Path, help="Root output directory.")
     parser.add_argument("--make", required=True, help="Vehicle make (e.g. toyota).")
     parser.add_argument(
-        "--model", required=True, help="Vehicle model (e.g. camry_4cyl_2wd)."
+        "--model",
+        required=True,
+        help="Vehicle model designation (e.g. camry, golf_1.5tsi). The derived "
+        "vehicle_slug is this plus the powertrain family; engine/drivetrain/"
+        "trim flags are descriptive metadata only.",
     )
     parser.add_argument("--year", type=int, required=True, help="Model year.")
     parser.add_argument(
