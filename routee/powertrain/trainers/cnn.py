@@ -373,7 +373,7 @@ class CNNTrainer(Trainer):
         )
         onnx_out = onnx_sess.run(None, {ONNX_INPUT_NAME: sanity_x})[0]
         export_drift_rtol = 1e-3
-        export_drift_atol = 5e-4
+        export_drift_atol = 1e-4
         if not np.allclose(
             onnx_out,
             torch_out,
