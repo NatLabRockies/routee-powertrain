@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import List, Literal, Optional
 
 import pandas as pd
@@ -118,36 +117,18 @@ class Estimator(ABC):
             }
         )
 
-    @classmethod
-    @abstractmethod
-    def from_file(cls, filepath: str | Path) -> Estimator:
-        """
-        Load an estimator from a file
-        """
-
-    @abstractmethod
-    def to_file(self, filepath: str | Path):
-        """
-        Save an estimator to a file
-        """
-
-    @classmethod
-    @abstractmethod
-    def from_dict(cls, in_dict: dict) -> Estimator:
-        """
-        Load an estimator from a bytes object in memory
-        """
-
-    @abstractmethod
-    def to_dict(self) -> dict:
-        """
-        Serialize an estimator to a python dictionary
-        """
-
     @abstractmethod
     def to_bytes(self) -> bytes:
         """
         Serialize the estimator to raw bytes (native binary format).
+
+        This is the estimator's *only* serialization primitive. Estimators are
+        not independently persistable artifacts: a model on disk is always an
+        estimator binary paired with its ``metadata.json`` sidecar, and that
+        pairing — along with the required input/output contract and the instance
+        digest — is enforced exclusively at the ``Model`` save/load choke points
+        (see ``routee.powertrain.io.archive``). Persist via ``Model.to_file`` /
+        ``Model.from_file``, never by writing these bytes directly.
         """
 
     @classmethod

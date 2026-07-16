@@ -33,10 +33,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
-from routee.powertrain.core.digest import stamp_digest
 from routee.powertrain.core.metadata import Metadata
-from routee.powertrain.core.model import REGISTERED_ESTIMATORS
+from routee.powertrain.core.model import REGISTERED_ESTIMATORS, Model
 from routee.powertrain.core.model_config import ModelConfig
+from routee.powertrain.io.archive import save_model_directory
 from routee.powertrain.registry.model_id import ModelId
 from routee.powertrain.validation.errors import ModelErrors
 
@@ -341,21 +341,26 @@ def convert_legacy_json(
         # the converted model is required-contract-complete: for ONNX this
         # re-embeds the ordered columns into the binary's metadata_props (and the
         # digest is minted over those embedded bytes). Legacy binaries carry no
-        # contract, so we reconstruct the estimator, bind it from the config, and
-        # re-serialize. Only the estimator mechanics (lookback/grouping/pad) go
-        # into metadata.json's input_spec; the ordered columns live once in the
-        # ``contract`` section (and embedded in the binary above).
+        # contract, so we reconstruct the estimator and bind it from the config;
+        # the re-serialization happens inside save_model_directory (below), which
+        # calls estimator.to_bytes(). Only the estimator mechanics
+        # (lookback/grouping/pad) go into metadata.json's input_spec; the ordered
+        # columns live once in the ``contract`` section (and embedded in the
+        # binary).
         estimator_cls = REGISTERED_ESTIMATORS[estimator_type]
         estimator = estimator_cls.from_bytes(model_bytes)
         estimator.bind_io_contract(config_obj)
-        model_bytes = estimator.to_bytes()
         input_spec_dict = estimator.input_spec.model_dump(
             mode="json", include={"lookback", "grouping_column", "pad_strategy"}
         )
 
         metadata_obj = Metadata.from_config(
             config_obj,
-            errors=ModelErrors.model_validate(new_errors),
+            # Sanitize any infinite error metrics to null before they reach the
+            # metadata; save_model_directory serializes with json.dumps, which
+            # would otherwise emit invalid `Infinity` tokens. Errors are excluded
+            # from the digest payload, so this does not affect model_digest.
+            errors=ModelErrors.model_validate(_sanitize_infinities(new_errors)),
             estimator_type=estimator_type,
             model_file=model_filename,
             architecture_tag=arch_tag,
@@ -365,22 +370,17 @@ def convert_legacy_json(
             # leave trained_date null rather than guessing.
             trained_date=None,
         )
-        # Mint the instance identity (estimator_sha256 + model_digest) so the
-        # converted library needs no separate digest backfill pass. The digest
-        # payload excludes the error metrics, so the infinity-sanitization of
-        # errors below does not invalidate it.
-        stamp_digest(metadata_obj, model_bytes)
         model_id = ModelId.from_metadata(metadata_obj, version)
-
         model_dir = output_dir / f"v{schema_version}" / model_id.to_path()
-        model_dir.mkdir(parents=True, exist_ok=True)
 
-        # Sanitize any infinite error metrics to null before writing.
-        metadata_out = _sanitize_infinities(metadata_obj.model_dump(mode="json"))
-        (model_dir / "metadata.json").write_text(json.dumps(metadata_out, indent=2))
-
-        # Write binary model file
-        (model_dir / model_filename).write_bytes(model_bytes)
+        # Persist through the Model umbrella rather than writing the binary and
+        # metadata by hand. save_model_directory is the single save choke point:
+        # it enforces the required input/output contract and mints the instance
+        # identity (estimator_sha256 + model_digest) via _ensure_digest, so the
+        # converted library needs no separate digest backfill pass and this
+        # script can't drift from the invariants the archive layer enforces.
+        model = Model(estimator, metadata_obj)
+        save_model_directory(model, model_dir)
 
         created.append(model_dir)
         log.info("Created model: %s", model_dir)

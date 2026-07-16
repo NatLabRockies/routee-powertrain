@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
-import base64
 import io
-import json
 import pandas as pd
 
 from importlib.util import find_spec
@@ -12,7 +9,6 @@ from routee.powertrain.core.model_config import ModelConfig, PredictMethod
 from routee.powertrain.estimators.estimator_interface import (
     ColumnSpec,
     Estimator,
-    InputSpec,
 )
 from typing import List
 
@@ -32,80 +28,6 @@ class NGBoostEstimator(Estimator):
                 name=f"{target.name}_std", units=target.units, dtype=target.dtype
             ),
         ]
-
-    @classmethod
-    def from_file(cls, filepath: str | Path) -> Estimator:
-        """
-        Load an estimator from a file
-        """
-        filepath = Path(filepath)
-
-        with filepath.open("rb") as f:
-            loaded_dict = json.load(f)
-
-        return cls.from_dict(loaded_dict)
-
-    def to_file(self, filepath: str | Path):
-        """
-        Save an estimator to a file
-        """
-        filepath = Path(filepath)
-
-        with open(filepath, "w") as f:
-            json.dump(self.to_dict(), f)
-
-    @classmethod
-    def from_dict(cls, in_dict: dict) -> NGBoostEstimator:
-        """
-        Load an estimator from a bytes object in memory
-        """
-        if find_spec("ngboost") is None:
-            raise ImportError(
-                "The NGBoostEstimator estimator requires extra dependencies like joblib and ngboost. "
-                "To install, you can do pip install routee.powertrain[ngboost]"
-            )
-
-        if find_spec("joblib") is None:
-            raise ImportError(
-                "The NGBoostEstimator estimator requires extra dependencies like joblib and ngboost. "
-                "To install, you can do pip install routee.powertrain[ngboost]"
-            )
-        else:
-            import joblib
-
-        model_base64 = in_dict.get("ngboost_model")
-
-        if model_base64 is None:
-            raise ValueError(
-                "Model file must contain ngboost model at key: 'ngboost_model'"
-            )
-        byte_stream = io.BytesIO(base64.b64decode(model_base64))
-        ngboost_model = joblib.load(byte_stream)
-        estimator = cls(ngboost_model)
-        in_spec = in_dict.get("input_spec")
-        if in_spec is not None:
-            estimator.input_spec = InputSpec.model_validate(in_spec)
-        return estimator
-
-    def to_dict(self) -> dict:
-        """
-        Serialize an estimator to a python dictionary
-        """
-        try:
-            import joblib
-        except ImportError:
-            raise ImportError(
-                "The NGBoostEstimator estimator requires extra dependencies like joblib and ngboost. "
-                "To install, you can do pip install routee.powertrain[ngboost]"
-            )
-        byte_stream = io.BytesIO()
-        joblib.dump(self.model, byte_stream)
-        byte_stream.seek(0)
-        model_base64 = base64.b64encode(byte_stream.read()).decode("utf-8")
-        out_dict: dict = {"ngboost_model": model_base64}
-        out_dict["input_spec"] = self.input_spec.model_dump(mode="json")
-
-        return out_dict
 
     def to_bytes(self) -> bytes:
         try:

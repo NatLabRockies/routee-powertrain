@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import base64
 import json
-from pathlib import Path
 from typing import Literal, Optional, cast
 
 import numpy as np
@@ -180,38 +178,6 @@ class ONNXEstimator(Estimator):
             providers=["CPUExecutionProvider"],
         )
         self._input_spec = input_spec
-
-    @classmethod
-    def from_dict(cls, in_dict: dict) -> ONNXEstimator:
-        onnx_model_raw = in_dict.get("onnx_model")
-        if onnx_model_raw is None:
-            raise ValueError("Model file must contain onnx model at key: 'onnx_model'")
-        in_bytes = base64.b64decode(onnx_model_raw)
-        onnx_model = onnx.load_from_string(in_bytes)
-        return cls(onnx_model, input_spec=_read_input_spec(onnx_model))
-
-    def to_dict(self) -> dict:
-        model = _embed_input_spec(self.onnx_model, self._input_spec)
-        return {
-            "onnx_model": base64.b64encode(model.SerializeToString()).decode("utf-8"),
-        }
-
-    @classmethod
-    def from_file(cls, filepath: str | Path) -> ONNXEstimator:
-        filepath = Path(filepath)
-        if filepath.suffix != ".onnx":
-            raise ValueError("ONNX model must be saved as a .onnx file")
-        with filepath.open("rb") as f:
-            onnx_model = onnx.load_from_string(f.read())
-        return cls(onnx_model, input_spec=_read_input_spec(onnx_model))
-
-    def to_file(self, filepath: str | Path):
-        filepath = Path(filepath)
-        if filepath.suffix != ".onnx":
-            raise ValueError("ONNX model must be saved as a .onnx file")
-        model = _embed_input_spec(self.onnx_model, self._input_spec)
-        with filepath.open("wb") as f:
-            f.write(model.SerializeToString())
 
     def to_bytes(self) -> bytes:
         model = _embed_input_spec(self.onnx_model, self._input_spec)
