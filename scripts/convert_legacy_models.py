@@ -335,7 +335,14 @@ def convert_legacy_json(
         # and thus the registry path — is derived from this exact metadata via
         # ModelId.from_metadata, so the on-disk path always matches the slug the
         # registry recomputes (and validates) on load.
-        config_obj = ModelConfig.model_validate(new_config)
+        #
+        # Legacy feature/distance constraints use ±inf to mean "unbounded"; v2
+        # records unbounded as null. Sanitize before validating so no infinities
+        # survive into the serialized metadata — save_model_directory writes with
+        # json.dumps, which would otherwise emit invalid `Infinity` tokens.
+        # Constraint bounds are not part of the digest payload, so this does not
+        # affect model_digest.
+        config_obj = ModelConfig.model_validate(_sanitize_infinities(new_config))
 
         # Stamp the self-describing input/output contract onto the estimator so
         # the converted model is required-contract-complete: for ONNX this
