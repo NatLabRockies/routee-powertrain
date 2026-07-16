@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import json
 from pathlib import Path
 from typing import Literal, Optional, cast
 
@@ -11,6 +12,7 @@ import pandas as pd
 
 from routee.powertrain.core.model_config import ModelConfig, PredictMethod
 from routee.powertrain.estimators.estimator_interface import (
+    ColumnSpec,
     Estimator,
     InputSpec,
     PadStrategy,
@@ -23,6 +25,22 @@ ONNX_DTYPE = "float32"
 _META_LOOKBACK = "routee_lookback"
 _META_GROUPING = "routee_grouping_column"
 _META_PAD = "routee_pad_strategy"
+_META_INPUT_COLUMNS = "routee_input_columns"
+_META_OUTPUT_COLUMNS = "routee_output_columns"
+_META_PREDICT_METHOD = "routee_predict_method"
+_META_DISTANCE_COLUMN = "routee_distance_column"
+
+#: Every metadata_props key this module manages, stripped before re-embedding so
+#: a re-save never leaves stale contract entries behind.
+_ROUTEE_META_KEYS = (
+    _META_LOOKBACK,
+    _META_GROUPING,
+    _META_PAD,
+    _META_INPUT_COLUMNS,
+    _META_OUTPUT_COLUMNS,
+    _META_PREDICT_METHOD,
+    _META_DISTANCE_COLUMN,
+)
 
 
 def _read_input_spec(onnx_model: onnx.ModelProto) -> InputSpec:
@@ -30,6 +48,10 @@ def _read_input_spec(onnx_model: onnx.ModelProto) -> InputSpec:
     lookback: int = 0
     grouping: Optional[str] = None
     pad: PadStrategy = "repeat_first"
+    input_columns: Optional[list[ColumnSpec]] = None
+    output_columns: Optional[list[ColumnSpec]] = None
+    predict_method: Optional[str] = None
+    distance_column: Optional[str] = None
     for mp in onnx_model.metadata_props:
         if mp.key == _META_LOOKBACK:
             lookback = int(mp.value)
@@ -39,7 +61,23 @@ def _read_input_spec(onnx_model: onnx.ModelProto) -> InputSpec:
             if mp.value not in ("zero", "repeat_first"):
                 raise ValueError(f"Unknown pad strategy in ONNX metadata: {mp.value}")
             pad = cast(PadStrategy, mp.value)
-    return InputSpec(lookback=lookback, grouping_column=grouping, pad_strategy=pad)
+        elif mp.key == _META_INPUT_COLUMNS:
+            input_columns = [ColumnSpec(**d) for d in json.loads(mp.value)]
+        elif mp.key == _META_OUTPUT_COLUMNS:
+            output_columns = [ColumnSpec(**d) for d in json.loads(mp.value)]
+        elif mp.key == _META_PREDICT_METHOD:
+            predict_method = mp.value or None
+        elif mp.key == _META_DISTANCE_COLUMN:
+            distance_column = mp.value or None
+    return InputSpec(
+        lookback=lookback,
+        grouping_column=grouping,
+        pad_strategy=pad,
+        input_columns=input_columns,
+        output_columns=output_columns,
+        predict_method=predict_method,
+        distance_column=distance_column,
+    )
 
 
 def _embed_input_spec(
@@ -47,27 +85,41 @@ def _embed_input_spec(
 ) -> onnx.ModelProto:
     """Return a copy of ``onnx_model`` with ``input_spec`` embedded in metadata_props.
 
-    When ``input_spec.lookback == 0`` the model is tabular and no metadata is
-    written (keeping the serialized artifact clean for the common case).
+    The input/output contract (ordered columns, predict method, distance column)
+    is written whenever present — including the common ``lookback == 0`` tabular
+    case — so a consumer holding only the ``.onnx`` can reconstruct the exact
+    positional input order. The windowing keys are written only when
+    ``lookback > 0``.
     """
     model = onnx.ModelProto()
     model.CopyFrom(onnx_model)
-    keep = [
-        mp
-        for mp in model.metadata_props
-        if mp.key not in (_META_LOOKBACK, _META_GROUPING, _META_PAD)
-    ]
+    keep = [mp for mp in model.metadata_props if mp.key not in _ROUTEE_META_KEYS]
     del model.metadata_props[:]
     model.metadata_props.extend(keep)
+
+    def _add(key: str, value: str) -> None:
+        prop = model.metadata_props.add()
+        prop.key = key
+        prop.value = value
+
+    if input_spec.input_columns is not None:
+        _add(
+            _META_INPUT_COLUMNS,
+            json.dumps([c.model_dump() for c in input_spec.input_columns]),
+        )
+    if input_spec.output_columns is not None:
+        _add(
+            _META_OUTPUT_COLUMNS,
+            json.dumps([c.model_dump() for c in input_spec.output_columns]),
+        )
+    if input_spec.predict_method is not None:
+        _add(_META_PREDICT_METHOD, input_spec.predict_method)
+    if input_spec.distance_column is not None:
+        _add(_META_DISTANCE_COLUMN, input_spec.distance_column)
     if input_spec.lookback > 0:
-        for key, value in (
-            (_META_LOOKBACK, str(input_spec.lookback)),
-            (_META_GROUPING, input_spec.grouping_column or ""),
-            (_META_PAD, input_spec.pad_strategy),
-        ):
-            prop = model.metadata_props.add()
-            prop.key = key
-            prop.value = value
+        _add(_META_LOOKBACK, str(input_spec.lookback))
+        _add(_META_GROUPING, input_spec.grouping_column or "")
+        _add(_META_PAD, input_spec.pad_strategy)
     return model
 
 
@@ -129,10 +181,6 @@ class ONNXEstimator(Estimator):
         )
         self._input_spec = input_spec
 
-    @property
-    def input_spec(self) -> InputSpec:
-        return self._input_spec
-
     @classmethod
     def from_dict(cls, in_dict: dict) -> ONNXEstimator:
         onnx_model_raw = in_dict.get("onnx_model")
@@ -179,19 +227,19 @@ class ONNXEstimator(Estimator):
         links_df: pd.DataFrame,
         config: ModelConfig,
     ) -> pd.DataFrame:
-        feature_set = config.feature_set
         distance = config.distance
         target_set = config.target
         predict_method = config.predict_method
 
-        if predict_method == PredictMethod.RATE:
-            feature_name_list = feature_set.feature_name_list
-        elif predict_method == PredictMethod.RAW:
-            feature_name_list = feature_set.feature_name_list + [distance.name]
-        else:
+        if predict_method not in (PredictMethod.RATE, PredictMethod.RAW):
             raise ValueError(
                 f"Predict method {predict_method} is not supported by ONNXEstimator"
             )
+
+        # ``all_feature_names`` is the single source of truth for the positional
+        # input order (features, plus distance appended for RAW) — the same list
+        # that ``bind_io_contract`` embeds into the estimator binary.
+        feature_name_list = config.all_feature_names
 
         feature_matrix = links_df[feature_name_list].to_numpy(dtype=ONNX_DTYPE)
 

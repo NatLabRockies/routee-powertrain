@@ -124,6 +124,12 @@ class Trainer(ABC):
             validation_target=validation_target,
         )
 
+        # Stamp the full input/output contract (positional column order, predict
+        # method, distance column) onto the estimator so the serialized binary
+        # and metadata are self-describing — a downstream consumer never has to
+        # guess the order in which to feed the inference engine.
+        estimator.bind_io_contract(config)
+
         model_errors = compute_errors(test, estimator, config)
 
         metadata = Metadata.from_config(

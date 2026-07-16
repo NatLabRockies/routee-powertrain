@@ -35,6 +35,7 @@ from typing import List, Optional
 
 from routee.powertrain.core.digest import stamp_digest
 from routee.powertrain.core.metadata import Metadata
+from routee.powertrain.core.model import REGISTERED_ESTIMATORS
 from routee.powertrain.core.model_config import ModelConfig
 from routee.powertrain.registry.model_id import ModelId
 from routee.powertrain.validation.errors import ModelErrors
@@ -325,9 +326,8 @@ def convert_legacy_json(
 
         new_errors = {"estimator_errors": estimator_errors_dict}
 
-        # Build metadata.json. Legacy models are all pointwise (no lookback),
-        # so input_spec is the default. The flat legacy config is decomposed into
-        # the grouped v2 sections (vehicle / contract / estimator / training) via
+        # Build metadata.json. The flat legacy config is decomposed into the
+        # grouped v2 sections (vehicle / contract / estimator / training) via
         # Metadata.from_config.
         #
         # Validating through the pydantic ModelConfig + Metadata models keeps the
@@ -336,17 +336,30 @@ def convert_legacy_json(
         # ModelId.from_metadata, so the on-disk path always matches the slug the
         # registry recomputes (and validates) on load.
         config_obj = ModelConfig.model_validate(new_config)
+
+        # Stamp the self-describing input/output contract onto the estimator so
+        # the converted model is required-contract-complete: for ONNX this
+        # re-embeds the ordered columns into the binary's metadata_props (and the
+        # digest is minted over those embedded bytes). Legacy binaries carry no
+        # contract, so we reconstruct the estimator, bind it from the config, and
+        # re-serialize. Only the estimator mechanics (lookback/grouping/pad) go
+        # into metadata.json's input_spec; the ordered columns live once in the
+        # ``contract`` section (and embedded in the binary above).
+        estimator_cls = REGISTERED_ESTIMATORS[estimator_type]
+        estimator = estimator_cls.from_bytes(model_bytes)
+        estimator.bind_io_contract(config_obj)
+        model_bytes = estimator.to_bytes()
+        input_spec_dict = estimator.input_spec.model_dump(
+            mode="json", include={"lookback", "grouping_column", "pad_strategy"}
+        )
+
         metadata_obj = Metadata.from_config(
             config_obj,
             errors=ModelErrors.model_validate(new_errors),
             estimator_type=estimator_type,
             model_file=model_filename,
             architecture_tag=arch_tag,
-            input_spec={
-                "lookback": 0,
-                "grouping_column": None,
-                "pad_strategy": "zero",
-            },
+            input_spec=input_spec_dict,
             routee_version=old_routee_version,
             # Legacy v1 archives don't record when the model was trained, so we
             # leave trained_date null rather than guessing.

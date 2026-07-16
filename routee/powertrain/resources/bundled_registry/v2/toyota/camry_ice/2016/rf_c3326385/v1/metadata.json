@@ -63,9 +63,9 @@
     "input_spec": {
       "lookback": 0,
       "grouping_column": null,
-      "pad_strategy": "zero"
+      "pad_strategy": "repeat_first"
     },
-    "estimator_sha256": "970db5ad5a358820208179c0f4811f78da10a2e51443de0c3a598956c220524c"
+    "estimator_sha256": "ac35b66a70c3850c422673f7d98dfe741898ac4eaeeb1894a2a5711a7e56d57a"
   },
   "training": {
     "test_size": 0.2,
@@ -103,5 +103,5 @@
   },
   "routee_version": "1.0.0",
   "schema_version": 2,
-  "model_digest": "sha256:086121c31e4d6c60d9415f4e584a3e5eeb0c70a825e1a25a95beb78fb92e966c"
+  "model_digest": "sha256:cd4f79730100ed3881c7abb4ea4106b91e832050dde99e57dec107cd51d41ec8"
 }

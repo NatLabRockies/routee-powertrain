@@ -9,7 +9,12 @@ import pandas as pd
 from importlib.util import find_spec
 
 from routee.powertrain.core.model_config import ModelConfig, PredictMethod
-from routee.powertrain.estimators.estimator_interface import Estimator
+from routee.powertrain.estimators.estimator_interface import (
+    ColumnSpec,
+    Estimator,
+    InputSpec,
+)
+from typing import List
 
 
 class NGBoostEstimator(Estimator):
@@ -17,6 +22,16 @@ class NGBoostEstimator(Estimator):
 
     def __init__(self, ngboost) -> None:
         self.model = ngboost
+
+    def output_column_specs(self, config: ModelConfig) -> List[ColumnSpec]:
+        """NGBoost emits a point prediction plus a per-target standard deviation."""
+        target = config.target.targets[0]
+        return [
+            ColumnSpec.from_data_column(target),
+            ColumnSpec(
+                name=f"{target.name}_std", units=target.units, dtype=target.dtype
+            ),
+        ]
 
     @classmethod
     def from_file(cls, filepath: str | Path) -> Estimator:
@@ -66,7 +81,11 @@ class NGBoostEstimator(Estimator):
             )
         byte_stream = io.BytesIO(base64.b64decode(model_base64))
         ngboost_model = joblib.load(byte_stream)
-        return cls(ngboost_model)
+        estimator = cls(ngboost_model)
+        in_spec = in_dict.get("input_spec")
+        if in_spec is not None:
+            estimator.input_spec = InputSpec.model_validate(in_spec)
+        return estimator
 
     def to_dict(self) -> dict:
         """
@@ -83,7 +102,8 @@ class NGBoostEstimator(Estimator):
         joblib.dump(self.model, byte_stream)
         byte_stream.seek(0)
         model_base64 = base64.b64encode(byte_stream.read()).decode("utf-8")
-        out_dict = dict({"ngboost_model": model_base64})
+        out_dict: dict = {"ngboost_model": model_base64}
+        out_dict["input_spec"] = self.input_spec.model_dump(mode="json")
 
         return out_dict
 
@@ -118,7 +138,6 @@ class NGBoostEstimator(Estimator):
         links_df: pd.DataFrame,
         config: ModelConfig,
     ) -> pd.DataFrame:
-        feature_set = config.feature_set
         distance = config.distance
         target_set = config.target
         predict_method = config.predict_method
@@ -131,15 +150,13 @@ class NGBoostEstimator(Estimator):
         energy = target_set.targets[0]
 
         distance_col = distance.name
-        if predict_method == PredictMethod.RATE:
-            feature_name_list = feature_set.feature_name_list
-        elif predict_method == PredictMethod.RAW:
-            feature_name_list = feature_set.feature_name_list + [distance.name]
-        else:
+        if predict_method not in (PredictMethod.RATE, PredictMethod.RAW):
             raise ValueError(
                 f"Predict method {predict_method} is not supported by NGBoostEstimator"
             )
-        x = links_df[feature_name_list].values
+        # Single source of truth for the positional input order (features, plus
+        # distance appended for RAW) — matches the embedded input contract.
+        x = links_df[config.all_feature_names].values
 
         energy_pred_series = self.model.pred_dist(x.tolist())
         energy_pred_mean = energy_pred_series.loc

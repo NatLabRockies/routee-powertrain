@@ -55,8 +55,51 @@ def _model_filename(metadata_dict: dict) -> str:
     return filename
 
 
+#: Contract fields every persisted estimator must carry (required on save).
+_REQUIRED_CONTRACT_FIELDS = (
+    "input_columns",
+    "output_columns",
+    "predict_method",
+    "distance_column",
+)
+
+
+def _require_input_contract(model: Model) -> None:
+    """Raise unless the estimator carries a complete input/output contract.
+
+    The contract is *required on persist*: any model written to disk (directory,
+    zip, tar, or registry) must be self-describing about its positional input and
+    output order. Trained models get this automatically — ``Trainer.train`` calls
+    ``estimator.bind_io_contract(config)`` — so this only fires for an estimator
+    built by hand and never bound.
+    """
+    spec = model.estimator.input_spec
+    missing = [f for f in _REQUIRED_CONTRACT_FIELDS if getattr(spec, f) is None]
+    if missing:
+        raise ValueError(
+            "Cannot save a model whose estimator has an incomplete input/output "
+            f"contract (missing: {missing}). Trained models bind this "
+            "automatically; if you built the estimator directly, call "
+            "estimator.bind_io_contract(config) before saving."
+        )
+
+
 def _build_metadata_dict(model: Model) -> dict:
-    """Build the metadata dictionary for serialization."""
+    """Build the metadata dictionary for serialization.
+
+    Requires a complete input/output contract (see ``_require_input_contract``).
+    Only the estimator *mechanics* — ``lookback`` / ``grouping_column`` /
+    ``pad_strategy`` — are persisted into ``estimator.input_spec``. The ordered
+    input/output columns are deliberately **not** duplicated here: ``contract``
+    is the single ordered source of truth in ``metadata.json`` (and the resolved
+    positional contract still travels embedded in the estimator binary for
+    consumers that only have the binary). ``input_spec`` is excluded from the
+    digest payload, so this never affects ``model_digest``.
+    """
+    _require_input_contract(model)
+    model.metadata.estimator.input_spec = model.estimator.input_spec.model_dump(
+        mode="json", include={"lookback", "grouping_column", "pad_strategy"}
+    )
     return model.metadata.model_dump(mode="json")
 
 
@@ -129,6 +172,32 @@ def _verify_digest(metadata: Metadata, model_bytes: bytes) -> None:
             )
 
 
+def _verify_input_contract(metadata: Metadata, estimator) -> None:
+    """Cross-check the estimator binary's embedded input order against metadata.
+
+    When the binary is self-describing (its ``input_spec`` carries an ordered
+    ``input_columns`` list — the ONNX case since the contract was introduced),
+    that order must match the one implied by the metadata contract
+    (``feature_set`` order, plus the distance column for RAW). A disagreement
+    means the binary and ``metadata.json`` were minted from, or edited to,
+    different feature orders — predictions would be silently transposed — so we
+    **raise**. Binaries with no embedded contract (legacy artifacts, or backends
+    that don't embed one) skip the check.
+    """
+    spec = estimator.input_spec
+    if spec.input_columns is None:
+        return
+    embedded = [c.name for c in spec.input_columns]
+    expected = metadata.config.all_feature_names
+    if embedded != expected:
+        raise ValueError(
+            "Estimator input contract does not match metadata. The binary's "
+            f"embedded input order is {embedded} but metadata.json implies "
+            f"{expected}. The artifact's estimator and metadata disagree on "
+            "feature order; predictions would be silently wrong."
+        )
+
+
 def _model_from_metadata_and_bytes(metadata_dict: dict, model_bytes: bytes) -> Model:
     """Reconstruct a Model from a parsed metadata dict and raw model bytes."""
     from routee.powertrain.core.model import Model
@@ -160,6 +229,16 @@ def _model_from_metadata_and_bytes(metadata_dict: dict, model_bytes: bytes) -> M
     _verify_digest(metadata, model_bytes)
 
     estimator = estimator_cls.from_bytes(model_bytes)
+    _verify_input_contract(metadata, estimator)
+
+    # Ensure the loaded estimator carries the full contract in memory even when
+    # its binary format doesn't embed one (e.g. NGBoost's joblib blob). We
+    # rebuild it from the metadata ``contract`` — the single ordered source —
+    # rather than a duplicated copy, so a load → save round trip stays
+    # contract-complete. Windowed estimators embed their own contract, so they
+    # never reach this branch (their binary already carries ``input_columns``).
+    if estimator.input_spec.input_columns is None:
+        estimator.bind_io_contract(metadata.config)
 
     return Model(estimator=estimator, metadata=metadata)
 
