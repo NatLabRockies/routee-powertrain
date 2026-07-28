@@ -11,9 +11,9 @@ from joblib import Parallel, delayed
 
 import shapely
 
-import nrel.routee.powertrain as pt
+import routee.powertrain as pt
 
-from nrel.routee.powertrain.trainers.sklearn_random_forest import (
+from routee.powertrain.trainers.sklearn_random_forest import (
     SklearnRandomForestTrainer,
 )
 
@@ -312,26 +312,15 @@ feature_set_3 = [
     pt.DataColumn(name="grade_dec", units="decimal"),
     pt.DataColumn(name="entry_angle", units="degrees"),
 ]
-features = [
-    [pt.DataColumn(name="speed_mph", units="mph")],
-    [
-        pt.DataColumn(name="speed_mph", units="mph"),
-        pt.DataColumn(name="grade_dec", units="decimal"),
-    ],
-    [
-        pt.DataColumn(name="speed_mph", units="mph"),
-        pt.DataColumn(name="previous_speed_mph", units="mph"),
-        pt.DataColumn(name="grade_dec", units="decimal"),
-        pt.DataColumn(name="previous_grade_dec", units="decimal"),
-    ],
-    [
-        pt.DataColumn(name="previous_speed_mph", units="mph"),
-        pt.DataColumn(name="speed_mph", units="mph"),
-        pt.DataColumn(name="previous_grade_dec", units="decimal"),
-        pt.DataColumn(name="grade_dec", units="decimal"),
-        pt.DataColumn(name="entry_angle", units="degrees"),
-        pt.DataColumn(name="exit_angle", units="degrees"),
-    ],
+
+# Default feature set used for training (most comprehensive)
+default_features = [
+    pt.DataColumn(name="previous_speed_mph", units="mph"),
+    pt.DataColumn(name="speed_mph", units="mph"),
+    pt.DataColumn(name="previous_grade_dec", units="decimal"),
+    pt.DataColumn(name="grade_dec", units="decimal"),
+    pt.DataColumn(name="entry_angle", units="degrees"),
+    pt.DataColumn(name="exit_angle", units="degrees"),
 ]
 
 distance = pt.DataColumn(name="miles", units="miles")
@@ -367,12 +356,23 @@ def train_model(model_name):
     else:
         raise ValueError(f"Dual fuel powertrains not yet supported for {model_name}")
 
+    # parse structured fields from model_name like "2016_TOYOTA_Camry_4cyl_2WD"
+    parts = model_name.split("_")
+    year_str = parts[0] if parts else "0"
+    make_str = parts[1] if len(parts) > 1 else "unknown"
+    name_str = parts[2] if len(parts) > 2 else "unknown"
+    trim_str = "_".join(parts[3:]) if len(parts) > 3 else "default"
+
     config = pt.ModelConfig(
         vehicle_description=model_name,
         powertrain_type=powertrain_type,
-        feature_sets=features,
+        feature_set=default_features,
         distance=distance,
         target=energy_target,
+        make=make_str,
+        model=name_str,
+        year=int(year_str),
+        trim=trim_str if trim_str else "default",
         test_size=0.2,
     )
 

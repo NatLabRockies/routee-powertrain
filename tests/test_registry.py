@@ -1,0 +1,823 @@
+import math
+from pathlib import Path
+from unittest import TestCase
+
+import pandas as pd
+
+import routee.powertrain as pt
+from routee.powertrain.core.drivetrain import Drivetrain
+from routee.powertrain.core.fuel_type import FuelType
+from routee.powertrain.io.archive import save_model_directory
+from routee.powertrain.registry.local import LocalRegistry
+from routee.powertrain.registry.model_id import ModelId, ModelInfo
+from routee.powertrain.registry.slug import derive_config_slug
+from routee.powertrain.trainers.sklearn_random_forest import (
+    SklearnRandomForestTrainer,
+)
+
+this_dir = Path(__file__).parent
+
+
+class TestModelId(TestCase):
+    def test_to_path(self):
+        mid = ModelId("toyota", "camry_ice", 2016, "rf_default", 1)
+        path = mid.to_path()
+        self.assertEqual(path, "toyota/camry_ice/2016/rf_default/v1")
+
+    def test_lowercase_normalization(self):
+        mid = ModelId("Toyota", "Camry_ICE", 2016, "RF_Default", 1)
+        self.assertEqual(mid.make, "toyota")
+        self.assertEqual(mid.vehicle_slug, "camry_ice")
+        self.assertEqual(mid.config_slug, "rf_default")
+
+    def test_roundtrip_dict(self):
+        mid = ModelId("toyota", "camry_ice", 2016, "rf_default", 1)
+        d = mid.model_dump(mode="json")
+        mid2 = ModelId.model_validate(d)
+        self.assertEqual(mid, mid2)
+
+
+class TestLocalRegistry(TestCase):
+    def setUp(self):
+        import tempfile
+
+        self.tmp = tempfile.mkdtemp()
+        self.root = Path(self.tmp)
+        self.schema_version = "v2"
+
+        # Train a model
+        data_path = (
+            this_dir
+            / Path("routee-powertrain-test-data")
+            / Path("sample_train_data.csv")
+        )
+        df = pd.read_csv(data_path)
+        config = pt.ModelConfig(
+            vehicle_description="2016 Toyota Camry 4cyl FWD",
+            powertrain_type=pt.PowertrainType.ICE,
+            feature_set=pt.FeatureSet(
+                features=[
+                    pt.DataColumn(name="speed_mph", units="mph"),
+                    pt.DataColumn(name="grade_dec", units="decimal"),
+                ],
+            ),
+            distance=pt.DataColumn(name="miles", units="miles"),
+            target=pt.TargetSet(
+                targets=[
+                    pt.DataColumn(
+                        name="gallons_fastsim",
+                        units="gallons_gasoline",
+                        constraints=pt.Constraints(lower=0.0, upper=100.0),
+                    )
+                ],
+            ),
+            make="Toyota",
+            model="Camry",
+            engine="4cyl",
+            drivetrain="FWD",
+            year=2016,
+        )
+        trainer = SklearnRandomForestTrainer()
+        self.model = trainer.train(df, config)
+        self.df = df
+
+        # Save to registry path as a flat directory, under the derived slugs
+        # (vehicle_slug "camry_ice" comes from model + powertrain family;
+        # engine/drivetrain are descriptive metadata only).
+        self.slug = derive_config_slug(self.model.metadata)
+        self.model_id = ModelId("toyota", "camry_ice", 2016, self.slug, 1)
+        rel_path = f"{self.schema_version}/{self.model_id.to_path()}"
+        full_path = self.root / rel_path
+        save_model_directory(self.model, full_path)
+
+        self.registry = LocalRegistry(
+            root=self.root, schema_version=self.schema_version
+        )
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmp)
+
+    def test_query(self):
+        results = self.registry.query(make="toyota")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].model_id.vehicle_slug, "camry_ice")
+        self.assertEqual(results[0].vehicle_model, "camry")
+
+    def test_query_all(self):
+        results = self.registry.query()
+        self.assertEqual(len(results), 1)
+
+    def test_query_no_match(self):
+        results = self.registry.query(make="ford")
+        self.assertEqual(len(results), 0)
+
+    def test_load(self):
+        loaded = self.registry.load(self.model_id)
+
+        r1 = self.model.predict(self.df)
+        r2 = loaded.predict(self.df)
+        self.assertTrue(
+            math.isclose(r1.gallons_fastsim.sum(), r2.gallons_fastsim.sum())
+        )
+        # A model always self-describes its version-less identity.
+        self.assertEqual(loaded.key, self.model_id.key)
+
+    def test_get_metadata(self):
+        meta = self.registry.get_metadata(self.model_id)
+        self.assertIn("vehicle", meta)
+        self.assertIn("contract", meta)
+        self.assertIn("estimator", meta)
+        self.assertIn("estimator_type", meta["estimator"])
+
+    def test_query_returns_model_info(self):
+        results = self.registry.query(make="toyota")
+        info = results[0]
+        self.assertIsInstance(info, ModelInfo)
+        self.assertEqual(info.estimator_type, "ONNXEstimator")
+        self.assertIn("speed_mph", info.feature_names)
+        self.assertIn("gallons_fastsim", info.target_names)
+
+    def test_fuzzy_partial_make(self):
+        """Partial make like 'toy' should match 'toyota'."""
+        results = self.registry.query(make="toy")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].model_id.make, "toyota")
+
+    def test_fuzzy_partial_model(self):
+        """Partial model name like 'camry' should match 'camry_ice'."""
+        results = self.registry.query(model="camry")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].model_id.vehicle_slug, "camry_ice")
+
+    def test_model_filter_matches_bare_name_and_slug(self):
+        """query(model=...) exact-matches either the bare metadata model name
+        or the derived vehicle_slug."""
+        by_name = self.registry.query(model="camry", fuzzy=False)
+        self.assertEqual(len(by_name), 1)
+        by_slug = self.registry.query(model="camry_ice", fuzzy=False)
+        self.assertEqual(len(by_slug), 1)
+        self.assertEqual(by_name[0].model_id, by_slug[0].model_id)
+
+    def test_fuzzy_disabled_exact_match(self):
+        """With fuzzy=False, exact match is required."""
+        results = self.registry.query(make="toyota", fuzzy=False)
+        self.assertEqual(len(results), 1)
+
+    def test_fuzzy_disabled_no_partial(self):
+        """With fuzzy=False, partial match should not work."""
+        results = self.registry.query(make="toy", fuzzy=False)
+        self.assertEqual(len(results), 0)
+
+    def test_fuzzy_no_match(self):
+        """Completely unrelated query should not match even with fuzzy."""
+        results = self.registry.query(make="zzzzz")
+        self.assertEqual(len(results), 0)
+
+    def test_fuzzy_threshold_controls_sensitivity(self):
+        """High threshold rejects weak matches; low threshold accepts them."""
+        # With a very high threshold, a weak partial match is rejected
+        results_strict = self.registry.query(make="toyta", fuzzy_threshold=100)
+        self.assertEqual(len(results_strict), 0)
+
+        # With a lower threshold, the partial match is accepted
+        results_relaxed = self.registry.query(make="toyta", fuzzy_threshold=80)
+        self.assertEqual(len(results_relaxed), 1)
+
+    def test_query_by_powertrain_type_exact(self):
+        """Exact powertrain type match should work."""
+        results = self.registry.query(powertrain_type="ICE")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].powertrain_type, "ICE")
+
+    def test_query_by_powertrain_type_case_insensitive(self):
+        """Powertrain type filtering should be case insensitive."""
+        results = self.registry.query(powertrain_type="ice")
+        self.assertEqual(len(results), 1)
+
+    def test_query_by_powertrain_type_no_match(self):
+        """Non-matching powertrain type should return empty results."""
+        results = self.registry.query(powertrain_type="BEV")
+        self.assertEqual(len(results), 0)
+
+    def test_query_by_powertrain_type_fuzzy(self):
+        """Fuzzy matching should work for powertrain type."""
+        results = self.registry.query(powertrain_type="IC")
+        self.assertEqual(len(results), 1)
+
+    def test_query_by_powertrain_type_fuzzy_disabled(self):
+        """With fuzzy=False, partial powertrain type should not match."""
+        results = self.registry.query(powertrain_type="IC", fuzzy=False)
+        self.assertEqual(len(results), 0)
+
+    def test_query_by_powertrain_type_combined_with_make(self):
+        """Powertrain type filter should combine with other filters."""
+        results = self.registry.query(make="toyota", powertrain_type="ICE")
+        self.assertEqual(len(results), 1)
+
+        results = self.registry.query(make="toyota", powertrain_type="BEV")
+        self.assertEqual(len(results), 0)
+
+    def test_mass_lbs_in_model_info(self):
+        """ModelInfo should include mass_lbs from the config."""
+        results = self.registry.query(make="toyota")
+        info = results[0]
+        # The test model config doesn't set mass_lbs, so it should be None
+        self.assertIsNone(info.mass_lbs)
+
+    def test_custom_filter_single(self):
+        """A single custom filter function should be applied."""
+        # Filter that accepts everything
+        results = self.registry.query(custom_filters=[lambda m: True])
+        self.assertEqual(len(results), 1)
+
+        # Filter that rejects everything
+        results = self.registry.query(custom_filters=[lambda m: False])
+        self.assertEqual(len(results), 0)
+
+    def test_custom_filter_on_feature_names(self):
+        """Custom filter can inspect ModelInfo fields like feature_names."""
+        results = self.registry.query(
+            custom_filters=[lambda m: "speed_mph" in m.feature_names]
+        )
+        self.assertEqual(len(results), 1)
+
+        results = self.registry.query(
+            custom_filters=[lambda m: "nonexistent_feature" in m.feature_names]
+        )
+        self.assertEqual(len(results), 0)
+
+    def test_custom_filter_multiple(self):
+        """Multiple custom filters are all applied (AND logic)."""
+        results = self.registry.query(
+            custom_filters=[
+                lambda m: m.powertrain_type == "ICE",
+                lambda m: "speed_mph" in m.feature_names,
+            ]
+        )
+        self.assertEqual(len(results), 1)
+
+        # Second filter rejects
+        results = self.registry.query(
+            custom_filters=[
+                lambda m: m.powertrain_type == "ICE",
+                lambda m: False,
+            ]
+        )
+        self.assertEqual(len(results), 0)
+
+    def test_custom_filter_combined_with_named_filters(self):
+        """Custom filters work alongside named filters like make."""
+        results = self.registry.query(
+            make="toyota",
+            custom_filters=[lambda m: m.powertrain_type == "ICE"],
+        )
+        self.assertEqual(len(results), 1)
+
+        results = self.registry.query(
+            make="ford",
+            custom_filters=[lambda m: m.powertrain_type == "ICE"],
+        )
+        self.assertEqual(len(results), 0)
+
+    def test_custom_filter_on_mass_lbs(self):
+        """Custom filter can filter by mass_lbs (None-safe)."""
+        # Our test model has no mass_lbs, so filtering for heavy vehicles returns nothing
+        results = self.registry.query(
+            custom_filters=[lambda m: m.mass_lbs is not None and m.mass_lbs > 10000]
+        )
+        self.assertEqual(len(results), 0)
+
+        # Filtering for None mass should return our model
+        results = self.registry.query(custom_filters=[lambda m: m.mass_lbs is None])
+        self.assertEqual(len(results), 1)
+
+
+class TestVersionStrategyAndPartialLoad(TestCase):
+    """Multi-version fixture exercising version_strategy, version filter,
+    and partial-id resolution in load_model."""
+
+    def setUp(self):
+        import tempfile
+
+        self.tmp = tempfile.mkdtemp()
+        self.root = Path(self.tmp)
+        self.schema_version = "v2"
+
+        data_path = (
+            this_dir
+            / Path("routee-powertrain-test-data")
+            / Path("sample_train_data.csv")
+        )
+        df = pd.read_csv(data_path)
+        config = pt.ModelConfig(
+            vehicle_description="2016 Toyota Camry 4cyl FWD",
+            powertrain_type=pt.PowertrainType.ICE,
+            feature_set=pt.FeatureSet(
+                features=[
+                    pt.DataColumn(name="speed_mph", units="mph"),
+                    pt.DataColumn(name="grade_dec", units="decimal"),
+                ],
+            ),
+            distance=pt.DataColumn(name="miles", units="miles"),
+            target=pt.TargetSet(
+                targets=[
+                    pt.DataColumn(
+                        name="gallons_fastsim",
+                        units="gallons_gasoline",
+                        constraints=pt.Constraints(lower=0.0, upper=100.0),
+                    )
+                ],
+            ),
+            make="Toyota",
+            model="Camry",
+            engine="4cyl",
+            drivetrain="FWD",
+            year=2016,
+        )
+        trainer = SklearnRandomForestTrainer()
+        self.model = trainer.train(df, config)
+        self.df = df
+
+        # Save three versions of the same (make, vehicle_slug, year, config_slug).
+        self.slug = derive_config_slug(self.model.metadata)
+        for version in (1, 2, 3):
+            mid = ModelId("toyota", "camry_ice", 2016, self.slug, version)
+            save_model_directory(
+                self.model, self.root / self.schema_version / mid.to_path()
+            )
+
+        # A second config that shares architecture + feature set but carries a
+        # variant, so it derives a distinct slug — exercises multi-slug grouping
+        # and ambiguity safeguards.
+        model_other = trainer.train(
+            df, config.model_copy(update={"variant": "speed_grade"})
+        )
+        self.slug_other = derive_config_slug(model_other.metadata)
+        mid_other = ModelId("toyota", "camry_ice", 2016, self.slug_other, 1)
+        save_model_directory(
+            model_other, self.root / self.schema_version / mid_other.to_path()
+        )
+
+        self.registry = LocalRegistry(
+            root=self.root, schema_version=self.schema_version
+        )
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmp)
+
+    def test_query_default_returns_latest_only(self):
+        """Default strategy keeps only the highest version per group."""
+        results = self.registry.query(make="toyota", model="camry_ice")
+        # slug v3 + slug_other v1 = 2 groups
+        self.assertEqual(len(results), 2)
+        versions_by_slug = {r.model_id.config_slug: r.model_id.version for r in results}
+        self.assertEqual(versions_by_slug[self.slug], 3)
+        self.assertEqual(versions_by_slug[self.slug_other], 1)
+
+    def test_query_version_strategy_all(self):
+        """version_strategy='all' returns every version."""
+        results = self.registry.query(
+            make="toyota",
+            config_slug=self.slug,
+            version_strategy="all",
+            fuzzy=False,
+        )
+        self.assertEqual(len(results), 3)
+        versions = sorted(r.model_id.version for r in results)
+        self.assertEqual(versions, [1, 2, 3])
+
+    def test_query_version_filter_exact(self):
+        """version=2 returns only v2 of matching models."""
+        results = self.registry.query(config_slug=self.slug, version=2, fuzzy=False)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].model_id.version, 2)
+
+    def test_query_version_filter_overrides_strategy(self):
+        """When version is set, version_strategy should be ignored."""
+        results = self.registry.query(
+            config_slug=self.slug,
+            version=1,
+            version_strategy="latest",
+            fuzzy=False,
+        )
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].model_id.version, 1)
+
+    def test_list_models_default_latest(self):
+        """list_models default keeps only the highest version per group."""
+        ids = self.registry.list_models()
+        self.assertEqual(len(ids), 2)
+        by_slug = {mid.config_slug: mid.version for mid in ids}
+        self.assertEqual(by_slug[self.slug], 3)
+
+    def test_list_models_all(self):
+        """list_models with version_strategy='all' returns every version."""
+        ids = self.registry.list_models(version_strategy="all")
+        self.assertEqual(len(ids), 4)
+
+    def test_load_model_partial_id_resolves_latest(self):
+        """A 4-segment string loads the highest-versioned model."""
+        loaded = pt.load_model(
+            f"toyota/camry_ice/2016/{self.slug}", registry=self.registry
+        )
+        r1 = self.model.predict(self.df)
+        r2 = loaded.predict(self.df)
+        self.assertTrue(
+            math.isclose(r1.gallons_fastsim.sum(), r2.gallons_fastsim.sum())
+        )
+
+    def test_load_model_explicit_version_still_works(self):
+        """A 5-segment path pins the specific version."""
+        loaded = pt.load_model(
+            f"toyota/camry_ice/2016/{self.slug}/v1", registry=self.registry
+        )
+        self.assertIsNotNone(loaded)
+
+    def test_load_model_partial_id_no_match_raises(self):
+        """Partial id with no match raises ValueError naming the path."""
+        with self.assertRaises(ValueError) as ctx:
+            pt.load_model(
+                "toyota/camry_ice/2016/does_not_exist", registry=self.registry
+            )
+        self.assertIn("No model found", str(ctx.exception))
+
+    def test_load_model_partial_id_uses_exact_match_not_fuzzy(self):
+        """Partial id resolver must use fuzzy=False to avoid neighbor matches."""
+        # 'rf' would fuzzy-match both 'rf_default' and 'rf_speed_grade', but
+        # the resolver pins fuzzy=False, so no model should match.
+        with self.assertRaises(ValueError) as ctx:
+            pt.load_model("toyota/camry_ice/2016/rf", registry=self.registry)
+        self.assertIn("No model found", str(ctx.exception))
+
+    def test_load_model_bad_segment_count_raises(self):
+        """A path with neither 4 nor 5 segments raises with a helpful message."""
+        with self.assertRaises(ValueError) as ctx:
+            pt.load_model("toyota/camry", registry=self.registry)
+        msg = str(ctx.exception)
+        self.assertIn("<make>/<vehicle_slug>/<year>/<config_slug>", msg)
+
+
+class TestMassLbsModelConfig(TestCase):
+    def setUp(self):
+        import tempfile
+
+        self.tmp = tempfile.mkdtemp()
+        self.root = Path(self.tmp)
+        self.schema_version = "v2"
+
+        data_path = (
+            this_dir
+            / Path("routee-powertrain-test-data")
+            / Path("sample_train_data.csv")
+        )
+        df = pd.read_csv(data_path)
+        config = pt.ModelConfig(
+            vehicle_description="Heavy Duty Truck",
+            powertrain_type=pt.PowertrainType.HEAVY_DUTY,
+            feature_set=pt.FeatureSet(
+                features=[
+                    pt.DataColumn(name="speed_mph", units="mph"),
+                    pt.DataColumn(name="grade_dec", units="decimal"),
+                ],
+            ),
+            distance=pt.DataColumn(name="miles", units="miles"),
+            target=pt.TargetSet(
+                targets=[
+                    pt.DataColumn(
+                        name="gallons_fastsim",
+                        units="gallons_gasoline",
+                        constraints=pt.Constraints(lower=0.0, upper=100.0),
+                    )
+                ],
+            ),
+            make="Freightliner",
+            model="Cascadia",
+            year=2022,
+            mass_lbs=33000.0,
+        )
+        trainer = SklearnRandomForestTrainer()
+        model = trainer.train(df, config)
+
+        model_id = ModelId("freightliner", "cascadia", 2022, "rf_default", 1)
+        rel_path = f"{self.schema_version}/{model_id.to_path()}"
+        full_path = self.root / rel_path
+        save_model_directory(model, full_path)
+
+        self.registry = LocalRegistry(
+            root=self.root, schema_version=self.schema_version
+        )
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmp)
+
+    def test_mass_lbs_populated(self):
+        """ModelInfo should have mass_lbs when set in ModelConfig."""
+        results = self.registry.query()
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].mass_lbs, 33000.0)
+
+    def test_custom_filter_mass_lbs_heavy(self):
+        """Custom filter for mass > 10000 should match heavy vehicle."""
+        results = self.registry.query(
+            custom_filters=[lambda m: m.mass_lbs is not None and m.mass_lbs > 10000]
+        )
+        self.assertEqual(len(results), 1)
+
+    def test_custom_filter_mass_lbs_light(self):
+        """Custom filter for mass < 5000 should not match heavy vehicle."""
+        results = self.registry.query(
+            custom_filters=[lambda m: m.mass_lbs is not None and m.mass_lbs < 5000]
+        )
+        self.assertEqual(len(results), 0)
+
+    def test_mass_lbs_in_model_info_dict(self):
+        """mass_lbs should roundtrip through to_dict/from_dict."""
+        results = self.registry.query()
+        info = results[0]
+        d = info.model_dump(mode="json")
+        self.assertEqual(d["mass_lbs"], 33000.0)
+        restored = ModelInfo.model_validate(d)
+        self.assertEqual(restored.mass_lbs, 33000.0)
+
+
+class TestFuelTypeEnum(TestCase):
+    def test_from_string_roundtrip(self):
+        for member in FuelType:
+            self.assertEqual(FuelType.from_string(member.name), member)
+
+    def test_from_string_case_insensitive(self):
+        self.assertEqual(FuelType.from_string("diesel"), FuelType.DIESEL)
+        self.assertEqual(FuelType.from_string("Gasoline"), FuelType.GASOLINE)
+
+    def test_from_string_empty_returns_undefined(self):
+        self.assertEqual(FuelType.from_string(""), FuelType.UNDEFINED)
+        self.assertEqual(FuelType.from_string(None), FuelType.UNDEFINED)
+
+    def test_from_string_invalid_raises(self):
+        with self.assertRaises(TypeError):
+            FuelType.from_string("propane")
+
+
+class TestDrivetrainEnum(TestCase):
+    def test_from_string_roundtrip(self):
+        for member in Drivetrain:
+            self.assertEqual(Drivetrain.from_string(member.name), member)
+
+    def test_from_string_case_insensitive(self):
+        self.assertEqual(Drivetrain.from_string("fwd"), Drivetrain.FWD)
+        self.assertEqual(Drivetrain.from_string("Awd"), Drivetrain.AWD)
+
+    def test_from_string_empty_returns_undefined(self):
+        self.assertEqual(Drivetrain.from_string(""), Drivetrain.UNDEFINED)
+        self.assertEqual(Drivetrain.from_string(None), Drivetrain.UNDEFINED)
+
+    def test_from_string_invalid_raises(self):
+        with self.assertRaises(TypeError):
+            Drivetrain.from_string("6wd")
+
+
+class TestVehicleAttributeFields(TestCase):
+    def setUp(self):
+        import tempfile
+
+        self.tmp = tempfile.mkdtemp()
+        self.root = Path(self.tmp)
+        self.schema_version = "v2"
+
+        data_path = (
+            this_dir
+            / Path("routee-powertrain-test-data")
+            / Path("sample_train_data.csv")
+        )
+        df = pd.read_csv(data_path)
+        config = pt.ModelConfig(
+            vehicle_description="2020 Chevrolet Colorado 2WD Diesel",
+            powertrain_type=pt.PowertrainType.ICE,
+            feature_set=pt.FeatureSet(
+                features=[
+                    pt.DataColumn(name="speed_mph", units="mph"),
+                    pt.DataColumn(name="grade_dec", units="decimal"),
+                ],
+            ),
+            distance=pt.DataColumn(name="miles", units="miles"),
+            target=pt.TargetSet(
+                targets=[
+                    pt.DataColumn(
+                        name="gallons_fastsim",
+                        units="gallons_gasoline",
+                        constraints=pt.Constraints(lower=0.0, upper=100.0),
+                    )
+                ],
+            ),
+            make="Chevrolet",
+            model="colorado",
+            year=2020,
+            fuel_type=FuelType.DIESEL,
+            drivetrain=Drivetrain.FOURWD,
+            engine="4cyl",
+            trim="lt",
+        )
+        trainer = SklearnRandomForestTrainer()
+        model = trainer.train(df, config)
+
+        # Build the save path from the derived identity so the fixture can't
+        # silently drift from the slug derivation (vehicle_slug is
+        # "colorado_ice" — model + powertrain family).
+        model_id = ModelId.from_metadata(model.metadata, 1)
+        rel_path = f"{self.schema_version}/{model_id.to_path()}"
+        full_path = self.root / rel_path
+        save_model_directory(model, full_path)
+
+        self.registry = LocalRegistry(
+            root=self.root, schema_version=self.schema_version
+        )
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmp)
+
+    def test_fuel_type_in_model_info(self):
+        results = self.registry.query()
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].fuel_type, "DIESEL")
+
+    def test_drivetrain_in_model_info(self):
+        results = self.registry.query()
+        self.assertEqual(results[0].drivetrain, "FOURWD")
+
+    def test_engine_in_model_info(self):
+        results = self.registry.query()
+        self.assertEqual(results[0].engine, "4cyl")
+
+    def test_vehicle_slug_is_model_plus_family(self):
+        results = self.registry.query()
+        info = results[0]
+        self.assertEqual(info.vehicle_model, "colorado")
+        self.assertEqual(info.model_id.vehicle_slug, "colorado_ice")
+
+    def test_trim_in_model_info(self):
+        results = self.registry.query()
+        self.assertEqual(results[0].trim, "lt")
+
+    def test_query_by_fuel_type(self):
+        results = self.registry.query(fuel_type="DIESEL")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].fuel_type, "DIESEL")
+
+    def test_query_by_fuel_type_no_match(self):
+        results = self.registry.query(fuel_type="GASOLINE")
+        self.assertEqual(len(results), 0)
+
+    def test_query_by_drivetrain(self):
+        results = self.registry.query(drivetrain="FOURWD")
+        self.assertEqual(len(results), 1)
+
+    def test_query_by_drivetrain_no_match(self):
+        results = self.registry.query(drivetrain="FWD")
+        self.assertEqual(len(results), 0)
+
+    def test_query_by_engine(self):
+        results = self.registry.query(engine="4cyl")
+        self.assertEqual(len(results), 1)
+
+    def test_query_by_trim(self):
+        results = self.registry.query(trim="lt")
+        self.assertEqual(len(results), 1)
+
+    def test_query_combined_filters(self):
+        results = self.registry.query(fuel_type="DIESEL", drivetrain="FOURWD")
+        self.assertEqual(len(results), 1)
+
+        results = self.registry.query(fuel_type="DIESEL", drivetrain="FWD")
+        self.assertEqual(len(results), 0)
+
+    def test_model_info_roundtrip_dict(self):
+        results = self.registry.query()
+        info = results[0]
+        d = info.model_dump(mode="json")
+        self.assertEqual(d["fuel_type"], "DIESEL")
+        self.assertEqual(d["drivetrain"], "FOURWD")
+        self.assertEqual(d["engine"], "4cyl")
+        self.assertEqual(d["trim"], "lt")
+        restored = ModelInfo.model_validate(d)
+        self.assertEqual(restored.fuel_type, "DIESEL")
+        self.assertEqual(restored.drivetrain, "FOURWD")
+        self.assertEqual(restored.engine, "4cyl")
+        self.assertEqual(restored.trim, "lt")
+
+    def test_model_config_string_coercion(self):
+        """ModelConfig should coerce string fuel_type/drivetrain to enums."""
+        config = pt.ModelConfig(
+            vehicle_description="test",
+            powertrain_type=pt.PowertrainType.ICE,
+            feature_set=pt.FeatureSet(
+                features=[pt.DataColumn(name="speed_mph", units="mph")]
+            ),
+            distance=pt.DataColumn(name="miles", units="miles"),
+            target=pt.TargetSet(
+                targets=[pt.DataColumn(name="gallons", units="gallons")]
+            ),
+            make="test",
+            model="test",
+            year=2020,
+            fuel_type="DIESEL",
+            drivetrain="AWD",
+        )
+        self.assertEqual(config.fuel_type, FuelType.DIESEL)
+        self.assertEqual(config.drivetrain, Drivetrain.AWD)
+
+    def test_model_config_backwards_compat(self):
+        """ModelConfig.from_dict should handle missing new fields gracefully."""
+        d = {
+            "vehicle_description": "test",
+            "powertrain_type": "ICE",
+            "feature_set": {
+                "features": [
+                    {
+                        "name": "speed_mph",
+                        "units": "mph",
+                        "dtype": "float32",
+                        "constraints": {"lower": None, "upper": None},
+                    }
+                ]
+            },
+            "distance": {
+                "name": "miles",
+                "units": "miles",
+                "dtype": "float32",
+                "constraints": {"lower": None, "upper": None},
+            },
+            "target": {
+                "targets": [
+                    {
+                        "name": "gallons",
+                        "units": "gallons",
+                        "dtype": "float32",
+                        "constraints": {"lower": None, "upper": None},
+                    }
+                ]
+            },
+            "make": "test",
+            "model": "test",
+            "year": 2020,
+        }
+        config = pt.ModelConfig.model_validate(d)
+        self.assertIsNone(config.fuel_type)
+        self.assertIsNone(config.drivetrain)
+        self.assertIsNone(config.engine)
+        self.assertIsNone(config.trim)
+
+    def test_model_info_from_dict_backwards_compat(self):
+        """ModelInfo.from_dict should handle missing new fields gracefully."""
+        d = {
+            "model_id": {
+                "make": "test",
+                "vehicle_slug": "test",
+                "year": 2020,
+                "config_slug": "rf_default",
+                "version": 1,
+            },
+            "estimator_type": "ONNXEstimator",
+            "feature_names": ["speed_mph"],
+            "target_names": ["gallons"],
+            "powertrain_type": "ICE",
+            "vehicle_description": "test",
+        }
+        info = ModelInfo.model_validate(d)
+        self.assertIsNone(info.fuel_type)
+        self.assertIsNone(info.drivetrain)
+        self.assertIsNone(info.vehicle_model)
+        self.assertIsNone(info.engine)
+        self.assertIsNone(info.trim)
+
+    def test_none_fields_excluded_from_filter(self):
+        """Models with None fuel_type should not match a fuel_type filter."""
+        from routee.powertrain.registry.filtering import filter_models
+
+        info_with = ModelInfo(
+            model_id=ModelId("a", "b", 2020, "rf_default", 1),
+            estimator_type="ONNXEstimator",
+            feature_names=["speed"],
+            target_names=["gal"],
+            powertrain_type="ICE",
+            vehicle_description="test",
+            fuel_type="DIESEL",
+        )
+        info_without = ModelInfo(
+            model_id=ModelId("a", "c", 2020, "rf_default", 1),
+            estimator_type="ONNXEstimator",
+            feature_names=["speed"],
+            target_names=["gal"],
+            powertrain_type="ICE",
+            vehicle_description="test",
+        )
+        results = filter_models([info_with, info_without], fuel_type="DIESEL")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].fuel_type, "DIESEL")

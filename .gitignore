@@ -1,4 +1,6 @@
-*.local*
+*.ignore*
+
+*.ipynb
 
 .DS_Store
 *.pyc

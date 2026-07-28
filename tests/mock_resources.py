@@ -3,12 +3,17 @@ import uuid
 import pandas as pd
 import numpy as np
 
-from nrel.routee.powertrain import load_model, FeatureSet, DataColumn
-from nrel.routee.powertrain.core.model import Model
+from routee.powertrain import FeatureSet, DataColumn
+from routee.powertrain.core.model import Model
+from routee.powertrain.registry.local import LocalRegistry
+from routee.powertrain.registry.model_id import ModelId
+from routee.powertrain.resources.bundled_registry import bundled_registry_root
 
 
 def mock_model() -> Model:
-    return load_model("2016_TOYOTA_Camry_4cyl_2WD")
+    registry = LocalRegistry(root=bundled_registry_root(), schema_version="v2")
+    model_id = ModelId("toyota", "camry_ice", 2016, "rf_c3326385", 1)
+    return registry.load(model_id)
 
 
 def mock_ev_data(n_links: int = 100):
@@ -50,9 +55,7 @@ def mock_data_single_feature():
         {"miles": 1, "speed": 12, "energy": 1},
     ]
 
-    feature_pack = FeatureSet(
-        features=(DataColumn(name="speed", units=""),),
-        distance=DataColumn(name="miles", units=""),
-        energy=DataColumn(name="energy", units=""),
+    feature_set = FeatureSet(
+        features=[DataColumn(name="speed", units="")],
     )
-    return pd.DataFrame(data), feature_pack
+    return pd.DataFrame(data), feature_set

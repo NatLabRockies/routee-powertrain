@@ -6,21 +6,24 @@ root: intro
 parts:
   - caption: Getting Started
     chapters:
-    - file: installation
-    - file: what_is_routee 
+      - file: installation
+      - file: what_is_routee
+      - file: migrating_from_v1
 
   - caption: User Reference
     chapters:
-    - file: model_prediction 
-    - file: model_training 
-    - file: api_docs
-  
+      - file: api_docs
+      - file: estimator_input_contract
+
   - caption: Examples
     chapters:
-    - file: examples/temperature_models_example
-    - file: examples/to_lookup_table_example
+      - file: examples/model_prediction_example
+      - file: examples/model_training_example
+      - file: examples/temperature_models_example
+      - file: examples/to_lookup_table_example
+      - file: publishing_a_model
 
-  - caption: Developers 
+  - caption: Developers
     chapters:
-    - file: build_the_docs 
-    - file: contributing 
+      - file: build_the_docs
+      - file: contributing

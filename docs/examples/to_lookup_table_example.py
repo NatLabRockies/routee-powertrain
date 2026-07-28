@@ -5,7 +5,7 @@ This example demonstrates how to convert a Routee Powertrain model into a lookup
 Lookup tables are useful for fast energy consumption predictions across a predefined grid of operating conditions.
 """
 
-import nrel.routee.powertrain as pt
+import routee.powertrain as pt
 import numpy as np
 
 
@@ -16,20 +16,20 @@ First, let's load a few different models to demonstrate lookup table generation.
 We'll use models with different feature sets to show the flexibility of the approach.
 """
 
-toyota_camry = pt.load_model("2016_TOYOTA_Camry_4cyl_2WD")
-tesla_model3 = pt.load_model("2022_Tesla_Model_3_RWD")
-tesla_with_temp = pt.load_model("2022_Tesla_Model_3_RWD_0F_110F_steady")
+toyota_camry = pt.load_model("toyota/camry_ice/2016/rf_db8522fb/v1")
+tesla_model3 = pt.load_model("tesla/model_3_rwd/2022/rf_c3326385/v1")
+tesla_with_temp = pt.load_model("tesla/model_3_rwd/2022/rf_steady_thermal_ab1db342/v1")
 """
 Let's examine the available features and targets for each model.
 """
 
-print("Toyota Camry features:", toyota_camry.feature_set_lists)
+print("Toyota Camry features:", toyota_camry.feature_names)
 print("Toyota Camry targets:", toyota_camry.metadata.config.target.target_name_list)
 print()
-print("Tesla Model 3 features:", tesla_model3.feature_set_lists)
+print("Tesla Model 3 features:", tesla_model3.feature_names)
 print("Tesla Model 3 targets:", tesla_model3.metadata.config.target.target_name_list)
 print()
-print("Tesla with Temperature features:", tesla_with_temp.feature_set_lists)
+print("Tesla with Temperature features:", tesla_with_temp.feature_names)
 print(
     "Tesla with Temperature targets:",
     tesla_with_temp.metadata.config.target.target_name_list,

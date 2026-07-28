@@ -1,0 +1,107 @@
+{
+  "vehicle": {
+    "vehicle_description": "2016_TOYOTA_Camry_4cyl_2WD trained July 2024",
+    "powertrain_type": "ICE",
+    "make": "toyota",
+    "model": "camry",
+    "year": 2016,
+    "variant": null,
+    "mass_lbs": null,
+    "fuel_type": null,
+    "drivetrain": "FWD",
+    "engine": "4cyl",
+    "trim": null
+  },
+  "contract": {
+    "feature_set": [
+      {
+        "name": "speed_mph",
+        "units": "mph",
+        "dtype": "float32",
+        "constraints": {
+          "lower": 0.0,
+          "upper": 120.0
+        }
+      },
+      {
+        "name": "grade_percent",
+        "units": "percent",
+        "dtype": "float32",
+        "constraints": {
+          "lower": -20.0,
+          "upper": 20.0
+        }
+      }
+    ],
+    "distance": {
+      "name": "distance",
+      "units": "miles",
+      "dtype": "float32",
+      "constraints": {
+        "lower": null,
+        "upper": null
+      }
+    },
+    "target": [
+      {
+        "name": "gge",
+        "units": "gallons gasoline",
+        "dtype": "float32",
+        "constraints": {
+          "lower": null,
+          "upper": null
+        }
+      }
+    ],
+    "predict_method": "rate",
+    "real_world_adjustment_factor": 1.166
+  },
+  "estimator": {
+    "estimator_type": "ONNXEstimator",
+    "model_file": "model.onnx",
+    "architecture_tag": "random_forest",
+    "input_spec": {
+      "lookback": 0,
+      "grouping_column": null,
+      "pad_strategy": "repeat_first"
+    },
+    "estimator_sha256": "ac35b66a70c3850c422673f7d98dfe741898ac4eaeeb1894a2a5711a7e56d57a"
+  },
+  "training": {
+    "test_size": 0.2,
+    "validation_size": null,
+    "random_seed": 42,
+    "trip_column": "journey_id",
+    "trained_date": null,
+    "dataset_name": null,
+    "dataset_hash": null
+  },
+  "errors": {
+    "estimator_errors": {
+      "error_by_target": {
+        "gge": {
+          "link_root_mean_squared_error": 0.0012698840872346134,
+          "link_norm_root_mean_squared_error": 0.7240177664023913,
+          "link_weighted_relative_percent_difference": 0.36264801841324906,
+          "net_error": 0.017718058813985083,
+          "actual_dist_per_energy": 30.82589200688958,
+          "pred_dist_per_energy": 30.289225724080254,
+          "real_world_pred_dist_per_energy": 25.977037499211228,
+          "trip_relative_percent_difference": 0.16894018208419193,
+          "trip_weighted_relative_percent_difference": 0.09843317383042983,
+          "trip_root_mean_squared_error": 0.008502485147408074,
+          "trip_norm_root_mean_squared_error": 0.16527194182282584,
+          "link_negative_log_likelihood": null,
+          "link_continuous_ranked_probability_score": null,
+          "link_prediction_interval_coverage_probability": null,
+          "trip_negative_log_likelihood": null,
+          "trip_continuous_ranked_probability_score": null,
+          "trip_prediction_interval_coverage_probability": null
+        }
+      }
+    }
+  },
+  "routee_version": "1.0.0",
+  "schema_version": 2,
+  "model_digest": "sha256:cd4f79730100ed3881c7abb4ea4106b91e832050dde99e57dec107cd51d41ec8"
+}

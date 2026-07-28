@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nrel.routee.powertrain"
+version = "2.0.0"
+description = "Deprecated: this project is now published as 'routee.powertrain'."
+readme = "README.md"
+authors = [{ name = "National Laboratory of the Rockies" }]
+license = { text = "BSD 3-Clause License Copyright (c) 2023, Alliance for Energy Innovation, LLC" }
+classifiers = [
+  "Development Status :: 7 - Inactive",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Topic :: Scientific/Engineering",
+]
+requires-python = ">=3.10,<3.14"
+dependencies = ["routee.powertrain>=2.0,<3"]
+
+[project.urls]
+Homepage = "https://github.com/NatLabRockies/routee-powertrain"
+
+# Ship ONLY nrel/routee/powertrain/__init__.py.
+#
+# `nrel/` and `nrel/routee/` are PEP 420 implicit namespace packages, shared with
+# sibling distributions such as nrel.routee.compass. They must NOT contain an
+# __init__.py -- adding one here would shadow those siblings and break unrelated
+# code at import time. Keep this directory free of any other module.
+[tool.hatch.build.targets.wheel]
+packages = ["nrel"]
+
+[tool.hatch.build.targets.sdist]
+include = ["nrel", "README.md"]

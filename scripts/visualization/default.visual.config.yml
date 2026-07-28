@@ -1,8 +1,8 @@
 # where find models to test
-models_path: 'where/to/find/models'
+models_path: "where/to/find/models"
 
 # where to save the resulting plots
-output_path: 'where/to/save/outputs'
+output_path: "where/to/save/outputs"
 
 # these ranges will be used when generating predictions using the routee-powertrain models
 feature_ranges:
@@ -30,4 +30,3 @@ feature_ranges:
     max: 180
     min: -180
     steps: 36
-

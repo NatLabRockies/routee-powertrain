@@ -1,23 +1,20 @@
 import logging as log
 import math
+import shutil
 from pathlib import Path
-from unittest import TestCase, skip
+from unittest import TestCase
 
 import pandas as pd
 
-import nrel.routee.powertrain as pt
-from nrel.routee.powertrain.core.model_config import PredictMethod
-from nrel.routee.powertrain.estimators.onnx import ONNXEstimator
-from nrel.routee.powertrain.estimators.smart_core import SmartCoreEstimator
-from nrel.routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
+import routee.powertrain as pt
+from routee.powertrain.core.model_config import PredictMethod
+from routee.powertrain.estimators.onnx import ONNXEstimator
+from routee.powertrain.estimators.ngboost_estimator import NGBoostEstimator
 
-from nrel.routee.powertrain.trainers.sklearn_random_forest import (
+from routee.powertrain.trainers.sklearn_random_forest import (
     SklearnRandomForestTrainer,
 )
-from nrel.routee.powertrain.trainers.smartcore_random_forest import (
-    SmartcoreRandomForestTrainer,
-)
-from nrel.routee.powertrain.trainers.ngboost_trainer import (
+from routee.powertrain.trainers.ngboost_trainer import (
     NGBoostTrainer,
 )
 
@@ -55,22 +52,28 @@ class TestTrainEstimatePipeline(TestCase):
         self.rate_config = pt.ModelConfig(
             vehicle_description="Test Model",
             powertrain_type=pt.PowertrainType.ICE,
-            feature_sets=[feature_set],
+            feature_set=feature_set,
             distance=distance,
             target=targets,
+            make="test",
+            model="model",
+            year=2024,
         )
         self.raw_config = pt.ModelConfig(
             vehicle_description="Test Model",
             powertrain_type=pt.PowertrainType.ICE,
-            feature_sets=[feature_set],
+            feature_set=feature_set,
             distance=distance,
             target=targets,
+            make="test",
+            model="model",
+            year=2024,
             predict_method=PredictMethod.RAW,
         )
 
     def tearDown(self) -> None:
-        pass
-        self.out_path.rmdir()
+        if self.out_path.exists():
+            shutil.rmtree(self.out_path)
 
     def test_sklearn_random_forest_rate(self):
         trainer = SklearnRandomForestTrainer()
@@ -80,18 +83,14 @@ class TestTrainEstimatePipeline(TestCase):
         r1 = vehicle_model.predict(self.df)
         energy1 = round(r1.gallons_fastsim.sum(), 2)
 
-        # test out writing and reading to file
-        outfile = self.out_path / "model_rate.json"
-        vehicle_model.to_file(outfile)
-        new_vehicle_model = pt.load_model(outfile)
-        outfile.unlink()
+        # test out writing and reading to file (directory format)
+        outdir = self.out_path / "model_rate"
+        vehicle_model.to_file(outdir)
+        new_vehicle_model = pt.load_model(outdir)
+        shutil.rmtree(outdir)
 
-        # test writing inner estimator to file
-        outfile = self.out_path / "estimator_rate.onnx"
-        estimator = list(vehicle_model.estimators.values())[0]
-        estimator.to_file(outfile)
-        _ = ONNXEstimator.from_file(outfile)
-        outfile.unlink()
+        # test round-tripping the inner estimator via its bytes primitive
+        _ = ONNXEstimator.from_bytes(vehicle_model.estimator.to_bytes())
 
         r2 = new_vehicle_model.predict(self.df)
         energy2 = round(r2.gallons_fastsim.sum(), 2)
@@ -106,51 +105,14 @@ class TestTrainEstimatePipeline(TestCase):
         r1 = vehicle_model.predict(self.df)
         energy1 = round(r1.gallons_fastsim.sum(), 2)
 
-        # test out writing and reading to file
-        outfile = self.out_path / "model_raw.json"
-        vehicle_model.to_file(outfile)
-        new_vehicle_model = pt.load_model(outfile)
-        outfile.unlink()
+        # test out writing and reading to file (directory format)
+        outdir = self.out_path / "model_raw"
+        vehicle_model.to_file(outdir)
+        new_vehicle_model = pt.load_model(outdir)
+        shutil.rmtree(outdir)
 
-        # test writing inner estimator to file
-        outfile = self.out_path / "estimator_raw.onnx"
-        estimator = list(vehicle_model.estimators.values())[0]
-        estimator.to_file(outfile)
-        _ = ONNXEstimator.from_file(outfile)
-        outfile.unlink()
-
-        r2 = new_vehicle_model.predict(self.df)
-        energy2 = round(r2.gallons_fastsim.sum(), 2)
-
-        self.assertTrue(math.isclose(energy1, energy2))
-
-    @skip("This requires rust to be installed")
-    def test_smartcore_random_forest(self):
-        trainer = SmartcoreRandomForestTrainer()
-
-        vehicle_model = trainer.train(self.df, self.rate_config)
-
-        r1 = vehicle_model.predict(self.df)
-        energy1 = round(r1.gallons_fastsim.sum(), 2)
-
-        # test out writing and reading to file
-        outfile = self.out_path / "model.json"
-        vehicle_model.to_file(outfile)
-        new_vehicle_model = pt.load_model(outfile)
-        outfile.unlink()
-
-        # test writing inner estimator to file
-        outfile = self.out_path / "estimator.json"
-        estimator = list(vehicle_model.estimators.values())[0]
-        estimator.to_file(outfile)
-        _ = SmartCoreEstimator.from_file(outfile)
-        outfile.unlink()
-
-        outfile = self.out_path / "estimator.bin"
-        estimator = list(vehicle_model.estimators.values())[0]
-        estimator.to_file(outfile)
-        _ = SmartCoreEstimator.from_file(outfile)
-        outfile.unlink()
+        # test round-tripping the inner estimator via its bytes primitive
+        _ = ONNXEstimator.from_bytes(vehicle_model.estimator.to_bytes())
 
         r2 = new_vehicle_model.predict(self.df)
         energy2 = round(r2.gallons_fastsim.sum(), 2)
@@ -165,18 +127,14 @@ class TestTrainEstimatePipeline(TestCase):
         r1 = vehicle_model.predict(self.df)
         energy1 = round(r1.gallons_fastsim.sum(), 2)
 
-        # test out writing and reading to file
-        outfile = self.out_path / "model_rate.json"
-        vehicle_model.to_file(outfile)
-        new_vehicle_model = pt.load_model(outfile)
-        outfile.unlink()
+        # test out writing and reading to file (directory format)
+        outdir = self.out_path / "model_ngboost_rate"
+        vehicle_model.to_file(outdir)
+        new_vehicle_model = pt.load_model(outdir)
+        shutil.rmtree(outdir)
 
-        # test writing inner estimator to file
-        outfile = self.out_path / "estimator_rate.json"
-        estimator = list(vehicle_model.estimators.values())[0]
-        estimator.to_file(outfile)
-        _ = NGBoostEstimator.from_file(outfile)
-        outfile.unlink()
+        # test round-tripping the inner estimator via its bytes primitive
+        _ = NGBoostEstimator.from_bytes(vehicle_model.estimator.to_bytes())
 
         r2 = new_vehicle_model.predict(self.df)
         energy2 = round(r2.gallons_fastsim.sum(), 2)
@@ -191,18 +149,14 @@ class TestTrainEstimatePipeline(TestCase):
         r1 = vehicle_model.predict(self.df)
         energy1 = round(r1.gallons_fastsim.sum(), 2)
 
-        # test out writing and reading to file
-        outfile = self.out_path / "model_raw.json"
-        vehicle_model.to_file(outfile)
-        new_vehicle_model = pt.load_model(outfile)
-        outfile.unlink()
+        # test out writing and reading to file (directory format)
+        outdir = self.out_path / "model_ngboost_raw"
+        vehicle_model.to_file(outdir)
+        new_vehicle_model = pt.load_model(outdir)
+        shutil.rmtree(outdir)
 
-        # test writing inner estimator to file
-        outfile = self.out_path / "estimator_raw.json"
-        estimator = list(vehicle_model.estimators.values())[0]
-        estimator.to_file(outfile)
-        _ = NGBoostEstimator.from_file(outfile)
-        outfile.unlink()
+        # test round-tripping the inner estimator via its bytes primitive
+        _ = NGBoostEstimator.from_bytes(vehicle_model.estimator.to_bytes())
 
         r2 = new_vehicle_model.predict(self.df)
         energy2 = round(r2.gallons_fastsim.sum(), 2)

@@ -4,7 +4,7 @@
 This example demonstrates how to use models with temperature as a feature in the Routee Powertrain library.
 """
 
-import nrel.routee.powertrain as pt
+import routee.powertrain as pt
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -19,9 +19,13 @@ It's important to understand the distinction between steady-state and transient 
 - **Transient Temperature Models**: These models account for the period when the vehicle is still adjusting to the ambient temperature.
     For example, when a vehicle starts a trip in cold weather and has been sitting outside, it takes some time for the battery and cabin to warm up.
 """
-tesla = pt.load_model("2022_Tesla_Model_3_RWD")
-tesla_with_temp_steady = pt.load_model("2022_Tesla_Model_3_RWD_0F_110F_steady")
-tesla_with_temp_transient = pt.load_model("2022_Tesla_Model_3_RWD_0F_110F_transient")
+tesla = pt.load_model("tesla/model_3_rwd/2022/rf_c3326385/v1")
+tesla_with_temp_steady = pt.load_model(
+    "tesla/model_3_rwd/2022/rf_steady_thermal_ab1db342/v1"
+)
+tesla_with_temp_transient = pt.load_model(
+    "tesla/model_3_rwd/2022/rf_transient_thermal_ab1db342/v1"
+)
 
 """
 Load a sample route and prepare it for prediction.
@@ -51,20 +55,14 @@ sample_route_32F_steady = sample_route_32F[
     sample_route_32F["cummulative_time_minutes"] > 5
 ]
 """
-Predict energy consumption using the different models and ambient temperatures.
+Predict energy consumption using the different models and ambient temperatures. Each model uses its own configured feature set, so we just need to make sure the input DataFrame contains the columns the model expects.
 """
-energy = tesla.predict(sample_route, feature_columns=["speed_mph", "grade_percent"])
-energy_with_temp_72F = tesla_with_temp_steady.predict(
-    sample_route_72F, feature_columns=["speed_mph", "grade_percent", "ambient_temp_f"]
-)
+energy = tesla.predict(sample_route)
+energy_with_temp_72F = tesla_with_temp_steady.predict(sample_route_72F)
 energy_with_temp_32F_transient = tesla_with_temp_transient.predict(
-    sample_route_32F_transient,
-    feature_columns=["speed_mph", "grade_percent", "ambient_temp_f"],
+    sample_route_32F_transient
 )
-energy_with_temp_32F_steady = tesla_with_temp_steady.predict(
-    sample_route_32F_steady,
-    feature_columns=["speed_mph", "grade_percent", "ambient_temp_f"],
-)
+energy_with_temp_32F_steady = tesla_with_temp_steady.predict(sample_route_32F_steady)
 energy_with_temp_32F = pd.concat(
     [energy_with_temp_32F_transient, energy_with_temp_32F_steady]
 )
@@ -107,13 +105,19 @@ Now let's compare the Tesla Model 3 with other electric vehicles to see how diff
 We'll load the Nissan Leaf and Chevrolet Bolt models and compare their energy consumption across different temperatures.
 """
 
-# Load Nissan Leaf models
-nissan_leaf_steady = pt.load_model("2016_Nissan_Leaf_30_kWh_0F_110F_steady")
-nissan_leaf_transient = pt.load_model("2016_Nissan_Leaf_30_kWh_0F_110F_transient")
+nissan_leaf_steady = pt.load_model(
+    "nissan/leaf_30_kwh/2016/rf_steady_thermal_ab1db342/v1"
+)
+nissan_leaf_transient = pt.load_model(
+    "nissan/leaf_30_kwh/2016/rf_transient_thermal_ab1db342/v1"
+)
 
-# Load Chevrolet Bolt models
-chevy_bolt_steady = pt.load_model("2020_Chevrolet_Bolt_EV_0F_110F_steady")
-chevy_bolt_transient = pt.load_model("2020_Chevrolet_Bolt_EV_0F_110F_transient")
+chevy_bolt_steady = pt.load_model(
+    "chevrolet/bolt_ev/2020/rf_steady_thermal_ab1db342/v1"
+)
+chevy_bolt_transient = pt.load_model(
+    "chevrolet/bolt_ev/2020/rf_transient_thermal_ab1db342/v1"
+)
 
 """
 ### Temperature Sensitivity Comparison
@@ -136,9 +140,7 @@ for temp in temperatures:
     route_temp["ambient_temp_f"] = temp
 
     for vehicle_name, model in vehicles_data.items():
-        energy_pred = model.predict(
-            route_temp, feature_columns=["speed_mph", "grade_percent", "ambient_temp_f"]
-        )
+        energy_pred = model.predict(route_temp)
         total_energy_by_temp[vehicle_name].append(energy_pred["kwh"].sum())
 
 # Create temperature sensitivity comparison plot

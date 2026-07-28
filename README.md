@@ -1,9 +1,9 @@
 # <img src="docs/images/routeelogo.png" alt="Routee Powertrain" width="100"/>
 
 <div align="left">
-    <img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue"/>
-  <a href="https://pypi.org/project/nrel.routee.powertrain/">
-    <img src="https://img.shields.io/pypi/v/nrel.routee.powertrain" alt="PyPi Latest Release"/>
+    <img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue"/>
+  <a href="https://pypi.org/project/routee.powertrain/">
+    <img src="https://img.shields.io/pypi/v/routee.powertrain" alt="PyPi Latest Release"/>
   </a>
 </div>
 
@@ -25,72 +25,67 @@ RouteE Powertrain is available on PyPI and can be installed with `pip`:
 
 ```bash
 pip install pip --upgrade
-pip install nrel.routee.powertrain
+pip install routee.powertrain
 ```
 
 If `pip` is unavailable, use `pip3`:
+
 ```bash
 pip3 install pip --upgrade
-pip3 install nrel.routee.powertrain
+pip3 install routee.powertrain
 ```
 
-(For more detailed instructions, see [here](https://nrel.github.io/routee-powertrain/installation.html))
+(For more detailed instructions, see [here](https://natlabrockies.github.io/routee-powertrain/installation.html))
 
 Then, you can import the package and use a pre-trained model from the RouteE model catalog:
 
 ```python
 import pandas as pd
-import nrel.routee.powertrain as pt
+import routee.powertrain as pt
 
-# Print the available pre-trained models
-print(pt.list_available_models(local=True, external=True))
-
-# [
-#   '2016_TOYOTA_Camry_4cyl_2WD',
-#   '2017_CHEVROLET_Bolt',
-#   '2012_Ford_Focus',
-#   ...
-# ]
+# Query for a specific model
+print(pt.query_available_models(make="chevrolet", model="bolt", year=2017))
 
 # Load a pre-trained model
-model = pt.load_model("2016_TOYOTA_Camry_4cyl_2WD")
+model = pt.load_model("chevrolet/bolt_bev/2017/rf_c3326385/v1")
 
 # Inspect the model to see what it expects for input
 print(model)
-
-# ========================================
-# Model Summary
-# --------------------
-# Vehicle description: 2016_TOYOTA_Camry_4cyl_2WD
-# Powertrain type: ICE
-# Number of estimators: 2
-# ========================================
-# Estimator Summary
-# --------------------
-# Feature: speed_mph (mph)
-# Distance: miles (miles)
-# Target: gge (gallons_gasoline)
-# Raw Predicted Consumption: 29.856 (miles/gallons_gasoline)
-# Real World Predicted Consumption: 25.606 (miles/gallons_gasoline)
-# ========================================
-# Estimator Summary
-# --------------------
-# Feature: speed_mph (mph)
-# Feature: grade_dec (decimal)
-# Distance: miles (miles)
-# Target: gge (gallons_gasoline)
-# Raw Predicted Consumption: 29.845 (miles/gallons_gasoline)
-# Real World Predicted Consumption: 25.596 (miles/gallons_gasoline)
-# ========================================
 
 # Predict energy consumption for a set of road links
 links_df = pd.DataFrame(
     {
         "distance": [0.1, 0.2, 0.3], # miles
         "speed_mph": [30, 40, 50], # mph
-        "grade_percent": [-0.5, 0, 0.5], # percent
+        "grade_percent": [-5.0, 0.0, 5.0], # percent
     }
 )
 
 energy_result = model.predict(links_df)
+```
+
+## Upgrading from v1
+
+RouteE Powertrain 2.0 is a breaking release. It was previously published as
+**`nrel.routee.powertrain`**; it is now **`routee.powertrain`**, and the import path changed
+to match:
+
+```bash
+pip uninstall nrel.routee.powertrain
+pip install routee.powertrain
+```
+
+```diff
+-import nrel.routee.powertrain as pt
++import routee.powertrain as pt
+```
+
+Model names, the model file format, and much of the `Model` API changed as well. See the
+[migration guide](https://natlabrockies.github.io/routee-powertrain/migrating_from_v1.html)
+for the full list, and [CHANGELOG.md](CHANGELOG.md) for everything in 2.0.0.
+
+Custom v1 `.json` models can be converted in place:
+
+```bash
+routee-powertrain convert-v1 MyModel.json out/ --make toyota --model camry --year 2016
 ```

@@ -1,15 +1,23 @@
 # Developer Scripts
 
-Scripts used by the developers for various tasks
+Scripts used by the developers for various tasks.
 
-## build_box_shared_links.py
+## train_model_catalog.py
 
-This script is used to build the links that can be used to download pre-trained models.
+Trains the model catalog from a directory of drive-cycle datasets.
+`kestrel_train_model_catalog.sh` runs the same job as a Slurm batch script.
 
-There are a couple of pre-requisites for this script to work:
+## cnn_training_example.py
 
-- You need to have an NREL Box account
-- You need to set up a developer API key
-- You need to upload a set of pretrained models to a folder in your Box account
+End-to-end example of training a 1D CNN model with `CNNTrainer` and exporting it to ONNX.
 
-Once you have done this, you can run the script and supply all the required information.
+## Publishing models
+
+Publishing moved to the registry in v2. See `scripts/upload_to_hf.py` to push a local registry
+tree to the HuggingFace Hub and `scripts/build_hf_index.py` to (re)build the `index.json` used
+for fast queries, plus [docs/publishing_a_model.md](../../docs/publishing_a_model.md) for the
+full workflow. `scripts/upload_to_s3.py` and `scripts/build_s3_index.py` do the same for the
+legacy S3 mirror.
+
+The old Box-hosted download-link workflow (`build_box_shared_links.py`) was removed along with
+the v1 `external_model_links.json` catalog.

@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     env:
       PYTHON: ${{ matrix.python-version }}
@@ -47,6 +47,9 @@ jobs:
       - name: ruff format check
         run: |
           ruff format --check
+
+      - name: Install dprint
+        uses: dprint/check@v2.2
 
       - name: Python unit tests
         run: |
