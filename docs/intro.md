@@ -1,6 +1,6 @@
 # RouteE Powertrain
 
-RouteE-Powertrain is a Python package that allows users to work with a set of pre-trained mesoscopic vehicle energy prediction models for a varity of vehicle types. Additionally, users can train their own models if "ground truth" energy consumption and driving data are available. RouteE-Powertrain models predict vehicle energy consumption over links in a road network, so the features considered for prediction often include traffic speeds, road grade, turns, etc.
+RouteE-Powertrain is a Python package that allows users to work with a set of pre-trained mesoscopic vehicle energy prediction models for a variety of vehicle types. Additionally, users can train their own models if "ground truth" energy consumption and driving data are available. RouteE-Powertrain models predict vehicle energy consumption over links in a road network, so the features considered for prediction often include traffic speeds, road grade, turns, etc.
 
 ## Quickstart
 
@@ -55,7 +55,7 @@ print(model)
 links_df = pd.DataFrame(
     {
         "distance": [0.1, 0.2, 0.3], # miles
-        "speed_mph": [30, 40, 50],   # mph
+        "speed_mph": [30, 40, 50], # mph
         "grade_percent": [-5.0, 0, 5.0], # percent
     }
 )
