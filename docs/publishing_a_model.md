@@ -1,7 +1,8 @@
 # Publishing a Trained Model
 
 After training a model with one of the `Trainer` classes, you can save it
-into the v2 registry layout that `LocalRegistry` and `S3Registry` understand.
+into the v2 registry layout that every registry backend understands —
+`LocalRegistry`, `HFRegistry`, and `S3Registry` all read the same tree.
 This page walks through writing a trained model into a local registry,
 understanding the derived `vehicle_slug` and `config_slug`, and loading it
 back through `pt.load_model()`.
@@ -162,7 +163,7 @@ model = pt.load_model("test/sedan_ice/2024/rf_aaa9554f")
 ```
 
 You can also list and query what's in the registry the same way you would
-with the default S3 registry:
+with the default HuggingFace registry:
 
 ```python
 pt.list_available_models()
@@ -210,8 +211,10 @@ See `routee/powertrain/core/metadata.py` for the full schema and
 ## Sharing Your Model
 
 Once your model loads cleanly from a local registry, that same directory tree
-is what gets uploaded to the shared S3 bucket. Publishing to the shared
-bucket requires write access and is currently a maintainer step — package the
-`<registry_root>/v2/...` directory (or zip it) and hand it off. The
-maintainer-side upload and index-refresh scripts live at
-`scripts/upload_to_s3.py` and `scripts/build_s3_index.py`.
+is what gets uploaded to the shared HuggingFace Hub repository. Publishing
+requires write access to that repo and is currently a maintainer step —
+package the `<registry_root>/v2/...` directory (or zip it) and hand it off.
+The maintainer-side upload and index-refresh scripts live at
+`scripts/upload_to_hf.py` and `scripts/build_hf_index.py` (with
+`scripts/upload_to_s3.py` and `scripts/build_s3_index.py` still there for the
+legacy S3 mirror).

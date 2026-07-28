@@ -14,7 +14,8 @@ A breaking rewrite of the packaging, model file format, and model distribution s
 2. A `Model` now holds exactly **one** estimator instead of a dict of estimators keyed by feature set.
 3. Model files are **archives** (directory / `.zip` / `.tar.gz`) with `metadata.json` + a binary
    estimator, replacing the single monolithic JSON.
-4. A pluggable **registry** (S3 or local) replaces the hardcoded list of bundled/external models.
+4. A pluggable **registry** (HuggingFace Hub, S3, or local) replaces the hardcoded list of
+   bundled/external models. The Hub is the default source of pre-trained models.
 5. Models carry a content-addressed **digest** identity, separate from their registry coordinate.
 6. Core types moved from `@dataclass` to **pydantic**.
 7. New **CNN trainer** (PyTorch → ONNX) with sequence/lookback support.
@@ -27,8 +28,10 @@ A breaking rewrite of the packaging, model file format, and model distribution s
 - PyPI distribution renamed `nrel.routee.powertrain` → `routee.powertrain`.
 - Homepage moved to `github.com/NatLabRockies/routee-powertrain`.
 - Python support widened to `>=3.10,<3.14` (3.13 added to the CI matrix).
-- New runtime dependencies: `pydantic`, `boto3`, `rapidfuzz`.
-- New optional extra: `pytorch` (`torch`, `onnxscript`) for the CNN trainer.
+- New runtime dependencies: `pydantic`, `huggingface_hub`, `rapidfuzz`.
+- New optional extras: `pytorch` (`torch`, `onnxscript`) for the CNN trainer, and `s3` (`boto3`)
+  for the S3 registry backend. **`boto3` is no longer installed by default** — if you set
+  `ROUTEE_REGISTRY_BACKEND=s3`, install `routee.powertrain[s3]`.
 - New `routee-powertrain` console script (currently exposing `convert-v1`).
 - `dprint` added for non-Python formatting (JSON/YAML/TOML/Markdown), enforced in CI.
 - `.pre-commit-config.yaml` added, running `pixi run ci` (fmt + lint + typing + test).
@@ -87,11 +90,13 @@ mean different published models.
 ### Added: the model registry
 
 - `ModelRegistry` (ABC) with `query()`, `load()`, `list_models()`, `get_metadata()`.
-- `S3Registry` — public S3 bucket, with an optional `index.json` for fast queries and hierarchical
-  prefix walking for filtered searches.
+- `HFRegistry` — a public HuggingFace Hub repository, read anonymously. Downloads land in the
+  shared HuggingFace cache, so loading the same model twice hits the network once, and
+  `ROUTEE_HF_REVISION` pins a branch, tag, or commit sha to freeze the whole library.
+- `S3Registry` — public S3 bucket, with an `index.json` for fast queries. Requires the `s3` extra.
 - `LocalRegistry` — glob-based scan of a local directory tree.
-- `get_default_registry()` picks the backend from `ROUTEE_REGISTRY_BACKEND` (`"s3"` default, or
-  `"local"`).
+- `get_default_registry()` picks the backend from `ROUTEE_REGISTRY_BACKEND` (`"hf"` default, or
+  `"s3"` / `"local"`).
 - Layout: `<root>/<schema_version>/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/`.
 - `ModelId` — five-segment identifier, e.g. `toyota/camry_ice/2016/rf_c3326385/v1`. Both slugs are
   **derived from metadata**, never user-supplied; loading re-derives them and raises on any mismatch
@@ -100,7 +105,8 @@ mean different published models.
 - `ModelInfo` — lightweight metadata-only summary returned by `query()`.
 - Bundled models now live at `routee/powertrain/resources/bundled_registry/v2/` (Toyota Camry 2016
   ICE and Chevrolet Bolt 2017 BEV).
-- Environment variables: `ROUTEE_REGISTRY_BACKEND`, `ROUTEE_SCHEMA_VERSION`, `ROUTEE_S3_BUCKET`,
+- Environment variables: `ROUTEE_REGISTRY_BACKEND`, `ROUTEE_SCHEMA_VERSION`, `ROUTEE_HF_REPO_ID`,
+  `ROUTEE_HF_REPO_TYPE`, `ROUTEE_HF_REVISION`, `ROUTEE_HF_TOKEN`, `ROUTEE_S3_BUCKET`,
   `ROUTEE_S3_REGION`, `ROUTEE_S3_ROOT_PREFIX`, `ROUTEE_LOCAL_REGISTRY_ROOT`.
 
 Public API changes:
@@ -199,6 +205,8 @@ onnxruntime session options so ONNX respects the environment's thread limit.
 | Script                               | Purpose                                                      |
 | ------------------------------------ | ------------------------------------------------------------ |
 | `scripts/convert_nlr_library.py`     | Batch conversion of the full legacy model library            |
+| `scripts/upload_to_hf.py`            | Publish a local registry tree to a HuggingFace Hub repo      |
+| `scripts/build_hf_index.py`          | Build the Hub `index.json` used for fast queries             |
 | `scripts/upload_to_s3.py`            | Publish a local registry tree to S3                          |
 | `scripts/build_s3_index.py`          | Build the S3 `index.json` used for fast queries              |
 | `scripts/backfill_digests.py`        | Stamp digests onto pre-digest registry entries               |

@@ -9,7 +9,7 @@
 - **Python**: >=3.10, <3.14
 - **Build system**: Hatchling (`hatch build`)
 - **Package manager**: Pixi (preferred) or pip
-- **Core deps**: pandas, numpy, onnx, onnxruntime, boto3, rapidfuzz
+- **Core deps**: pandas, numpy, onnx, onnxruntime, huggingface_hub, rapidfuzz
 
 ## Quick Commands
 
@@ -45,28 +45,34 @@ Package source lives under `routee/powertrain/`.
 - **`validation/`** — `ModelErrors`, `compute_errors()`, `visualize_features()`, `contour_plot()`
 - **`resources/`** — Bundled pre-trained models (`bundled_registry/v2/...`) and sample route data
 - **`registry/`** — Pluggable model discovery and retrieval system with multiple backends:
-  - `ModelRegistry` (ABC) — Interface with `query()`, `load()`, `list_models()`, `get_metadata()`
-  - `S3Registry` — Fetches models from a public S3 bucket (`routeecore-bucket`). Uses optional `index.json` for fast queries and hierarchical prefix walking for filtered searches
+  - `ModelRegistry` (ABC) — Interface with `query()`, `load()`, `list_models()`, `get_metadata()`. `find_by_digest()` is concrete and delegates to `query()`, so a new backend gets it free. Also holds `INDEX_FILENAME` and `IndexMissingError`, shared by the remote backends.
+  - `HFRegistry` — **The default.** Fetches models from a public HuggingFace Hub repo, read anonymously via `HfApi`. Downloads go through `hf_hub_download` into the shared HF cache, so repeat loads are offline; `revision` pins a branch/tag/commit sha to freeze the whole library. Discovery requires `index.json` at the schema root.
+  - `S3Registry` — Fetches models from a public S3 bucket (`routeecore-bucket`). Discovery requires `index.json` at the schema root. `boto3` is imported lazily inside `_get_client()`/`build_index()`, so this module imports fine without the `s3` extra installed and only errors when actually used.
   - `LocalRegistry` — Reads models from a local directory tree using glob-based scanning
+  - `registry/entry.py` — Backend-agnostic decoding of the shared layout: `parse_model_id_from_segments()`, `parse_model_id_from_metadata_key()` (used by both object-store backends), and `model_info_from_metadata()`. Add a backend by reusing these rather than copying them.
   - `ModelId` — Identifier with five segments: `make/vehicle_slug/year/config_slug/v<N>` (e.g. `toyota/camry_ice/2016/rf_c3326385/v1`). It composes a `ModelKey` (the version-less identity) plus a registry-assigned `version`. Both slugs are **derived** from metadata (`registry/slug.py`), not user-supplied: `derive_vehicle_slug` is `<model>_<powertrain_family>` (family via `powertrain_family()`: `ice`/`hev`/`bev`/`phev`/`heavy_duty`; both PHEV modes collapse to `phev` since CD/CS models describe the same vehicle — that split lives in `config.variant`; UNDEFINED omitted; model token lowercased, whitespace/`/` → `-`), and `derive_config_slug` composes `<arch_short>_<variant?>_<feature_hash>`. The model name should carry the vehicle's full commercial designation (`golf_1.5tsi` vs `golf_2.0tdi`); `engine`/`drivetrain`/`trim`/`fuel_type` are descriptive metadata — filterable and correctable without renaming paths, NOT identity. So `make/vehicle_slug/year/config_slug` are all pure functions of a model's metadata; only `version` is a registry coordinate. `ModelId.from_metadata(metadata, version)` / `ModelId.from_key(key, version)` mint one.
   - `ModelKey` — The version-less identity (`make/vehicle_slug/year/config_slug`), frozen/hashable. `Model.key` (`ModelKey.from_metadata`) exposes it on any trained or loaded model; `filter_models` groups versions by it. Registry `load()` re-derives both slugs and **raises on any mismatch** with the on-disk path (`assert_metadata_matches_id`).
   - `ModelInfo` — Lightweight summary returned by `query()` with metadata but no binary data. Carries `vehicle_model` (the bare metadata model name, e.g. `"camry"`) alongside `model_id.vehicle_slug`; the `model` query filter matches either.
-  - `get_default_registry()` — Factory that selects backend based on `ROUTEE_REGISTRY_BACKEND` env var (`"s3"` or `"local"`, default `"s3"`)
+  - `get_default_registry()` — Factory that selects backend based on `ROUTEE_REGISTRY_BACKEND` env var (`"hf"`, `"s3"`, or `"local"`, default `"hf"`)
   - `filter_models()` / `latest_model_ids()` — Filtering supports exact + fuzzy matching (via `rapidfuzz`) on `make`, `model`, `year`, `config_slug`, `feature_names`, `powertrain_type`, `fuel_type`, `drivetrain`, `engine`, `trim`, `version`, plus optional `custom_filters` callables.
 
 ### Registry
 
-The Registry system abstracts model discovery and retrieval, allowing pre-trained models to be served from S3 or the local filesystem with an identical API.
+The Registry system abstracts model discovery and retrieval, allowing pre-trained models to be served from HuggingFace Hub, S3, or the local filesystem with an identical API. All three read the **same tree**, so a `ModelId` path means the same thing everywhere.
 
-- **Directory/bucket layout**: `<root>/<schema_version>/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/` containing `metadata.json` + a binary estimator file (e.g. `model.onnx` or a `.joblib` blob)
+- **Directory/bucket/repo layout**: `<root>/<schema_version>/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/` containing `metadata.json` + a binary estimator file (e.g. `model.onnx` or a `.joblib` blob)
 - **Bundled models**: `routee/powertrain/resources/bundled_registry/v2/` (currently `toyota/camry_ice` 2016 and `chevrolet/bolt_bev` 2017, both `rf_c3326385/v1` — the derived slug for a random forest over speed & grade)
 - **Public entry points** (in `io/load.py`):
   - `list_available_models(registry=None, version_strategy="latest")` — Returns all `ModelId`s. `version_strategy="all"` returns every version; default keeps only the latest per `(make, vehicle_slug, year, config_slug)` group.
   - `query_available_models(...)` — Filtered search returning `ModelInfo` objects; supports fuzzy matching (`fuzzy=True`, `fuzzy_threshold=80`) and the same filter set as `filter_models()`.
   - `load_model(name_or_path, registry=None)` — Loads from a local path/zip/tar if it exists, otherwise resolves the string as a `ModelId` (`v<N>` segment optional → latest) and fetches from the registry.
 - **Environment variables**:
-  - `ROUTEE_REGISTRY_BACKEND` — `"s3"` (default) or `"local"`
+  - `ROUTEE_REGISTRY_BACKEND` — `"hf"` (default), `"s3"`, or `"local"`
   - `ROUTEE_SCHEMA_VERSION` — default `"v2"`
+  - `ROUTEE_HF_REPO_ID` — default `NatLabRockies/routee-powertrain-model-library`
+  - `ROUTEE_HF_REPO_TYPE` — `"model"` (default) or `"dataset"`
+  - `ROUTEE_HF_REVISION` — branch/tag/commit sha (default: the repo's default branch)
+  - `ROUTEE_HF_TOKEN` — Hub token; unset reads anonymously
   - `ROUTEE_S3_BUCKET` — default `routeecore-bucket`
   - `ROUTEE_S3_REGION` — default `us-west-2`
   - `ROUTEE_S3_ROOT_PREFIX` — default `routee-powertrain-model-library`
@@ -130,6 +136,7 @@ Two-layer identity, mirroring OCI/MLflow: an immutable **instance digest** minte
   - `tests/test_cnn_pipeline.py` — CNN → ONNX round-trip (requires torch; skipped otherwise)
   - `tests/test_archive.py` — Directory / `.zip` / `.tar.gz` serialization round-trip
   - `tests/test_registry.py` — `ModelId` parsing, `LocalRegistry` filtering, `ModelInfo` round-trip
+  - `tests/test_hf_registry.py` — `HFRegistry` query/load/`build_index` against a fake `HfApi` injected on `registry._client`, plus the default-backend factory checks and a subprocess assertion that importing the package does not pull in `boto3`
   - `tests/test_s3_registry.py` — `S3Registry` boto3 integration, key parsing
   - `tests/test_s3_index.py` — S3 `index.json` build / parse
   - `tests/test_year_range.py` — `Year` type (int or `tuple[int, int]`) parsing and serialization
@@ -152,6 +159,7 @@ Two-layer identity, mirroring OCI/MLflow: an immutable **instance digest** minte
 | `ngboost` | NGBoost for probabilistic training                        |
 | `pytorch` | torch + onnxscript for the CNN trainer                    |
 | `plot`    | matplotlib for visualization                              |
+| `s3`      | boto3 for the legacy S3 registry backend                  |
 | `dev`     | All of the above + pytest, mypy, ruff, jupyter-book, etc. |
 
 Install with: `pip install -e ".[scikit]"`, `pip install -e ".[ngboost,plot]"`, etc.

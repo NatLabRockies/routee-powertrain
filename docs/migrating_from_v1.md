@@ -204,8 +204,9 @@ If you subclass `Trainer`, add the two new members `required_extra_columns` and
 
 Worth knowing about even though nothing forces you to use it:
 
-- **Registry** — pluggable model discovery over S3 or a local directory, configured with
-  `ROUTEE_REGISTRY_BACKEND` and friends. See [Publishing a model](publishing_a_model.md).
+- **Registry** — pluggable model discovery over HuggingFace Hub (the default), S3, or a local
+  directory, configured with `ROUTEE_REGISTRY_BACKEND` and friends. See
+  [Publishing a model](publishing_a_model.md).
 - **Digests** — every model carries a content-addressed `model_digest` minted at train time, and
   the estimator binary is checksummed on load. See `pt.compute_model_digest()`.
 - **Self-describing binaries** — the `.onnx` file embeds its own input/output contract, so a

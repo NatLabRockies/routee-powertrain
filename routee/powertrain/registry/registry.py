@@ -8,6 +8,15 @@ from routee.powertrain.registry.filtering import VersionStrategy
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
 
 
+#: Filename of the catalog the remote backends read to answer queries without
+#: walking the whole store.
+INDEX_FILENAME = "index.json"
+
+
+class IndexMissingError(RuntimeError):
+    """Raised when ``index.json`` is missing or unreadable at the schema root."""
+
+
 def _resolve_model_id(model_id: Union[str, ModelId]) -> ModelId:
     """Coerce a string or ModelId into a ModelId."""
     if isinstance(model_id, str):

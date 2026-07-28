@@ -2,16 +2,19 @@ from __future__ import annotations
 
 import json
 import logging
-import re
-from typing import Callable, List, Optional, Sequence, Union
+from typing import Any, Callable, List, Optional, Sequence, Union
 
 from routee.powertrain.core.metadata import SCHEMA_VERSION_STRING
 from routee.powertrain.core.model import Model
-from routee.powertrain.core.year import parse_year
 from routee.powertrain.io.archive import (
     _model_filename,
     _model_from_metadata_and_bytes,
     METADATA_FILENAME,
+)
+from routee.powertrain.registry.entry import (
+    model_info_from_metadata,
+    parse_model_id_from_metadata_key,
+    VERSION_RE,
 )
 from routee.powertrain.registry.filtering import (
     VersionStrategy,
@@ -19,7 +22,12 @@ from routee.powertrain.registry.filtering import (
     latest_model_ids,
 )
 from routee.powertrain.registry.model_id import ModelId, ModelInfo
-from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
+from routee.powertrain.registry.registry import (
+    INDEX_FILENAME,
+    IndexMissingError,
+    ModelRegistry,
+    _resolve_model_id,
+)
 from routee.powertrain.registry.slug import assert_metadata_matches_id
 from routee.powertrain.registry.default import (
     DEFAULT_BUCKET,
@@ -27,14 +35,29 @@ from routee.powertrain.registry.default import (
     DEFAULT_ROOT_PREFIX,
 )
 
-import boto3
+__all__ = [
+    "S3Registry",
+    "build_index",
+    # Re-exported for backwards compatibility; both now live in shared modules
+    # so the HuggingFace backend can use them without importing boto3.
+    "IndexMissingError",
+    "INDEX_FILENAME",
+    "VERSION_RE",
+]
 
-from botocore import UNSIGNED
-from botocore.config import Config
+_MISSING_BOTO3 = (
+    "The S3 registry backend requires boto3, which is not installed. "
+    'Install it with: pip install "routee.powertrain[s3]"'
+)
 
-# Pattern to extract version from path segment like "v1", "v2"
-VERSION_RE = re.compile(r"^v(\d+)$")
-INDEX_FILENAME = "index.json"
+
+def _import_boto3() -> Any:
+    """Import boto3 lazily so it stays an optional dependency."""
+    try:
+        import boto3
+    except ImportError as exc:  # pragma: no cover - depends on the environment
+        raise ImportError(_MISSING_BOTO3) from exc
+    return boto3
 
 
 def _parse_model_id_from_key(
@@ -46,69 +69,8 @@ def _parse_model_id_from_key(
     Expected key format:
         [<root_prefix>/]<schema_version>/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/metadata.json
     """
-    if root_prefix:
-        full_prefix = root_prefix + "/" + schema_version + "/"
-    else:
-        full_prefix = schema_version + "/"
-    if not key.startswith(full_prefix):
-        raise ValueError(f"Key {key} does not start with {full_prefix}")
-
-    rel = key[len(full_prefix) :]
-    parts = rel.split("/")
-    # parts: [make, vehicle_slug, year, config_slug, vN, metadata.json]
-    if len(parts) != 6 or parts[-1] != METADATA_FILENAME:
-        raise ValueError(
-            f"Unexpected S3 key structure: {key}. Expected <schema>/<make>/"
-            f"<vehicle_slug>/<year>/<config_slug>/v<N>/{METADATA_FILENAME}"
-        )
-
-    make, vehicle_slug, year_str, config_slug, version_dir, _ = parts
-    match = VERSION_RE.match(version_dir)
-    if not match:
-        raise ValueError(f"Version directory '{version_dir}' does not match v<N>")
-
-    return ModelId(
-        make=make,
-        vehicle_slug=vehicle_slug,
-        year=parse_year(year_str),
-        config_slug=config_slug,
-        version=int(match.group(1)),
-    )
-
-
-def _model_info_from_metadata(
-    metadata_dict: dict, model_id: ModelId, path: str
-) -> ModelInfo:
-    """Convert an archive metadata dict + ModelId into a ModelInfo."""
-    vehicle = metadata_dict["vehicle"]
-    contract = metadata_dict["contract"]
-    estimator = metadata_dict["estimator"]
-
-    feature_names = [f["name"] for f in contract["feature_set"]]
-    target_names = [t["name"] for t in contract["target"]]
-
-    return ModelInfo(
-        model_id=model_id,
-        vehicle_model=vehicle.get("model"),
-        estimator_type=estimator["estimator_type"],
-        architecture_tag=estimator.get("architecture_tag", "unknown"),
-        input_spec=estimator.get("input_spec"),
-        feature_names=feature_names,
-        target_names=target_names,
-        powertrain_type=vehicle["powertrain_type"],
-        vehicle_description=vehicle["vehicle_description"],
-        path=path,
-        mass_lbs=vehicle.get("mass_lbs"),
-        fuel_type=vehicle.get("fuel_type"),
-        drivetrain=vehicle.get("drivetrain"),
-        engine=vehicle.get("engine"),
-        trim=vehicle.get("trim"),
-        model_digest=metadata_dict.get("model_digest"),
-    )
-
-
-class IndexMissingError(RuntimeError):
-    """Raised when ``index.json`` is missing or unreadable at the schema root."""
+    prefix = f"{root_prefix}/{schema_version}" if root_prefix else schema_version
+    return parse_model_id_from_metadata_key(key, prefix)
 
 
 class S3Registry(ModelRegistry):
@@ -155,8 +117,12 @@ class S3Registry(ModelRegistry):
 
     def _get_client(self):
         if self._client is None:
+            boto3 = _import_boto3()
             kwargs = {"region_name": self.region}
             if self.anonymous:
+                from botocore import UNSIGNED
+                from botocore.config import Config
+
                 kwargs["config"] = Config(signature_version=UNSIGNED)
             self._client = boto3.client("s3", **kwargs)
         return self._client
@@ -308,7 +274,7 @@ def build_index(
             metadata_dict = json.loads(data)
             # path is the directory prefix (key without /metadata.json)
             dir_key = key[: -len(f"/{METADATA_FILENAME}")]
-            info = _model_info_from_metadata(metadata_dict, model_id, dir_key)
+            info = model_info_from_metadata(metadata_dict, model_id, dir_key)
             models.append(info.model_dump(mode="json"))
         except Exception:
             continue

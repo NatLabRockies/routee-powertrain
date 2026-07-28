@@ -1,17 +1,20 @@
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from typing import Callable, List, Optional, Sequence, Union
 
 from routee.powertrain.core.model import Model
-from routee.powertrain.core.year import parse_year
 from routee.powertrain.io.archive import (
     load_model_directory,
     read_directory_metadata,
     METADATA_FILENAME,
 )
 from routee.powertrain.core.metadata import SCHEMA_VERSION_STRING
+from routee.powertrain.registry.entry import (
+    model_info_from_metadata,
+    parse_model_id_from_segments,
+    VERSION_RE,
+)
 from routee.powertrain.registry.filtering import (
     VersionStrategy,
     filter_models,
@@ -21,8 +24,7 @@ from routee.powertrain.registry.model_id import ModelId, ModelInfo
 from routee.powertrain.registry.registry import ModelRegistry, _resolve_model_id
 from routee.powertrain.registry.slug import assert_metadata_matches_id
 
-# Pattern to extract version number from directory name like v1, v2
-VERSION_RE = re.compile(r"^v(\d+)$")
+__all__ = ["LocalRegistry", "VERSION_RE"]
 
 
 def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
@@ -32,61 +34,7 @@ def _parse_model_id_from_path(model_dir: Path, schema_root: Path) -> ModelId:
     Expected structure: <make>/<vehicle_slug>/<year>/<config_slug>/v<N>/
     """
     rel = model_dir.relative_to(schema_root)
-    parts = list(rel.parts)
-
-    if len(parts) != 5:
-        raise ValueError(
-            f"Unexpected path depth for {model_dir}. "
-            f"Expected <make>/<vehicle_slug>/<year>/<config_slug>/v<N>, "
-            f"got {'/'.join(parts)}"
-        )
-
-    make, vehicle_slug, year_str, config_slug, version_dir = parts
-
-    match = VERSION_RE.match(version_dir)
-    if not match:
-        raise ValueError(
-            f"Directory name '{version_dir}' does not match expected pattern v<N>"
-        )
-
-    return ModelId(
-        make=make,
-        vehicle_slug=vehicle_slug,
-        year=parse_year(year_str),
-        config_slug=config_slug,
-        version=int(match.group(1)),
-    )
-
-
-def _model_info_from_metadata(
-    metadata_dict: dict, model_id: ModelId, path: str
-) -> ModelInfo:
-    """Convert an archive metadata dict + ModelId into a ModelInfo."""
-    vehicle = metadata_dict["vehicle"]
-    contract = metadata_dict["contract"]
-    estimator = metadata_dict["estimator"]
-
-    feature_names = [f["name"] for f in contract["feature_set"]]
-    target_names = [t["name"] for t in contract["target"]]
-
-    return ModelInfo(
-        model_id=model_id,
-        vehicle_model=vehicle.get("model"),
-        estimator_type=estimator["estimator_type"],
-        architecture_tag=estimator.get("architecture_tag", "unknown"),
-        input_spec=estimator.get("input_spec"),
-        feature_names=feature_names,
-        target_names=target_names,
-        powertrain_type=vehicle["powertrain_type"],
-        vehicle_description=vehicle["vehicle_description"],
-        path=path,
-        mass_lbs=vehicle.get("mass_lbs"),
-        fuel_type=vehicle.get("fuel_type"),
-        drivetrain=vehicle.get("drivetrain"),
-        engine=vehicle.get("engine"),
-        trim=vehicle.get("trim"),
-        model_digest=metadata_dict.get("model_digest"),
-    )
+    return parse_model_id_from_segments(rel.parts, str(model_dir))
 
 
 class LocalRegistry(ModelRegistry):
@@ -133,7 +81,7 @@ class LocalRegistry(ModelRegistry):
                 model_id = _parse_model_id_from_path(model_dir, schema_root)
                 metadata_dict = read_directory_metadata(model_dir)
                 rel_path = str(model_dir.relative_to(self.root))
-                info = _model_info_from_metadata(metadata_dict, model_id, rel_path)
+                info = model_info_from_metadata(metadata_dict, model_id, rel_path)
                 results.append(info)
             except Exception:
                 continue  # skip malformed entries

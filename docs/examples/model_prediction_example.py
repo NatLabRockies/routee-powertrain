@@ -7,7 +7,7 @@ __A note on PHEVs__: Plug-in hybrids have two general operating modes 1) "Charge
 
 ## Picking a registry
 
-By default, `routee.powertrain` fetches models from the public S3 catalog. For this example we'll use the small bundled registry that ships with the package so the notebook runs fully offline — set `ROUTEE_REGISTRY_BACKEND=local` before importing. Drop this line to query the full S3 catalog instead.
+By default, `routee.powertrain` fetches models from the public HuggingFace Hub catalog. For this example we'll use the small bundled registry that ships with the package so the notebook runs fully offline — set `ROUTEE_REGISTRY_BACKEND=local` before importing. Drop this line to query the full Hub catalog instead.
 """
 
 import os
