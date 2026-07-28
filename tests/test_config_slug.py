@@ -214,7 +214,9 @@ class TestLoadDriftValidation(TestCase):
 
     def test_drift_raises_on_load(self) -> None:
         # Hand-edit the on-disk metadata so its feature set no longer matches the
-        # slug frozen into the path — loading must surface the drift loudly.
+        # estimator binary (and the slug frozen into the path) — loading must
+        # surface the drift loudly. The binary-vs-metadata input-contract check
+        # fires first and pinpoints the exact feature-order disagreement.
         model_dir = self.registry_root / SCHEMA_VERSION_STRING / self.model_id.to_path()
         meta_path = model_dir / "metadata.json"
         meta = meta_path.read_text().replace("speed_mph", "velocity_mph")
@@ -222,6 +224,14 @@ class TestLoadDriftValidation(TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             LocalRegistry(self.registry_root).load(self.model_id)
+        self.assertIn("contract", str(ctx.exception))
+
+    def test_config_slug_drift_detected_by_assert_helper(self) -> None:
+        # The path-vs-metadata slug check catches a config_slug that no longer
+        # matches the metadata it names, independent of the binary contract.
+        wrong_id = self.model_id.model_copy(update={"config_slug": "rf_wrongslug"})
+        with self.assertRaises(ValueError) as ctx:
+            assert_metadata_matches_id(self.model.metadata, wrong_id)
         self.assertIn("config_slug", str(ctx.exception))
 
     def test_vehicle_slug_drift_raises_on_load(self) -> None:

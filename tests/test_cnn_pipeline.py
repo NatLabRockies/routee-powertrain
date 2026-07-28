@@ -81,6 +81,14 @@ class TestCNNPipeline(TestCase):
         self.assertEqual(spec.lookback, 5)
         self.assertEqual(spec.grouping_column, "route_id")
 
+        # the windowed model also carries the positional input/output contract
+        self.assertIsNotNone(spec.input_columns)
+        self.assertEqual(
+            [c.name for c in spec.input_columns],
+            model.metadata.config.all_feature_names,
+        )
+        self.assertEqual(spec.predict_method, "rate")
+
         # Metadata carries architecture_tag and input_spec
         self.assertEqual(model.metadata.estimator.architecture_tag, "cnn")
         self.assertEqual(model.metadata.estimator.input_spec["lookback"], 5)

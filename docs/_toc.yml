@@ -12,6 +12,7 @@ parts:
   - caption: User Reference
     chapters:
       - file: api_docs
+      - file: estimator_input_contract
 
   - caption: Examples
     chapters:

@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from pandas import Series
     from routee.powertrain.registry.model_id import ModelKey
 
-REGISTERED_ESTIMATORS = {
+REGISTERED_ESTIMATORS: Dict[str, type[Estimator]] = {
     "ONNXEstimator": ONNXEstimator,
     "NGBoostEstimator": NGBoostEstimator,
 }

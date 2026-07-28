@@ -89,11 +89,8 @@ class TestTrainEstimatePipeline(TestCase):
         new_vehicle_model = pt.load_model(outdir)
         shutil.rmtree(outdir)
 
-        # test writing inner estimator to file
-        outfile = self.out_path / "estimator_rate.onnx"
-        vehicle_model.estimator.to_file(outfile)
-        _ = ONNXEstimator.from_file(outfile)
-        outfile.unlink()
+        # test round-tripping the inner estimator via its bytes primitive
+        _ = ONNXEstimator.from_bytes(vehicle_model.estimator.to_bytes())
 
         r2 = new_vehicle_model.predict(self.df)
         energy2 = round(r2.gallons_fastsim.sum(), 2)
@@ -114,11 +111,8 @@ class TestTrainEstimatePipeline(TestCase):
         new_vehicle_model = pt.load_model(outdir)
         shutil.rmtree(outdir)
 
-        # test writing inner estimator to file
-        outfile = self.out_path / "estimator_raw.onnx"
-        vehicle_model.estimator.to_file(outfile)
-        _ = ONNXEstimator.from_file(outfile)
-        outfile.unlink()
+        # test round-tripping the inner estimator via its bytes primitive
+        _ = ONNXEstimator.from_bytes(vehicle_model.estimator.to_bytes())
 
         r2 = new_vehicle_model.predict(self.df)
         energy2 = round(r2.gallons_fastsim.sum(), 2)
@@ -139,11 +133,8 @@ class TestTrainEstimatePipeline(TestCase):
         new_vehicle_model = pt.load_model(outdir)
         shutil.rmtree(outdir)
 
-        # test writing inner estimator to file
-        outfile = self.out_path / "estimator_rate.json"
-        vehicle_model.estimator.to_file(outfile)
-        _ = NGBoostEstimator.from_file(outfile)
-        outfile.unlink()
+        # test round-tripping the inner estimator via its bytes primitive
+        _ = NGBoostEstimator.from_bytes(vehicle_model.estimator.to_bytes())
 
         r2 = new_vehicle_model.predict(self.df)
         energy2 = round(r2.gallons_fastsim.sum(), 2)
@@ -164,11 +155,8 @@ class TestTrainEstimatePipeline(TestCase):
         new_vehicle_model = pt.load_model(outdir)
         shutil.rmtree(outdir)
 
-        # test writing inner estimator to file
-        outfile = self.out_path / "estimator_raw.json"
-        vehicle_model.estimator.to_file(outfile)
-        _ = NGBoostEstimator.from_file(outfile)
-        outfile.unlink()
+        # test round-tripping the inner estimator via its bytes primitive
+        _ = NGBoostEstimator.from_bytes(vehicle_model.estimator.to_bytes())
 
         r2 = new_vehicle_model.predict(self.df)
         energy2 = round(r2.gallons_fastsim.sum(), 2)
