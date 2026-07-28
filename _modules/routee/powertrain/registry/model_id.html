@@ -1,0 +1,737 @@
+
+<!DOCTYPE html>
+
+
+<html lang="python" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>routee.powertrain.registry.model_id &#8212; RouteE Powertrain</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../_static/documentation_options.js?v=30a733bc"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../../_static/togglebutton.js?v=b8b12719"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/routee/powertrain/registry/model_id';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="python"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../intro.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/routeelogo.png" class="logo__image only-light" alt="RouteE Powertrain - Home"/>
+    <script>document.write(`<img src="../../../../_static/routeelogo.png" class="logo__image only-dark" alt="RouteE Powertrain - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../../intro.html">
+                    RouteE Powertrain
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../what_is_routee.html">What is RouteE?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../migrating_from_v1.html">Migrating from v1</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_docs.html">Python API Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../estimator_input_contract.html">Estimator Input/Output Contract</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/model_prediction_example.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/model_training_example.html">Model Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/temperature_models_example.html">Temperature Models Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/to_lookup_table_example.html">Lookup Table Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publishing_a_model.html">Publishing a Trained Model</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../../build_the_docs.html">Build The Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain/issues/new?title=Issue%20on%20page%20%2F_modules/routee/powertrain/registry/model_id.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for routee.powertrain.registry.model_id</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">field_validator</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.core.pydantic_fields</span><span class="w"> </span><span class="kn">import</span> <span class="n">YearField</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.core.year</span><span class="w"> </span><span class="kn">import</span> <span class="n">format_year</span><span class="p">,</span> <span class="n">parse_year</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.core.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metadata</span>
+
+<span class="n">_VERSION_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^v(\d+)$&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ModelKey">
+<a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.model_id.ModelKey">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModelKey</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A model&#39;s intrinsic, version-less identity.</span>
+
+<span class="sd">    ``make``/``vehicle_slug``/``year``/``config_slug`` are all pure functions</span>
+<span class="sd">    of a model&#39;s metadata, so a ``ModelKey`` is fully determined the moment a</span>
+<span class="sd">    model is trained — unlike ``version``, which is a registry coordinate</span>
+<span class="sd">    assigned when the model is placed into a registry. ``vehicle_slug`` is</span>
+<span class="sd">    *derived* (via ``derive_vehicle_slug``) as the ``model`` name plus the</span>
+<span class="sd">    coarse powertrain family — e.g. ``camry_ice``, ``volt_phev``.</span>
+<span class="sd">    ``Model.key`` exposes this, so every model self-describes its identity</span>
+<span class="sd">    without needing a registry.</span>
+
+<span class="sd">    Frozen (and therefore hashable) so it can be used as a grouping key that</span>
+<span class="sd">    collapses the versions of one model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">make</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">vehicle_slug</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">year</span><span class="p">:</span> <span class="n">YearField</span>
+    <span class="n">config_slug</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;make&quot;</span><span class="p">,</span> <span class="s2">&quot;vehicle_slug&quot;</span><span class="p">,</span> <span class="s2">&quot;config_slug&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_lowercase</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ModelKey.from_metadata">
+<a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.model_id.ModelKey.from_metadata">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_metadata</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Metadata</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelKey</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derive the version-less identity from a model&#39;s metadata.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.registry.slug</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">derive_config_slug</span><span class="p">,</span>
+            <span class="n">derive_vehicle_slug</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">make</span><span class="o">=</span><span class="n">metadata</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">make</span><span class="p">,</span>
+            <span class="n">vehicle_slug</span><span class="o">=</span><span class="n">derive_vehicle_slug</span><span class="p">(</span><span class="n">metadata</span><span class="p">),</span>
+            <span class="n">year</span><span class="o">=</span><span class="n">metadata</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+            <span class="n">config_slug</span><span class="o">=</span><span class="n">derive_config_slug</span><span class="p">(</span><span class="n">metadata</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelKey.from_path">
+<a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.model_id.ModelKey.from_path">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_path</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelKey</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse a ModelKey from a ``make/vehicle_slug/year/config_slug`` path.&quot;&quot;&quot;</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot parse model key from path &#39;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Expected &lt;make&gt;/&lt;vehicle_slug&gt;/&lt;year&gt;/&lt;config_slug&gt;, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s2"> segments.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">make</span><span class="p">,</span> <span class="n">vehicle_slug</span><span class="p">,</span> <span class="n">year_str</span><span class="p">,</span> <span class="n">config_slug</span> <span class="o">=</span> <span class="n">parts</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">make</span><span class="o">=</span><span class="n">make</span><span class="p">,</span>
+            <span class="n">vehicle_slug</span><span class="o">=</span><span class="n">vehicle_slug</span><span class="p">,</span>
+            <span class="n">year</span><span class="o">=</span><span class="n">parse_year</span><span class="p">(</span><span class="n">year_str</span><span class="p">),</span>
+            <span class="n">config_slug</span><span class="o">=</span><span class="n">config_slug</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelKey.to_path">
+<a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.model_id.ModelKey.to_path">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the version-less registry path prefix for this model.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">make</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vehicle_slug</span><span class="si">}</span><span class="s2">/&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">format_year</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config_slug</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_path</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="ModelId">
+<a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.model_id.ModelId">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModelId</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uniquely identifies a model in the registry.</span>
+
+<span class="sd">    A ``config_slug`` disambiguates multiple models for the same vehicle/year —</span>
+<span class="sd">    e.g. ``rf_steady_a1b2c3d4``, ``ngb_96224f1f``. The slug is *derived* from the</span>
+<span class="sd">    model&#39;s metadata (architecture + optional ``config.variant`` + feature-set</span>
+<span class="sd">    hash) via ``derive_config_slug``; it is not stored separately. The full</span>
+<span class="sd">    feature composition and estimator architecture live in the archive&#39;s</span>
+<span class="sd">    ``metadata.json`` (and in ``index.json`` for registry-level search).</span>
+
+<span class="sd">    A ``ModelId`` is a :class:`ModelKey` (the intrinsic, version-less identity,</span>
+<span class="sd">    derivable from metadata) plus a registry ``version`` (the only coordinate a</span>
+<span class="sd">    registry assigns). Use ``id.key`` to get the version-less identity, or</span>
+<span class="sd">    ``ModelId.from_key(key, version)`` / ``from_metadata(metadata, version)`` to</span>
+<span class="sd">    attach a version. ``from_path`` reconstructs one from the frozen registry</span>
+<span class="sd">    path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">make</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">vehicle_slug</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">year</span><span class="p">:</span> <span class="n">YearField</span>
+    <span class="n">config_slug</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">make</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">vehicle_slug</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">year</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">config_slug</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">version</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">data</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Preserve positional construction</span>
+        <span class="c1"># (make, vehicle_slug, year, config_slug, version)</span>
+        <span class="c1"># while still routing through pydantic validation.</span>
+        <span class="k">if</span> <span class="n">make</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;make&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">make</span>
+        <span class="k">if</span> <span class="n">vehicle_slug</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;vehicle_slug&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vehicle_slug</span>
+        <span class="k">if</span> <span class="n">year</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;year&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">year</span>
+        <span class="k">if</span> <span class="n">config_slug</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;config_slug&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config_slug</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;make&quot;</span><span class="p">,</span> <span class="s2">&quot;vehicle_slug&quot;</span><span class="p">,</span> <span class="s2">&quot;config_slug&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_lowercase</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelKey</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The version-less identity — everything except the registry version.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ModelKey</span><span class="p">(</span>
+            <span class="n">make</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make</span><span class="p">,</span>
+            <span class="n">vehicle_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vehicle_slug</span><span class="p">,</span>
+            <span class="n">year</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+            <span class="n">config_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config_slug</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ModelId.from_key">
+<a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.model_id.ModelId.from_key">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">ModelKey</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelId</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Attach a registry ``version`` to a version-less ``ModelKey``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">make</span><span class="o">=</span><span class="n">key</span><span class="o">.</span><span class="n">make</span><span class="p">,</span>
+            <span class="n">vehicle_slug</span><span class="o">=</span><span class="n">key</span><span class="o">.</span><span class="n">vehicle_slug</span><span class="p">,</span>
+            <span class="n">year</span><span class="o">=</span><span class="n">key</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+            <span class="n">config_slug</span><span class="o">=</span><span class="n">key</span><span class="o">.</span><span class="n">config_slug</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelId.from_metadata">
+<a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.model_id.ModelId.from_metadata">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_metadata</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Metadata</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelId</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mint a ModelId from a model&#39;s metadata plus a registry version.</span>
+
+<span class="sd">        This is the canonical constructor: the version-less identity is derived</span>
+<span class="sd">        from ``metadata`` (via ``ModelKey.from_metadata``), so the only</span>
+<span class="sd">        registry-assigned coordinate is ``version``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            metadata: the model metadata</span>
+<span class="sd">            version: the registry version (positive integer)</span>
+
+<span class="sd">        Returns: a ModelId instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_key</span><span class="p">(</span><span class="n">ModelKey</span><span class="o">.</span><span class="n">from_metadata</span><span class="p">(</span><span class="n">metadata</span><span class="p">),</span> <span class="n">version</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelId.from_path">
+<a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.model_id.ModelId.from_path">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_path</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelId</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse a ModelId from a path string.</span>
+
+<span class="sd">        Expected format: ``make/vehicle_slug/year/config_slug/v&lt;N&gt;``</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path: a ``/``-separated path string</span>
+
+<span class="sd">        Returns: a ModelId instance</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: if the path cannot be parsed as a valid model id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot parse model id from path &#39;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Expected &lt;make&gt;/&lt;vehicle_slug&gt;/&lt;year&gt;/&lt;config_slug&gt;/v&lt;N&gt;, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s2"> segments.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">make</span><span class="p">,</span> <span class="n">vehicle_slug</span><span class="p">,</span> <span class="n">year_str</span><span class="p">,</span> <span class="n">config_slug</span><span class="p">,</span> <span class="n">version_dir</span> <span class="o">=</span> <span class="n">parts</span>
+
+        <span class="n">match</span> <span class="o">=</span> <span class="n">_VERSION_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">version_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Version segment &#39;</span><span class="si">{</span><span class="n">version_dir</span><span class="si">}</span><span class="s2">&#39; does not match expected pattern v&lt;N&gt;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">make</span><span class="o">=</span><span class="n">make</span><span class="p">,</span>
+            <span class="n">vehicle_slug</span><span class="o">=</span><span class="n">vehicle_slug</span><span class="p">,</span>
+            <span class="n">year</span><span class="o">=</span><span class="n">parse_year</span><span class="p">(</span><span class="n">year_str</span><span class="p">),</span>
+            <span class="n">config_slug</span><span class="o">=</span><span class="n">config_slug</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelId.to_path">
+<a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.model_id.ModelId.to_path">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the registry path for this model.</span>
+
+<span class="sd">        Returns: e.g. &quot;toyota/camry_ice/2016/rf_default/v1&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">to_path</span><span class="p">()</span><span class="si">}</span><span class="s2">/v</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">make</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vehicle_slug</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">format_year</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="p">)</span><span class="si">}</span><span class="s2">/&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config_slug</span><span class="si">}</span><span class="s2">/v</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ModelInfo">
+<a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.model_id.ModelInfo">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModelInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lightweight model summary returned from registry queries (no binary data).&quot;&quot;&quot;</span>
+
+    <span class="n">model_id</span><span class="p">:</span> <span class="n">ModelId</span>
+    <span class="c1">#: The bare metadata ``vehicle.model`` name (e.g. ``&quot;camry&quot;``), as distinct</span>
+    <span class="c1">#: from the derived ``model_id.vehicle_slug`` (e.g. ``&quot;camry_ice&quot;``).</span>
+    <span class="c1">#: ``query(model=...)`` matches either. ``None`` for entries indexed before</span>
+    <span class="c1">#: this field existed.</span>
+    <span class="n">vehicle_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">estimator_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">feature_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">target_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">powertrain_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">vehicle_description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">architecture_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+    <span class="n">input_spec</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">mass_lbs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">fuel_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">drivetrain</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">engine</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">trim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">#: The model&#39;s registry-independent instance identity (``sha256:&lt;hex&gt;``),</span>
+    <span class="c1">#: read from ``metadata.json``. ``None`` for models published before</span>
+    <span class="c1">#: digests existed.</span>
+    <span class="n">model_digest</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">ModelInfo:&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  model_id:       </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="o">.</span><span class="n">to_path</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  description:    </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vehicle_description</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  year:           </span><span class="si">{</span><span class="n">format_year</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="o">.</span><span class="n">year</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  make:           </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="o">.</span><span class="n">make</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  model:          </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vehicle_model</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  vehicle_slug:   </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="o">.</span><span class="n">vehicle_slug</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  powertrain:     </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">powertrain_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  config_slug:    </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="o">.</span><span class="n">config_slug</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  architecture:   </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">architecture_tag</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  estimator:      </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  features:       </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_names</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  targets:        </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">target_names</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  mass_lbs:       </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mass_lbs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  fuel_type:      </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fuel_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  drivetrain:     </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">drivetrain</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  engine:         </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  trim:           </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">trim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_digest</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.core.digest</span><span class="w"> </span><span class="kn">import</span> <span class="n">short_digest</span>
+
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  digest:         </span><span class="si">{</span><span class="n">short_digest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_digest</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By National Laboratory of the Rockies
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

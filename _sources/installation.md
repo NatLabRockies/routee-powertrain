@@ -1,4 +1,5 @@
 # Installation
+
 (In case `pip` is unavailable, use `pip3`)
 
 ## From PyPI
@@ -6,7 +7,7 @@
 To install the base package for model prediction, we recommend you use `pip`:
 
 ```bash
-pip install nrel.routee.powertrain
+pip install routee.powertrain
 ```
 
 ## From Source
@@ -14,7 +15,7 @@ pip install nrel.routee.powertrain
 To install the package from source, you can clone the repository and install the package using `pip`:
 
 ```bash
-git clone https://github.com/NREL/routee-powertrain.git
+git clone https://github.com/NatLabRockies/routee-powertrain.git
 cd routee-powertrain
 pip install .
 ```
@@ -26,43 +27,52 @@ Each training pipeline has its own set of dependencies.
 
 ### Scikit-learn
 
-To install the dependencies for the scikit learn training pipeline, use the following command:
+To install the dependencies for the scikit-learn training pipeline, use the following command:
 
 ```bash
-pip install nrel.routee.powertrain[scikit]
+pip install routee.powertrain[scikit]
 ```
 
 This should support usage of the following trainers:
 
 - `SklearnRandomForestTrainer`
 
-### Rust Smartcore
+### NGBoost
 
-The rust smartcore training pipeline requires a rust compiler to be installed on your system.
-One way to do this is to use [Anaconda](https://docs.anaconda.com/anaconda/install/):
-
-Create a conda virtual environment as `routee`:
+To install the dependencies for the NGBoost training pipeline:
 
 ```bash
-conda create --name routee
-conda init
-conda activate routee
+pip install routee.powertrain[ngboost]
 ```
+
+This should support usage of the following trainers:
+
+- `NGBoostTrainer`
+
+### PyTorch (for CNN training)
+
+To install the dependencies for the 1D-CNN training pipeline (PyTorch + ONNX export tooling):
 
 ```bash
-conda install rust
+pip install routee.powertrain[pytorch]
 ```
 
-Then, you'll have to build the python rust extension for powertrain:
+This should support usage of the following trainers:
+
+- `CNNTrainer`
+
+## Plotting
+
+Visualization helpers like `pt.visualize_features` and `pt.contour_plot` require `matplotlib`. Install the `plot` extra to enable them:
 
 ```bash
-pip install maturin
-
-git clone https://github.com/NREL/routee-powertrain.git
-cd routee-powertrain/rust
-maturin develop --release
+pip install routee.powertrain[plot]
 ```
 
-This will install the `powertrain_rust` extension and should support usage of the following trainers:
+## Everything (development)
 
-- `SmartcoreRandomForestTrainer`
+To install the package along with every optional extra and the development tooling (pytest, mypy, ruff, jupyter-book, etc.), use the `dev` extra:
+
+```bash
+pip install -e ".[dev]"
+```

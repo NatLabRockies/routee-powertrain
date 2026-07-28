@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>What is RouteE? &#8212; My sample book</title>
+    <title>What is RouteE? &#8212; RouteE Powertrain</title>
   
   
   
@@ -60,7 +60,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'what_is_routee';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Model Prediction" href="model_prediction.html" />
+    <link rel="next" title="Migrating from v1" href="migrating_from_v1.html" />
     <link rel="prev" title="Installation" href="installation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="python"/>
@@ -153,8 +153,8 @@
       
     
     
-    <img src="_static/routeelogo.png" class="logo__image only-light" alt="My sample book - Home"/>
-    <script>document.write(`<img src="_static/routeelogo.png" class="logo__image only-dark" alt="My sample book - Home"/>`);</script>
+    <img src="_static/routeelogo.png" class="logo__image only-light" alt="RouteE Powertrain - Home"/>
+    <script>document.write(`<img src="_static/routeelogo.png" class="logo__image only-dark" alt="RouteE Powertrain - Home"/>`);</script>
   
   
 </a></div>
@@ -183,17 +183,20 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">What is RouteE?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrating_from_v1.html">Migrating from v1</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Reference</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="model_prediction.html">Model Prediction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_training.html">Model Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_docs.html">Python API Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="estimator_input_contract.html">Estimator Input/Output Contract</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="examples/model_prediction_example.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/model_training_example.html">Model Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/temperature_models_example.html">Temperature Models Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/to_lookup_table_example.html">Lookup Table Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing_a_model.html">Publishing a Trained Model</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
 <ul class="nav bd-sidenav">
@@ -253,7 +256,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-powertrain" target="_blank"
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain" target="_blank"
    class="btn btn-sm btn-source-repository-button dropdown-item"
    title="Source repository"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -270,7 +273,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-powertrain/issues/new?title=Issue%20on%20page%20%2Fwhat_is_routee.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain/issues/new?title=Issue%20on%20page%20%2Fwhat_is_routee.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -300,7 +303,7 @@
       
       
       
-      <li><a href="_sources/what_is_routee.ipynb" target="_blank"
+      <li><a href="_sources/what_is_routee.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -310,7 +313,7 @@
 <span class="btn__icon-container">
   <i class="fas fa-file"></i>
   </span>
-<span class="btn__text-container">.ipynb</span>
+<span class="btn__text-container">.md</span>
 </a>
 </li>
       
@@ -396,6 +399,7 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training">Training</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prediction">Prediction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-registry">Model Registry</a></li>
 </ul>
             </nav>
         </div>
@@ -409,140 +413,93 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="what-is-routee">
 <h1>What is RouteE?<a class="headerlink" href="#what-is-routee" title="Link to this heading">#</a></h1>
-<p>RouteE-Powertrain is a Python package that allows users to work with a set of pre-trained mesoscopic vehicle energy prediction models for a variety of vehicle types. Additionally, users can train their own models if &quot;ground truth&quot; energy consumption and driving data are available. RouteE-Powertrain models predict vehicle energy consumption over links in a road network, so the features considered for prediction often include traffic speeds, road grade, turns, etc. Common applications of RouteE-Powertrain are energy-aware (&quot;eco&quot;) routing (like <a class="reference external" href="https://nrel.github.io/routee-compass/intro.html">RouteE-Compass</a>), energy accounting in mesoscopic simulations, and range estimation (especially for EVs). The diagrams below illustrate the logic and data flows for training custom RouteE-Powertrain models and performing prediction with previously trained models.</p>
+<p>RouteE-Powertrain is a Python package that allows users to work with a set of pre-trained mesoscopic vehicle energy prediction models for a varity of vehicle types. Additionally, users can train their own models if &quot;ground truth&quot; energy consumption and driving data are available. RouteE-Powertrain models predict vehicle energy consumption over links in a road network, so the features considered for prediction often include traffic speeds, road grade, turns, etc. Common applications of RouteE-Powertrain are energy-aware (&quot;eco&quot;) routing (like <a class="reference external" href="https://nrel.github.io/routee-compass/intro.html">RouteE-Compass</a>), energy accounting in mesoscopic simulations, and range estimation (especially for EVs). The diagrams below illustrate the logic and data flows for training custom RouteE-Powertrain models and performing prediction with previously trained models.</p>
 <section id="training">
 <h2>Training<a class="headerlink" href="#training" title="Link to this heading">#</a></h2>
-<p><img alt="image" src="https://github.com/NREL/routee-powertrain/assets/4818940/f5a89f64-241b-494b-9fe6-e13a34595da0" /></p>
+<p><img alt="RouteE-Powertrain training data flow" src="_images/routee_training.png" /></p>
 <p>Training new RouteE-Powertrain models requires a set of link aggregate driving data with energy consumption on each link in the road network. Often this data comes from high-frequency GPS or telematics data collected by dedicated loggers or from connected vehicles that are always streaming telematics data. The energy consumption can either be vehicle reported/measured or simulated using a powertrain simulation software like <a class="reference external" href="https://github.com/NREL/fastsim">NREL's FASTSim</a>.</p>
 </section>
 <section id="prediction">
 <h2>Prediction<a class="headerlink" href="#prediction" title="Link to this heading">#</a></h2>
-<p><img alt="image" src="https://github.com/NREL/routee-powertrain/assets/4818940/b3a1d1af-5060-4bf4-a576-b0b11ffc9424" /></p>
-<p>In application, trained RouteE-Powertrain models expect link features as inputs and return predicted energy consumption for a particular vehicle over a link with the particular feature set. The RouteE developers maintain a separate repository for previously trained RouteE-Powertrain models, available for prediction &quot;off the shelf&quot;. To see which models are available you can use the <code class="docutils literal notranslate"><span class="pre">pt.list_available_models()</span></code> function.</p>
-<p>A couple of models are distributed with the package itself and you can list those like:</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">nrel.routee.powertrain</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pt</span>
+<p><img alt="RouteE-Powertrain prediction data flow" src="_images/routee_prediction.png" /></p>
+<p>In application, trained RouteE-Powertrain models expect link features as inputs and return predicted energy consumption for a particular vehicle over a link with the particular feature set. The RouteE developers maintain a separate repository for previously trained RouteE-Powertrain models, available for prediction &quot;off the shelf&quot;. To see which models are available you can use the <code class="docutils literal notranslate"><span class="pre">pt.list_available_models()</span></code> function:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">routee.powertrain</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pt</span>
 
-<span class="n">pt</span><span class="o">.</span><span class="n">list_available_models</span><span class="p">(</span><span class="n">external</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">pt</span><span class="o">.</span><span class="n">list_available_models</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;2016_TOYOTA_Camry_4cyl_2WD&#39;, &#39;2017_CHEVROLET_Bolt&#39;]
+<p>This returns a list of <code class="docutils literal notranslate"><span class="pre">ModelId</span></code> objects. For more detail (including feature names, errors, and powertrain type), use <code class="docutils literal notranslate"><span class="pre">query_available_models</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Query all available Toyota models</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;toyota&quot;</span><span class="p">)</span>
+
+<span class="c1"># Query with multiple filters</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;chevrolet&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;bolt&quot;</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2017</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
-<p>In addition, a larger number of models are available for download and can be listed like:</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pt</span><span class="o">.</span><span class="n">list_available_models</span><span class="p">(</span><span class="n">local</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<p>To predict with any of these models you can use the <code class="docutils literal notranslate"><span class="pre">pt.load_model()</span></code> function. Pass the registry path string (or a <code class="docutils literal notranslate"><span class="pre">ModelId</span></code> object) to load a model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">camry</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s1">&#39;toyota/camry_ice/2016/rf_c3326385/v1&#39;</span><span class="p">)</span>
+<span class="n">bolt</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s1">&#39;chevrolet/bolt_bev/2017/rf_c3326385/v1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+</section>
+<section id="model-registry">
+<h2>Model Registry<a class="headerlink" href="#model-registry" title="Link to this heading">#</a></h2>
+<p>Model discovery and retrieval go through a <code class="docutils literal notranslate"><span class="pre">ModelRegistry</span></code> abstraction. By default, models are fetched from a public <a class="reference external" href="https://huggingface.co">HuggingFace Hub</a> repository — anonymously, with downloads cached under <code class="docutils literal notranslate"><span class="pre">~/.cache/huggingface</span></code> so loading the same model twice only hits the network once. Set the <code class="docutils literal notranslate"><span class="pre">ROUTEE_REGISTRY_BACKEND</span></code> environment variable to read a local directory tree instead, or to fall back to the S3 bucket (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;routee.powertrain[s3]&quot;</span></code>, since <code class="docutils literal notranslate"><span class="pre">boto3</span></code> is no longer installed by default).</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">ROUTEE_HF_REVISION</span></code> to a commit sha pins the entire library — every model and the index — to an exact state, which is the simplest way to make a downstream analysis reproducible.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">ModelId</span></code> is structured as <code class="docutils literal notranslate"><span class="pre">&lt;make&gt;/&lt;vehicle_slug&gt;/&lt;year&gt;/&lt;config_slug&gt;/v&lt;N&gt;</span></code>. Both slugs are <em>derived</em> from the model's metadata: the <code class="docutils literal notranslate"><span class="pre">vehicle_slug</span></code> is the model name plus the coarse powertrain family (e.g. <code class="docutils literal notranslate"><span class="pre">camry_ice</span></code>, <code class="docutils literal notranslate"><span class="pre">bolt_bev</span></code>, <code class="docutils literal notranslate"><span class="pre">volt_phev</span></code> — both PHEV operating modes collapse to one <code class="docutils literal notranslate"><span class="pre">phev</span></code> family), and the <code class="docutils literal notranslate"><span class="pre">config_slug</span></code> disambiguates multiple trained configurations for the same vehicle as <code class="docutils literal notranslate"><span class="pre">&lt;architecture&gt;_&lt;variant?&gt;_&lt;feature_hash&gt;</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">rf_c3326385</span></code>, <code class="docutils literal notranslate"><span class="pre">ngb_stochastic_96224f1f</span></code>) — so different architectures, feature sets, or <code class="docutils literal notranslate"><span class="pre">variant</span></code> labels each get a distinct slug automatically. Omit the trailing <code class="docutils literal notranslate"><span class="pre">v&lt;N&gt;</span></code> to load the latest version. The version-less part (<code class="docutils literal notranslate"><span class="pre">&lt;make&gt;/&lt;vehicle_slug&gt;/&lt;year&gt;/&lt;config_slug&gt;</span></code>) is a model's <code class="docutils literal notranslate"><span class="pre">ModelKey</span></code>, exposed on any loaded or trained model as <code class="docutils literal notranslate"><span class="pre">model.key</span></code>.</p>
+<p>For a step-by-step walkthrough of training a new model and writing it into the registry layout, see <a class="reference internal" href="publishing_a_model.html"><span class="std std-doc">Publishing a Model</span></a>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ROUTEE_REGISTRY_BACKEND</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hf</span></code></p></td>
+<td><p>Backend to use: <code class="docutils literal notranslate"><span class="pre">hf</span></code>, <code class="docutils literal notranslate"><span class="pre">s3</span></code>, or <code class="docutils literal notranslate"><span class="pre">local</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ROUTEE_HF_REPO_ID</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NatLabRockies/routee-powertrain-model-library</span></code></p></td>
+<td><p>HuggingFace repo holding the model library</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ROUTEE_HF_REPO_TYPE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
+<td><p>HuggingFace repo type: <code class="docutils literal notranslate"><span class="pre">model</span></code> or <code class="docutils literal notranslate"><span class="pre">dataset</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ROUTEE_HF_REVISION</span></code></p></td>
+<td><p>(default branch)</p></td>
+<td><p>Branch, tag, or commit sha to read</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ROUTEE_HF_TOKEN</span></code></p></td>
+<td><p>(anonymous)</p></td>
+<td><p>Hub access token; unset reads public repos</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ROUTEE_S3_BUCKET</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">routeecore-bucket</span></code></p></td>
+<td><p>S3 bucket name</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ROUTEE_S3_REGION</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">us-west-2</span></code></p></td>
+<td><p>AWS region</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ROUTEE_S3_ROOT_PREFIX</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">routee-powertrain-model-library</span></code></p></td>
+<td><p>S3 key prefix</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ROUTEE_SCHEMA_VERSION</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">v2</span></code></p></td>
+<td><p>On-disk schema version</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ROUTEE_LOCAL_REGISTRY_ROOT</span></code></p></td>
+<td><p>(bundled registry)</p></td>
+<td><p>Filesystem root for the local backend</p></td>
+</tr>
+</tbody>
+</table>
 </div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;2010_Mazda_3_i-Stop&#39;,
- &#39;2012_Ford_Focus&#39;,
- &#39;2012_Ford_Fusion&#39;,
- &#39;2016_AUDI_A3_4cyl_2WD&#39;,
- &#39;2016_BMW_328d_4cyl_2WD&#39;,
- &#39;2016_BMW_i3_REx_PHEV_Charge_Depleting&#39;,
- &#39;2016_BMW_i3_REx_PHEV_Charge_Sustaining&#39;,
- &#39;2016_CHEVROLET_Malibu_4cyl_2WD&#39;,
- &#39;2016_CHEVROLET_Spark_EV&#39;,
- &#39;2016_CHEVROLET_Volt_Charge_Depleting&#39;,
- &#39;2016_CHEVROLET_Volt_Charge_Sustaining&#39;,
- &#39;2016_FORD_C-MAX_(PHEV)_Charge_Depleting&#39;,
- &#39;2016_FORD_C-MAX_(PHEV)_Charge_Sustaining&#39;,
- &#39;2016_FORD_C-MAX_HEV&#39;,
- &#39;2016_FORD_Escape_4cyl_2WD&#39;,
- &#39;2016_FORD_Explorer_4cyl_2WD&#39;,
- &#39;2016_HYUNDAI_Elantra_4cyl_2WD&#39;,
- &#39;2016_HYUNDAI_Sonata_PHEV_Charge_Depleting&#39;,
- &#39;2016_HYUNDAI_Sonata_PHEV_Charge_Sustaining&#39;,
- &#39;2016_Hyundai_Tucson_Fuel_Cell&#39;,
- &#39;2016_KIA_Optima_Hybrid&#39;,
- &#39;2016_Leaf_24_kWh&#39;,
- &#39;2016_MITSUBISHI_i-MiEV&#39;,
- &#39;2016_Nissan_Leaf_30_kWh&#39;,
- &#39;2016_Nissan_Leaf_30_kWh_0F_110F_steady&#39;,
- &#39;2016_Nissan_Leaf_30_kWh_0F_110F_transient&#39;,
- &#39;2016_TESLA_Model_S60_2WD&#39;,
- &#39;2016_TOYOTA_Camry_4cyl_2WD&#39;,
- &#39;2016_TOYOTA_Corolla_4cyl_2WD&#39;,
- &#39;2016_TOYOTA_Corolla_4cyl_2WD_Stochastic&#39;,
- &#39;2016_TOYOTA_Highlander_Hybrid&#39;,
- &#39;2016_Toyota_Prius_Two_FWD&#39;,
- &#39;2017_CHEVROLET_Bolt&#39;,
- &#39;2017_Maruti_Dzire_VDI&#39;,
- &#39;2017_Prius_Prime_Charge_Depleting&#39;,
- &#39;2017_Prius_Prime_Charge_Sustaining&#39;,
- &#39;2017_Toyota_Highlander_3&#39;,
- &#39;2020_Chevrolet_Bolt_EV_0F_110F_steady&#39;,
- &#39;2020_Chevrolet_Bolt_EV_0F_110F_transient&#39;,
- &#39;2020_Chevrolet_Colorado_2WD_Diesel&#39;,
- &#39;2020_Chevrolet_Colorado_2WD_Diesel_Stochastic&#39;,
- &#39;2020_VW_Golf_1&#39;,
- &#39;2020_VW_Golf_2&#39;,
- &#39;2021_BMW_iX_xDrive40&#39;,
- &#39;2021_Cupra_Born&#39;,
- &#39;2021_Fiat_Panda_Mild_Hybrid&#39;,
- &#39;2021_Honda_N-Box_G&#39;,
- &#39;2021_Peugot_3008&#39;,
- &#39;2022_Ford_F-150_Lightning_4WD&#39;,
- &#39;2022_MINI_Cooper_SE_Hardtop_2_door&#39;,
- &#39;2022_Renault_Megane_E-Tech&#39;,
- &#39;2022_Renault_Zoe_ZE50_R135&#39;,
- &#39;2022_Tesla_Model_3_RWD&#39;,
- &#39;2022_Tesla_Model_3_RWD_0F_110F_steady&#39;,
- &#39;2022_Tesla_Model_3_RWD_0F_110F_transient&#39;,
- &#39;2022_Tesla_Model_Y_RWD&#39;,
- &#39;2022_Tesla_Model_Y_RWD_Stochastic&#39;,
- &#39;2022_Toyota_Avanza_E_J_MT&#39;,
- &#39;2022_Toyota_RAV4_Hybrid_LE&#39;,
- &#39;2022_Toyota_RAV4_Hybrid_LE_Stochastic&#39;,
- &#39;2022_Toyota_Yaris_Hybrid_Mid&#39;,
- &#39;2022_Volvo_XC40_Recharge_twin&#39;,
- &#39;2023_Mitsubishi_Pajero_Sport&#39;,
- &#39;2023_Polestar_2_Long_range_Dual_motor&#39;,
- &#39;2023_Volvo_C40_Recharge&#39;,
- &#39;2024_BYD_Dolphin_Active&#39;,
- &#39;2024_Toyota_Vios_1&#39;,
- &#39;2024_VinFast_VF_e34&#39;,
- &#39;2024_Volkswagen_Polo_1&#39;,
- &#39;BYD_ATTO_3&#39;,
- &#39;Daycab_new_300kW&#39;,
- &#39;Daycab_new_400kW&#39;,
- &#39;Daycab_old_300kW&#39;,
- &#39;Daycab_old_400kW&#39;,
- &#39;Maruti_Swift_4cyl_2WD&#39;,
- &#39;Nissan_Navara&#39;,
- &#39;Renault_Clio_IV_diesel&#39;,
- &#39;Renault_Megane_1&#39;,
- &#39;Sleeper_new_300kW&#39;,
- &#39;Sleeper_new_400kW&#39;,
- &#39;Sleeper_old_300kW&#39;,
- &#39;Sleeper_old_400kW&#39;,
- &#39;Toyota_Corolla_Cross_Hybrid&#39;,
- &#39;Toyota_Etios_Liva_diesel&#39;,
- &#39;Toyota_Hilux_Double_Cab_4WD&#39;,
- &#39;Toyota_Mirai&#39;,
- &#39;Transit_Bus_Battery_Electric&#39;,
- &#39;Transit_Bus_Diesel&#39;]
-</pre></div>
-</div>
-</div>
-</div>
-<p>To predict with any of these models you can use the <code class="docutils literal notranslate"><span class="pre">pt.load_model()</span></code> function. Here's an example of loading both a local model and an external model.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">camry</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;2016_TOYOTA_Camry_4cyl_2WD&quot;</span><span class="p">)</span>
-<span class="n">tesla</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;2022_Tesla_Model_Y_RWD&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">query_available_models</span></code> supports fuzzy string matching by default (<code class="docutils literal notranslate"><span class="pre">fuzzy=True</span></code>, <code class="docutils literal notranslate"><span class="pre">fuzzy_threshold=80</span></code>) and accepts the additional filters <code class="docutils literal notranslate"><span class="pre">powertrain_type</span></code>, <code class="docutils literal notranslate"><span class="pre">fuel_type</span></code>, <code class="docutils literal notranslate"><span class="pre">drivetrain</span></code>, <code class="docutils literal notranslate"><span class="pre">engine</span></code>, <code class="docutils literal notranslate"><span class="pre">trim</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_names</span></code>, and <code class="docutils literal notranslate"><span class="pre">custom_filters</span></code>. Pass <code class="docutils literal notranslate"><span class="pre">version_strategy=&quot;all&quot;</span></code> to see every version of every model instead of just the latest.</p>
 </section>
 </section>
 
@@ -586,11 +543,11 @@ document.write(`
       </div>
     </a>
     <a class="right-next"
-       href="model_prediction.html"
+       href="migrating_from_v1.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Model Prediction</p>
+        <p class="prev-next-title">Migrating from v1</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -612,6 +569,7 @@ document.write(`
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training">Training</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prediction">Prediction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-registry">Model Registry</a></li>
 </ul>
   </nav></div>
 
@@ -626,7 +584,7 @@ document.write(`
   <div class="footer-item">
     
 <p class="component-author">
-By The Jupyter Book Community
+By National Laboratory of the Rockies
 </p>
 
   </div>

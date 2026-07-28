@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Build The Docs &#8212; My sample book</title>
+    <title>Build The Docs &#8212; RouteE Powertrain</title>
   
   
   
@@ -61,7 +61,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Contributing" href="contributing.html" />
-    <link rel="prev" title="Lookup Table Example" href="examples/to_lookup_table_example.html" />
+    <link rel="prev" title="Publishing a Trained Model" href="publishing_a_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="python"/>
   </head>
@@ -153,8 +153,8 @@
       
     
     
-    <img src="_static/routeelogo.png" class="logo__image only-light" alt="My sample book - Home"/>
-    <script>document.write(`<img src="_static/routeelogo.png" class="logo__image only-dark" alt="My sample book - Home"/>`);</script>
+    <img src="_static/routeelogo.png" class="logo__image only-light" alt="RouteE Powertrain - Home"/>
+    <script>document.write(`<img src="_static/routeelogo.png" class="logo__image only-dark" alt="RouteE Powertrain - Home"/>`);</script>
   
   
 </a></div>
@@ -183,17 +183,20 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="what_is_routee.html">What is RouteE?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrating_from_v1.html">Migrating from v1</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Reference</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="model_prediction.html">Model Prediction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_training.html">Model Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_docs.html">Python API Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="estimator_input_contract.html">Estimator Input/Output Contract</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="examples/model_prediction_example.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/model_training_example.html">Model Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/temperature_models_example.html">Temperature Models Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/to_lookup_table_example.html">Lookup Table Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing_a_model.html">Publishing a Trained Model</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
 <ul class="current nav bd-sidenav">
@@ -253,7 +256,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-powertrain" target="_blank"
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain" target="_blank"
    class="btn btn-sm btn-source-repository-button dropdown-item"
    title="Source repository"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -270,7 +273,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-powertrain/issues/new?title=Issue%20on%20page%20%2Fbuild_the_docs.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain/issues/new?title=Issue%20on%20page%20%2Fbuild_the_docs.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -402,6 +405,10 @@ document.write(`
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>jupyter-book&lt;<span class="m">2</span>
 </pre></div>
 </div>
+<p>Make sure to convert the examples to jupyter notebooks:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>docs/examples/_convert_examples_to_notebooks.py
+</pre></div>
+</div>
 <p>Then, to build the docs, run the following command from the root of the repository:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jupyter-book<span class="w"> </span>build<span class="w"> </span>docs/
 </pre></div>
@@ -440,12 +447,12 @@ document.write(`
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="examples/to_lookup_table_example.html"
+       href="publishing_a_model.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Lookup Table Example</p>
+        <p class="prev-next-title">Publishing a Trained Model</p>
       </div>
     </a>
     <a class="right-next"
@@ -473,7 +480,7 @@ document.write(`
   <div class="footer-item">
     
 <p class="component-author">
-By The Jupyter Book Community
+By National Laboratory of the Rockies
 </p>
 
   </div>

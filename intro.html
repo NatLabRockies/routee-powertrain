@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>RouteE Powertrain &#8212; My sample book</title>
+    <title>RouteE Powertrain &#8212; RouteE Powertrain</title>
   
   
   
@@ -154,8 +154,8 @@
       
     
     
-    <img src="_static/routeelogo.png" class="logo__image only-light" alt="My sample book - Home"/>
-    <script>document.write(`<img src="_static/routeelogo.png" class="logo__image only-dark" alt="My sample book - Home"/>`);</script>
+    <img src="_static/routeelogo.png" class="logo__image only-light" alt="RouteE Powertrain - Home"/>
+    <script>document.write(`<img src="_static/routeelogo.png" class="logo__image only-dark" alt="RouteE Powertrain - Home"/>`);</script>
   
   
 </a></div>
@@ -184,17 +184,20 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="what_is_routee.html">What is RouteE?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrating_from_v1.html">Migrating from v1</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Reference</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="model_prediction.html">Model Prediction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_training.html">Model Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_docs.html">Python API Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="estimator_input_contract.html">Estimator Input/Output Contract</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="examples/model_prediction_example.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/model_training_example.html">Model Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/temperature_models_example.html">Temperature Models Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/to_lookup_table_example.html">Lookup Table Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing_a_model.html">Publishing a Trained Model</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
 <ul class="nav bd-sidenav">
@@ -254,7 +257,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-powertrain" target="_blank"
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain" target="_blank"
    class="btn btn-sm btn-source-repository-button dropdown-item"
    title="Source repository"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -271,7 +274,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-powertrain/issues/new?title=Issue%20on%20page%20%2Fintro.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain/issues/new?title=Issue%20on%20page%20%2Fintro.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -413,25 +416,27 @@ document.write(`
 <section id="quickstart">
 <h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">#</a></h2>
 <p>RouteE Powertrain is available on PyPI and can be installed with <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>nrel.routee.powertrain
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>routee.powertrain
 </pre></div>
 </div>
 <p>Then, you can import the package and use a pre-trained model from the RouteE model catalog:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">nrel.routee.powertrain</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">routee.powertrain</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pt</span>
 
-<span class="c1"># Print the available pre-trained models</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">list_available_models</span><span class="p">(</span><span class="n">local</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">external</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="c1"># List the available pre-trained models (returns a list of ModelId objects)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">list_available_models</span><span class="p">())</span>
 
 <span class="c1"># [</span>
-<span class="c1">#   &#39;2016_TOYOTA_Camry_4cyl_2WD&#39;,</span>
-<span class="c1">#   &#39;2017_CHEVROLET_Bolt&#39;,</span>
-<span class="c1">#   &#39;2012_Ford_Focus&#39;,</span>
+<span class="c1">#   toyota/camry_ice/2016/rf_c3326385/v1,</span>
+<span class="c1">#   chevrolet/bolt_bev/2017/rf_c3326385/v1,</span>
 <span class="c1">#   ...</span>
 <span class="c1"># ]</span>
 
-<span class="c1"># Load a pre-trained model</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;2016_TOYOTA_Camry_4cyl_2WD&quot;</span><span class="p">)</span>
+<span class="c1"># You can also query available models with filters for more detail</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;toyota&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;camry&quot;</span><span class="p">)</span>
+
+<span class="c1"># Load a pre-trained model using its registry path</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;toyota/camry_ice/2016/rf_c3326385/v1&quot;</span><span class="p">)</span>
 
 <span class="c1"># Inspect the model to see what it expects for input</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
@@ -439,26 +444,18 @@ document.write(`
 <span class="c1"># ========================================</span>
 <span class="c1"># Model Summary</span>
 <span class="c1"># --------------------</span>
-<span class="c1"># Vehicle description: 2016_TOYOTA_Camry_4cyl_2WD</span>
+<span class="c1"># Vehicle description: 2016_TOYOTA_Camry_4cyl_2WD trained July 2024</span>
 <span class="c1"># Powertrain type: ICE</span>
-<span class="c1"># Number of estimators: 2</span>
 <span class="c1"># ========================================</span>
 <span class="c1"># Estimator Summary</span>
 <span class="c1"># --------------------</span>
 <span class="c1"># Feature: speed_mph (mph)</span>
-<span class="c1"># Distance: miles (miles)</span>
-<span class="c1"># Target: gge (gallons_gasoline)</span>
-<span class="c1"># Raw Predicted Consumption: 29.856 (miles/gallons_gasoline)</span>
-<span class="c1"># Real World Predicted Consumption: 25.606 (miles/gallons_gasoline)</span>
-<span class="c1"># ========================================</span>
-<span class="c1"># Estimator Summary</span>
-<span class="c1"># --------------------</span>
-<span class="c1"># Feature: speed_mph (mph)</span>
-<span class="c1"># Feature: grade_dec (decimal)</span>
-<span class="c1"># Distance: miles (miles)</span>
-<span class="c1"># Target: gge (gallons_gasoline)</span>
-<span class="c1"># Raw Predicted Consumption: 29.845 (miles/gallons_gasoline)</span>
-<span class="c1"># Real World Predicted Consumption: 25.596 (miles/gallons_gasoline)</span>
+<span class="c1"># Feature: grade_percent (percent)</span>
+<span class="c1"># Distance: distance (miles)</span>
+<span class="c1"># Target: gge (gallons gasoline)</span>
+<span class="c1"># Raw Predicted Consumption: 30.289 (miles/gallons gasoline)</span>
+<span class="c1"># Real World Predicted Consumption: 25.977 (miles/gallons gasoline)</span>
+<span class="c1"># Predict Method: RATE</span>
 <span class="c1"># ========================================</span>
 
 <span class="c1"># Predict energy consumption for a set of road links</span>
@@ -466,7 +463,7 @@ document.write(`
     <span class="p">{</span>
         <span class="s2">&quot;distance&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="c1"># miles</span>
         <span class="s2">&quot;speed_mph&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">50</span><span class="p">],</span> <span class="c1"># mph</span>
-        <span class="s2">&quot;grade_percent&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="c1"># percent</span>
+        <span class="s2">&quot;grade_percent&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">],</span> <span class="c1"># percent</span>
     <span class="p">}</span>
 <span class="p">)</span>
 
@@ -554,7 +551,7 @@ document.write(`
   <div class="footer-item">
     
 <p class="component-author">
-By The Jupyter Book Community
+By National Laboratory of the Rockies
 </p>
 
   </div>

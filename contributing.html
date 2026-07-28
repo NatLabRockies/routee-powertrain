@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Contributing &#8212; My sample book</title>
+    <title>Contributing &#8212; RouteE Powertrain</title>
   
   
   
@@ -152,8 +152,8 @@
       
     
     
-    <img src="_static/routeelogo.png" class="logo__image only-light" alt="My sample book - Home"/>
-    <script>document.write(`<img src="_static/routeelogo.png" class="logo__image only-dark" alt="My sample book - Home"/>`);</script>
+    <img src="_static/routeelogo.png" class="logo__image only-light" alt="RouteE Powertrain - Home"/>
+    <script>document.write(`<img src="_static/routeelogo.png" class="logo__image only-dark" alt="RouteE Powertrain - Home"/>`);</script>
   
   
 </a></div>
@@ -182,17 +182,20 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="what_is_routee.html">What is RouteE?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrating_from_v1.html">Migrating from v1</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Reference</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="model_prediction.html">Model Prediction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_training.html">Model Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_docs.html">Python API Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="estimator_input_contract.html">Estimator Input/Output Contract</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="examples/model_prediction_example.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/model_training_example.html">Model Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/temperature_models_example.html">Temperature Models Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/to_lookup_table_example.html">Lookup Table Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing_a_model.html">Publishing a Trained Model</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
 <ul class="current nav bd-sidenav">
@@ -252,7 +255,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-powertrain" target="_blank"
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain" target="_blank"
    class="btn btn-sm btn-source-repository-button dropdown-item"
    title="Source repository"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -269,7 +272,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-powertrain/issues/new?title=Issue%20on%20page%20%2Fcontributing.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain/issues/new?title=Issue%20on%20page%20%2Fcontributing.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -396,7 +399,11 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#identifying-an-issue">Identifying an Issue</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#letting-others-know-youre-working-on-the-issue">Letting Others Know You’re Working on the Issue</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forking-the-repository">Forking the Repository</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-the-development-environment">Installing the development environment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-the-development-environment">Installing the development environment</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-pixi-recommended">Using Pixi (recommended)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-pip">Using pip</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opening-a-pull-request">Opening a Pull Request</a></li>
 </ul>
             </nav>
@@ -438,10 +445,29 @@ document.write(`
 </section>
 <section id="installing-the-development-environment">
 <h2>Installing the development environment<a class="headerlink" href="#installing-the-development-environment" title="Link to this heading">#</a></h2>
+<section id="using-pixi-recommended">
+<h3>Using Pixi (recommended)<a class="headerlink" href="#using-pixi-recommended" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p>Install <a class="reference external" href="https://pixi.sh">Pixi</a> if you haven't already.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">pixi</span> <span class="pre">install</span></code> from the project root. This will create an environment with Python, all dev dependencies, and tooling (ruff, dprint, mypy, etc.).</p></li>
+<li><p>Set up the pre-commit hooks by running <code class="docutils literal notranslate"><span class="pre">pixi</span> <span class="pre">run</span> <span class="pre">precommit-install</span></code>. This ensures formatting, linting, type checking, and tests run automatically before each commit.</p></li>
+<li><p>You can now run tasks with <code class="docutils literal notranslate"><span class="pre">pixi</span> <span class="pre">run</span> <span class="pre">&lt;task&gt;</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pixi</span> <span class="pre">run</span> <span class="pre">check</span></code> — auto-fix formatting + lint, then run type checking and tests</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pixi</span> <span class="pre">run</span> <span class="pre">ci</span></code> — same checks without auto-fix (mirrors CI)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pixi</span> <span class="pre">run</span> <span class="pre">test</span></code> — run tests only</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="using-pip">
+<h3>Using pip<a class="headerlink" href="#using-pip" title="Link to this heading">#</a></h3>
 <ol class="arabic simple">
 <li><p>Create and activate a new virtual environment with the tool of your choice (e.g. venv, conda, pipenv, etc.).</p></li>
-<li><p>Install the package and dependencies by running pip install -e &quot;.[dev]&quot;. This will install the package in editable mode, so you can make changes to the code and see them reflected in your environment.</p></li>
+<li><p>Install the package and dependencies by running <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">&quot;.[dev]&quot;</span></code>. This will install the package in editable mode, so you can make changes to the code and see them reflected in your environment.</p></li>
+<li><p>Set up the pre-commit hooks by running <code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">install</span></code>.</p></li>
 </ol>
+</section>
 </section>
 <section id="opening-a-pull-request">
 <h2>Opening a Pull Request<a class="headerlink" href="#opening-a-pull-request" title="Link to this heading">#</a></h2>
@@ -517,7 +543,11 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#identifying-an-issue">Identifying an Issue</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#letting-others-know-youre-working-on-the-issue">Letting Others Know You’re Working on the Issue</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forking-the-repository">Forking the Repository</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-the-development-environment">Installing the development environment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-the-development-environment">Installing the development environment</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-pixi-recommended">Using Pixi (recommended)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-pip">Using pip</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opening-a-pull-request">Opening a Pull Request</a></li>
 </ul>
   </nav></div>
@@ -533,7 +563,7 @@ document.write(`
   <div class="footer-item">
     
 <p class="component-author">
-By The Jupyter Book Community
+By National Laboratory of the Rockies
 </p>
 
   </div>

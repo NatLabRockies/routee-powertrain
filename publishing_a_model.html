@@ -1,0 +1,784 @@
+
+<!DOCTYPE html>
+
+
+<html lang="python" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Publishing a Trained Model &#8212; RouteE Powertrain</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=30a733bc"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js?v=b8b12719"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'publishing_a_model';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Build The Docs" href="build_the_docs.html" />
+    <link rel="prev" title="Lookup Table Example" href="examples/to_lookup_table_example.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="python"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="intro.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/routeelogo.png" class="logo__image only-light" alt="RouteE Powertrain - Home"/>
+    <script>document.write(`<img src="_static/routeelogo.png" class="logo__image only-dark" alt="RouteE Powertrain - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="intro.html">
+                    RouteE Powertrain
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="what_is_routee.html">What is RouteE?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrating_from_v1.html">Migrating from v1</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">Python API Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="estimator_input_contract.html">Estimator Input/Output Contract</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="examples/model_prediction_example.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/model_training_example.html">Model Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/temperature_models_example.html">Temperature Models Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/to_lookup_table_example.html">Lookup Table Example</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Publishing a Trained Model</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="build_the_docs.html">Build The Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain/issues/new?title=Issue%20on%20page%20%2Fpublishing_a_model.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/publishing_a_model.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Publishing a Trained Model</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-v2-registry-layout">The v2 Registry Layout</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-derived-vehicle-slug">The derived <code class="docutils literal notranslate"><span class="pre">vehicle_slug</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-derived-config-slug">The derived <code class="docutils literal notranslate"><span class="pre">config_slug</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-and-publish">Train and Publish</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-it-back">Load It Back</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-in-metadata-json">What's in <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sharing-your-model">Sharing Your Model</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="publishing-a-trained-model">
+<h1>Publishing a Trained Model<a class="headerlink" href="#publishing-a-trained-model" title="Link to this heading">#</a></h1>
+<p>After training a model with one of the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> classes, you can save it
+into the v2 registry layout that every registry backend understands —
+<code class="docutils literal notranslate"><span class="pre">LocalRegistry</span></code>, <code class="docutils literal notranslate"><span class="pre">HFRegistry</span></code>, and <code class="docutils literal notranslate"><span class="pre">S3Registry</span></code> all read the same tree.
+This page walks through writing a trained model into a local registry,
+understanding the derived <code class="docutils literal notranslate"><span class="pre">vehicle_slug</span></code> and <code class="docutils literal notranslate"><span class="pre">config_slug</span></code>, and loading it
+back through <code class="docutils literal notranslate"><span class="pre">pt.load_model()</span></code>.</p>
+<section id="the-v2-registry-layout">
+<h2>The v2 Registry Layout<a class="headerlink" href="#the-v2-registry-layout" title="Link to this heading">#</a></h2>
+<p>Every model in the registry lives in a five-segment path:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">registry_root</span><span class="o">&gt;/</span><span class="n">v2</span><span class="o">/&lt;</span><span class="n">make</span><span class="o">&gt;/&lt;</span><span class="n">vehicle_slug</span><span class="o">&gt;/&lt;</span><span class="n">year</span><span class="o">&gt;/&lt;</span><span class="n">config_slug</span><span class="o">&gt;/</span><span class="n">v</span><span class="o">&lt;</span><span class="n">N</span><span class="o">&gt;/</span>
+    <span class="n">metadata</span><span class="o">.</span><span class="n">json</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">onnx</span>        <span class="c1"># (or another binary, depending on the estimator)</span>
+</pre></div>
+</div>
+<p>The bundled example at
+<code class="docutils literal notranslate"><span class="pre">routee/powertrain/resources/bundled_registry/v2/toyota/camry_ice/2016/rf_c3326385/v1/</span></code>
+is a concrete reference for what the on-disk layout looks like.</p>
+</section>
+<section id="the-derived-vehicle-slug">
+<h2>The derived <code class="docutils literal notranslate"><span class="pre">vehicle_slug</span></code><a class="headerlink" href="#the-derived-vehicle-slug" title="Link to this heading">#</a></h2>
+<p>The second path segment identifies the vehicle. Like the <code class="docutils literal notranslate"><span class="pre">config_slug</span></code>, <strong>you
+don't write it — it is derived from the model's metadata</strong> as a pure function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">model</span><span class="o">&gt;</span><span class="n">_</span><span class="o">&lt;</span><span class="n">powertrain_family</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>model</strong> — the <code class="docutils literal notranslate"><span class="pre">ModelConfig.model</span></code> name. Use the vehicle's full commercial
+designation, including whatever distinguishes same-year stablemates:
+<code class="docutils literal notranslate"><span class="pre">camry</span></code>, <code class="docutils literal notranslate"><span class="pre">golf_1.5tsi</span></code> vs <code class="docutils literal notranslate"><span class="pre">golf_2.0tdi</span></code>, <code class="docutils literal notranslate"><span class="pre">leaf_24_kwh</span></code> vs <code class="docutils literal notranslate"><span class="pre">leaf_30_kwh</span></code>.</p></li>
+<li><p><strong>powertrain_family</strong> — the coarse family of <code class="docutils literal notranslate"><span class="pre">powertrain_type</span></code>: <code class="docutils literal notranslate"><span class="pre">ice</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hev</span></code>, <code class="docutils literal notranslate"><span class="pre">bev</span></code>, <code class="docutils literal notranslate"><span class="pre">phev</span></code>, <code class="docutils literal notranslate"><span class="pre">heavy_duty</span></code>. The two PHEV operating modes
+(<code class="docutils literal notranslate"><span class="pre">PHEV_EV_MODE</span></code> / <code class="docutils literal notranslate"><span class="pre">PHEV_HEV_MODE</span></code>) collapse to one <code class="docutils literal notranslate"><span class="pre">phev</span></code> family — a
+charge-depleting and a charge-sustaining model describe the <em>same vehicle</em>,
+and that split lives in <code class="docutils literal notranslate"><span class="pre">ModelConfig.variant</span></code> (and thus the <code class="docutils literal notranslate"><span class="pre">config_slug</span></code>).</p></li>
+</ul>
+<p>So <code class="docutils literal notranslate"><span class="pre">model=&quot;Camry&quot;</span></code> with <code class="docutils literal notranslate"><span class="pre">powertrain_type=ICE</span></code> lands at
+<code class="docutils literal notranslate"><span class="pre">.../toyota/camry_ice/...</span></code>, and both Volt operating-mode models share
+<code class="docutils literal notranslate"><span class="pre">.../chevrolet/volt_phev/...</span></code>. The model token is sanitized (lowercased,
+whitespace and <code class="docutils literal notranslate"><span class="pre">/</span></code> become <code class="docutils literal notranslate"><span class="pre">-</span></code>), and the slug is never parsed back apart — the
+registry always re-derives it from metadata and compares.</p>
+<p>The remaining vehicle attributes — <code class="docutils literal notranslate"><span class="pre">engine</span></code>, <code class="docutils literal notranslate"><span class="pre">drivetrain</span></code>, <code class="docutils literal notranslate"><span class="pre">trim</span></code>,
+<code class="docutils literal notranslate"><span class="pre">fuel_type</span></code>, <code class="docutils literal notranslate"><span class="pre">mass_lbs</span></code> — are deliberately <strong>not</strong> identity. They are
+descriptive metadata: individually filterable
+(<code class="docutils literal notranslate"><span class="pre">pt.query_available_models(engine=&quot;4cyl&quot;)</span></code>) and correctable on an
+already-published model without renaming its registry path. Only put a
+distinction in the model name when it genuinely names a different vehicle.</p>
+</section>
+<section id="the-derived-config-slug">
+<h2>The derived <code class="docutils literal notranslate"><span class="pre">config_slug</span></code><a class="headerlink" href="#the-derived-config-slug" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">config_slug</span></code> disambiguates multiple trained configurations for the same
+vehicle and year. <strong>You don't pick it — it is derived from the model's
+metadata</strong>, so it stays consistent and can't drift from what the model actually
+is. The slug is a pure function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>&lt;architecture&gt;_&lt;variant?&gt;_&lt;feature_set_hash&gt;
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>architecture</strong> — a short code for the estimator family (<code class="docutils literal notranslate"><span class="pre">rf</span></code>, <code class="docutils literal notranslate"><span class="pre">ngb</span></code>, <code class="docutils literal notranslate"><span class="pre">cnn</span></code>),
+from <code class="docutils literal notranslate"><span class="pre">metadata.estimator.architecture_tag</span></code>.</p></li>
+<li><p><strong>variant</strong> — the optional <code class="docutils literal notranslate"><span class="pre">ModelConfig.variant</span></code> label, included only when set.</p></li>
+<li><p><strong>feature_set_hash</strong> — a short hash of the feature set, so different feature
+compositions get different slugs automatically.</p></li>
+</ul>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">rf_c3326385</span></code> (a random forest over speed &amp; grade) or
+<code class="docutils literal notranslate"><span class="pre">ngb_stochastic_96224f1f</span></code> (an NGBoost model with <code class="docutils literal notranslate"><span class="pre">variant=&quot;stochastic&quot;</span></code>).</p>
+<p>Because the hash already separates different feature sets, the only time you
+need to intervene is when <strong>two models share the same architecture <em>and</em> feature
+set</strong> but represent different regimes — e.g. a &quot;steady thermal state&quot; model and
+a &quot;warm-up&quot; model. Set <code class="docutils literal notranslate"><span class="pre">ModelConfig.variant</span></code> to tell them apart:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">ModelConfig</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;steady&quot;</span><span class="p">)</span>   <span class="c1"># -&gt; rf_steady_&lt;hash&gt;</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">ModelConfig</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;warmup&quot;</span><span class="p">)</span>   <span class="c1"># -&gt; rf_warmup_&lt;hash&gt;</span>
+</pre></div>
+</div>
+<p>The registry recomputes both derived slugs when loading and <strong>raises if either
+disagrees with the on-disk path</strong>, so a moved or hand-edited model surfaces
+loudly instead of silently mis-loading. <code class="docutils literal notranslate"><span class="pre">version</span></code> is the one coordinate the
+registry assigns, not part of the derived identity — retraining the same
+configuration bumps <code class="docutils literal notranslate"><span class="pre">v&lt;N&gt;</span></code>.</p>
+</section>
+<section id="train-and-publish">
+<h2>Train and Publish<a class="headerlink" href="#train-and-publish" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Model.save_to_registry()</span></code> writes a trained model into the canonical layout in
+one call. It pulls <code class="docutils literal notranslate"><span class="pre">make</span></code> and <code class="docutils literal notranslate"><span class="pre">year</span></code> from <code class="docutils literal notranslate"><span class="pre">model.metadata.vehicle</span></code> and derives
+the <code class="docutils literal notranslate"><span class="pre">vehicle_slug</span></code> (model + powertrain family) and the <code class="docutils literal notranslate"><span class="pre">config_slug</span></code>, so make
+sure those fields on your <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> are correct before training.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">routee.powertrain</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.trainers.sklearn_random_forest</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SklearnRandomForestTrainer</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">ModelConfig</span><span class="p">(</span>
+    <span class="n">vehicle_description</span><span class="o">=</span><span class="s2">&quot;2024 Test Sedan&quot;</span><span class="p">,</span>
+    <span class="n">powertrain_type</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">PowertrainType</span><span class="o">.</span><span class="n">ICE</span><span class="p">,</span>
+    <span class="n">feature_set</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;speed_mph&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;mph&quot;</span><span class="p">),</span>
+        <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;grade_dec&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;decimal&quot;</span><span class="p">),</span>
+    <span class="p">]),</span>
+    <span class="n">distance</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;miles&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;miles&quot;</span><span class="p">),</span>
+    <span class="n">target</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">TargetSet</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;gallons_fastsim&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;gallons_gasoline&quot;</span><span class="p">),</span>
+    <span class="p">]),</span>
+    <span class="n">make</span><span class="o">=</span><span class="s2">&quot;Test&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;Sedan&quot;</span><span class="p">,</span>
+    <span class="n">year</span><span class="o">=</span><span class="mi">2024</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">SklearnRandomForestTrainer</span><span class="p">()</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">training_df</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<span class="c1"># both slugs are derived; version defaults to the next unused version.</span>
+<span class="n">model_id</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">save_to_registry</span><span class="p">(</span><span class="n">registry_root</span><span class="o">=</span><span class="s2">&quot;./my_local_registry&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span>      <span class="c1"># test/sedan_ice/2024/rf_aaa9554f/v1</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>     <span class="c1"># test/sedan_ice/2024/rf_aaa9554f  (version-less identity)</span>
+</pre></div>
+</div>
+<p>This creates <code class="docutils literal notranslate"><span class="pre">./my_local_registry/v2/test/sedan_ice/2024/rf_aaa9554f/v1/</span></code> with
+<code class="docutils literal notranslate"><span class="pre">metadata.json</span></code> and <code class="docutils literal notranslate"><span class="pre">model.onnx</span></code> inside. If that exact version already has
+files, the call raises <code class="docutils literal notranslate"><span class="pre">FileExistsError</span></code> — omit <code class="docutils literal notranslate"><span class="pre">version</span></code> to auto-increment, or
+pass <code class="docutils literal notranslate"><span class="pre">overwrite=True</span></code>.</p>
+<p>Every <code class="docutils literal notranslate"><span class="pre">Model</span></code> also exposes its version-less identity as <code class="docutils literal notranslate"><span class="pre">model.key</span></code> (a
+<code class="docutils literal notranslate"><span class="pre">ModelKey</span></code>), available the moment it is trained — even before it is placed in a
+registry.</p>
+</section>
+<section id="load-it-back">
+<h2>Load It Back<a class="headerlink" href="#load-it-back" title="Link to this heading">#</a></h2>
+<p>There are two equivalent ways to load a model from the registry you just
+wrote.</p>
+<p><strong>Option A — explicit <code class="docutils literal notranslate"><span class="pre">LocalRegistry</span></code>:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.registry.local</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalRegistry</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">LocalRegistry</span><span class="p">(</span><span class="s2">&quot;./my_local_registry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">links_df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Option B — <code class="docutils literal notranslate"><span class="pre">pt.load_model()</span></code> driven by environment variables:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">routee.powertrain</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pt</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;ROUTEE_REGISTRY_BACKEND&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;ROUTEE_LOCAL_REGISTRY_ROOT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;./my_local_registry&quot;</span>
+
+<span class="c1"># Omit the trailing v&lt;N&gt; to get the latest version. model.key.to_path() gives</span>
+<span class="c1"># exactly this version-less path.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;test/sedan_ice/2024/rf_aaa9554f&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can also list and query what's in the registry the same way you would
+with the default HuggingFace registry:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pt</span><span class="o">.</span><span class="n">list_available_models</span><span class="p">()</span>
+<span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="n">powertrain_type</span><span class="o">=</span><span class="s2">&quot;ICE&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="what-s-in-metadata-json">
+<h2>What's in <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code><a class="headerlink" href="#what-s-in-metadata-json" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">metadata.json</span></code> is written automatically by the save call. Its fields are
+grouped by the job a reader needs them for — <code class="docutils literal notranslate"><span class="pre">vehicle</span></code> (identity), <code class="docutils literal notranslate"><span class="pre">contract</span></code>
+(input/output), <code class="docutils literal notranslate"><span class="pre">estimator</span></code> (how to load the binary), and <code class="docutils literal notranslate"><span class="pre">training</span></code>
+(reproduction). Most of the contents come from your <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> and the
+trainer:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Source</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">schema_version</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">routee.powertrain.core.metadata.SCHEMA_VERSION</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">routee_version</span></code></p></td>
+<td><p>Package version at save time</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">errors</span></code></p></td>
+<td><p>Computed during <code class="docutils literal notranslate"><span class="pre">Trainer.train()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">estimator.estimator_type</span></code></p></td>
+<td><p>The trainer (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;ONNXEstimator&quot;</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">estimator.architecture_tag</span></code></p></td>
+<td><p>The trainer (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;random_forest&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cnn&quot;</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">estimator.input_spec</span></code></p></td>
+<td><p>The estimator (lookback / grouping column / pad)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">estimator.model_file</span></code></p></td>
+<td><p>Filename of the binary (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;model.onnx&quot;</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vehicle.make</span> <span class="pre">/</span> <span class="pre">model</span> <span class="pre">/</span> <span class="pre">year</span></code></p></td>
+<td><p>From <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> — drives the path</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vehicle.powertrain_type</span></code></p></td>
+<td><p>From <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> — feeds the <code class="docutils literal notranslate"><span class="pre">vehicle_slug</span></code> family token</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vehicle.variant</span></code></p></td>
+<td><p>From <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> (optional) — feeds the <code class="docutils literal notranslate"><span class="pre">config_slug</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vehicle.engine</span> <span class="pre">/</span> <span class="pre">drivetrain</span> <span class="pre">/</span> <span class="pre">trim</span></code></p></td>
+<td><p>From <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> (optional) — descriptive, filterable</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vehicle.vehicle_description</span></code></p></td>
+<td><p>From <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vehicle.mass_lbs</span> <span class="pre">/</span> <span class="pre">fuel_type</span></code></p></td>
+<td><p>From <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> (optional)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">contract.feature_set</span> <span class="pre">/</span> <span class="pre">target</span> <span class="pre">/</span> <span class="pre">distance</span></code></p></td>
+<td><p>From <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">contract.predict_method</span></code></p></td>
+<td><p>From <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">training.test_size</span> <span class="pre">/</span> <span class="pre">random_seed</span> <span class="pre">/</span> <span class="pre">trip_column</span></code></p></td>
+<td><p>From <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Metadata.config</span></code> reconstructs the original flat <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> from these
+grouped sections on demand, so nothing is stored twice.</p>
+<p>Neither derived slug in the path is stored in <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code>: the
+<code class="docutils literal notranslate"><span class="pre">vehicle_slug</span></code> is derived from <code class="docutils literal notranslate"><span class="pre">vehicle.model</span></code> + the <code class="docutils literal notranslate"><span class="pre">powertrain_type</span></code> family,
+and the <code class="docutils literal notranslate"><span class="pre">config_slug</span></code> from <code class="docutils literal notranslate"><span class="pre">estimator.architecture_tag</span></code> + <code class="docutils literal notranslate"><span class="pre">vehicle.variant</span></code> +
+<code class="docutils literal notranslate"><span class="pre">contract.feature_set</span></code> (see <code class="docutils literal notranslate"><span class="pre">routee/powertrain/registry/slug.py</span></code>).</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">routee/powertrain/core/metadata.py</span></code> for the full schema and
+<code class="docutils literal notranslate"><span class="pre">routee/powertrain/core/model_config.py</span></code> for the <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> fields.</p>
+</section>
+<section id="sharing-your-model">
+<h2>Sharing Your Model<a class="headerlink" href="#sharing-your-model" title="Link to this heading">#</a></h2>
+<p>Once your model loads cleanly from a local registry, that same directory tree
+is what gets uploaded to the shared HuggingFace Hub repository. Publishing
+requires write access to that repo and is currently a maintainer step —
+package the <code class="docutils literal notranslate"><span class="pre">&lt;registry_root&gt;/v2/...</span></code> directory (or zip it) and hand it off.
+The maintainer-side upload and index-refresh scripts live at
+<code class="docutils literal notranslate"><span class="pre">scripts/upload_to_hf.py</span></code> and <code class="docutils literal notranslate"><span class="pre">scripts/build_hf_index.py</span></code> (with
+<code class="docutils literal notranslate"><span class="pre">scripts/upload_to_s3.py</span></code> and <code class="docutils literal notranslate"><span class="pre">scripts/build_s3_index.py</span></code> still there for the
+legacy S3 mirror).</p>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="examples/to_lookup_table_example.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Lookup Table Example</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="build_the_docs.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Build The Docs</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-v2-registry-layout">The v2 Registry Layout</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-derived-vehicle-slug">The derived <code class="docutils literal notranslate"><span class="pre">vehicle_slug</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-derived-config-slug">The derived <code class="docutils literal notranslate"><span class="pre">config_slug</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-and-publish">Train and Publish</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-it-back">Load It Back</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-in-metadata-json">What's in <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sharing-your-model">Sharing Your Model</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By National Laboratory of the Rockies
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

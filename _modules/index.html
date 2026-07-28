@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Overview: module code &#8212; My sample book</title>
+    <title>Overview: module code &#8212; RouteE Powertrain</title>
   
   
   
@@ -152,8 +152,8 @@
       
     
     
-    <img src="../_static/routeelogo.png" class="logo__image only-light" alt="My sample book - Home"/>
-    <script>document.write(`<img src="../_static/routeelogo.png" class="logo__image only-dark" alt="My sample book - Home"/>`);</script>
+    <img src="../_static/routeelogo.png" class="logo__image only-light" alt="RouteE Powertrain - Home"/>
+    <script>document.write(`<img src="../_static/routeelogo.png" class="logo__image only-dark" alt="RouteE Powertrain - Home"/>`);</script>
   
   
 </a></div>
@@ -182,17 +182,20 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../what_is_routee.html">What is RouteE?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migrating_from_v1.html">Migrating from v1</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Reference</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../model_prediction.html">Model Prediction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../model_training.html">Model Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api_docs.html">Python API Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../estimator_input_contract.html">Estimator Input/Output Contract</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../examples/model_prediction_example.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/model_training_example.html">Model Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/temperature_models_example.html">Temperature Models Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/to_lookup_table_example.html">Lookup Table Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publishing_a_model.html">Publishing a Trained Model</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
 <ul class="nav bd-sidenav">
@@ -252,7 +255,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-powertrain" target="_blank"
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain" target="_blank"
    class="btn btn-sm btn-source-repository-button dropdown-item"
    title="Source repository"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -269,7 +272,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-powertrain/issues/new?title=Issue%20on%20page%20%2F_modules/index.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain/issues/new?title=Issue%20on%20page%20%2F_modules/index.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -348,8 +351,22 @@ document.write(`
                 <article class="bd-article">
                   
   <h1>All modules for which code is available</h1>
-<ul><li><a href="nrel/routee/powertrain/core/model.html">nrel.routee.powertrain.core.model</a></li>
-<li><a href="nrel/routee/powertrain/io/load.html">nrel.routee.powertrain.io.load</a></li>
+<ul><li><a href="routee/powertrain/core/features.html">routee.powertrain.core.features</a></li>
+<li><a href="routee/powertrain/core/metadata.html">routee.powertrain.core.metadata</a></li>
+<li><a href="routee/powertrain/core/model.html">routee.powertrain.core.model</a></li>
+<li><a href="routee/powertrain/core/model_config.html">routee.powertrain.core.model_config</a></li>
+<li><a href="routee/powertrain/core/predict_method.html">routee.powertrain.core.predict_method</a></li>
+<li><a href="routee/powertrain/core/year.html">routee.powertrain.core.year</a></li>
+<li><a href="routee/powertrain/estimators/estimator_interface.html">routee.powertrain.estimators.estimator_interface</a></li>
+<li><a href="routee/powertrain/estimators/ngboost_estimator.html">routee.powertrain.estimators.ngboost_estimator</a></li>
+<li><a href="routee/powertrain/estimators/onnx.html">routee.powertrain.estimators.onnx</a></li>
+<li><a href="routee/powertrain/io/load.html">routee.powertrain.io.load</a></li>
+<li><a href="routee/powertrain/registry/model_id.html">routee.powertrain.registry.model_id</a></li>
+<li><a href="routee/powertrain/registry/registry.html">routee.powertrain.registry.registry</a></li>
+<li><a href="routee/powertrain/trainers/ngboost_trainer.html">routee.powertrain.trainers.ngboost_trainer</a></li>
+<li><a href="routee/powertrain/trainers/sklearn_random_forest.html">routee.powertrain.trainers.sklearn_random_forest</a></li>
+<li><a href="routee/powertrain/trainers/trainer.html">routee.powertrain.trainers.trainer</a></li>
+<li><a href="routee/powertrain/validation/feature_visualization.html">routee.powertrain.validation.feature_visualization</a></li>
 </ul>
 
                 </article>
@@ -378,7 +395,7 @@ document.write(`
   <div class="footer-item">
     
 <p class="component-author">
-By The Jupyter Book Community
+By National Laboratory of the Rockies
 </p>
 
   </div>
