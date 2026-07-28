@@ -29,6 +29,7 @@ __all__ = [
     "contour_plot",
     "compute_model_digest",
     "hash_dataframe",
+    "convert_legacy_model",
 ]
 
 from .core.digest import compute_model_digest, hash_dataframe
@@ -40,6 +41,7 @@ from .core.model_config import ModelConfig, Vehicle, Contract, TrainingConfig
 from .core.metadata import Metadata, EstimatorInfo
 from .core.powertrain_type import PowertrainType
 from .io.archive import save_to_registry
+from .io.legacy import convert_legacy_model
 from .io.load import (
     list_available_models,
     query_available_models,

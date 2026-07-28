@@ -180,10 +180,24 @@ class Metadata(BaseModel):
 
     @model_validator(mode="after")
     def _warn_version_mismatch(self) -> Metadata:
+        """Warn only about models built by a *newer* major version.
+
+        Older models are the normal case — the v2 registry is full of artifacts
+        converted from v1 that still record the version that trained them — and
+        real format drift is caught hard by the ``schema_version`` check in
+        ``io/archive.py``. Warning on every backward-compatible load would fire
+        on essentially every model in the library.
+        """
         current = get_version()
-        if self.routee_version.split(".")[0] != current.split(".")[0]:
+        try:
+            model_major = int(self.routee_version.split(".")[0])
+            current_major = int(current.split(".")[0])
+        except ValueError:
+            return self
+        if model_major > current_major:
             warnings.warn(
                 "this model was trained using routee-powertrain version "
-                f"{self.routee_version} but you're using version {current}"
+                f"{self.routee_version} but you're using version {current}; "
+                "upgrade routee-powertrain if you hit unexpected behavior"
             )
         return self

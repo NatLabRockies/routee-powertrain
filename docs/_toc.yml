@@ -8,6 +8,7 @@ parts:
     chapters:
       - file: installation
       - file: what_is_routee
+      - file: migrating_from_v1
 
   - caption: User Reference
     chapters:

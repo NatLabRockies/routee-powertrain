@@ -10,6 +10,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Union
 
+from routee.powertrain.__about__ import MIGRATION_GUIDE_URL
 from routee.powertrain.core.metadata import (
     SCHEMA_VERSION,
     SCHEMA_VERSION_STRING,
@@ -610,6 +611,36 @@ def load_tar_archive(path: Union[str, Path]) -> Model:
 # ---------------------------------------------------------------------------
 
 
+def _unsupported_format_message(path: Path) -> str:
+    """Build the error text for a path that isn't a v2 model archive.
+
+    A ``.json`` path is almost always a v1 single-file model, so point at the
+    converter rather than restating the list of accepted suffixes.
+    """
+    base = (
+        f"Unsupported model format: {path}. "
+        "Expected a directory, .zip file, or .tar.gz file."
+    )
+    if path.suffix != ".json":
+        return base
+    return (
+        f"{path} looks like a routee-powertrain v1 model file. v1 stored a whole "
+        "model as a single .json; v2 models are directories, .zip, or .tar.gz "
+        "archives, and v1 files can no longer be loaded directly.\n"
+        "\n"
+        "Convert it first (one v1 file becomes one v2 model per feature set):\n"
+        f"    routee-powertrain convert-v1 {path} out/ "
+        "--make toyota --model camry --year 2016\n"
+        "\n"
+        "or from Python:\n"
+        "    pt.convert_legacy_model(\n"
+        f'        "{path}", "out/", make="toyota", model="camry", year=2016\n'
+        "    )\n"
+        "\n"
+        f"See {MIGRATION_GUIDE_URL}"
+    )
+
+
 def load_model_from_path(path: Union[str, Path]) -> Model:
     """
     Auto-detect format (directory, .zip, or .tar.gz) and load a model.
@@ -627,10 +658,7 @@ def load_model_from_path(path: Union[str, Path]) -> Model:
     elif path.name.endswith(".tar.gz") or path.suffix == ".tar":
         return load_tar_archive(path)
     else:
-        raise ValueError(
-            f"Unsupported model format: {path}. "
-            "Expected a directory, .zip file, or .tar.gz file."
-        )
+        raise ValueError(_unsupported_format_message(path))
 
 
 def read_metadata(path: Union[str, Path]) -> dict:
@@ -655,7 +683,4 @@ def read_metadata(path: Union[str, Path]) -> dict:
                 raise ValueError(f"Could not extract {METADATA_FILENAME} from {path}")
             return json.loads(meta_file.read())
     else:
-        raise ValueError(
-            f"Unsupported model format: {path}. "
-            "Expected a directory, .zip file, or .tar.gz file."
-        )
+        raise ValueError(_unsupported_format_message(path))

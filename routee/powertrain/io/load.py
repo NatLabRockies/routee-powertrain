@@ -4,6 +4,7 @@ from typing import Callable, List, Optional, Sequence, Union
 
 import pandas as pd
 
+from routee.powertrain.__about__ import MIGRATION_GUIDE_URL
 from routee.powertrain.core.model import Model
 from routee.powertrain.core.year import parse_year
 from routee.powertrain.registry.filtering import VersionStrategy
@@ -125,6 +126,36 @@ def query_available_models(
     )
 
 
+def _legacy_model_name_message(name: str) -> str:
+    """Build the guidance shown when a caller passes a v1 flat model name."""
+    if name.endswith(".json"):
+        # A .json that got this far doesn't exist on disk, but the caller
+        # clearly meant a file — explain the format change, not the id grammar.
+        from routee.powertrain.io.archive import _unsupported_format_message
+
+        return (
+            f"{_unsupported_format_message(Path(name))}\n\n(No file exists at {name}.)"
+        )
+    return (
+        f"'{name}' is not a valid model id. It looks like a routee-powertrain v1 "
+        "model name; v1 names were replaced in v2 by structured ids of the form "
+        "'<make>/<vehicle_slug>/<year>/<config_slug>'.\n"
+        "\n"
+        "To find the v2 equivalent, search the registry:\n"
+        '    pt.query_available_models(make="toyota", model="camry", year=2016)\n'
+        "\n"
+        "Note that one v1 model usually maps to several v2 models — v1 packed "
+        "every feature set into one file, while v2 publishes one model per "
+        "feature set — so pick the one whose features match your data.\n"
+        "\n"
+        "If this is your own v1 .json model file, convert it first:\n"
+        "    routee-powertrain convert-v1 MyModel.json out/ "
+        "--make toyota --model camry --year 2016\n"
+        "\n"
+        f"See {MIGRATION_GUIDE_URL}"
+    )
+
+
 def _resolve_load_target(name_or_path: str, registry: ModelRegistry) -> ModelId:
     """Resolve a string model identifier to a concrete ModelId.
 
@@ -164,6 +195,12 @@ def _resolve_load_target(name_or_path: str, registry: ModelRegistry) -> ModelId:
             f"Ambiguous partial id '{name_or_path}' — matched {len(hits)} models: "
             + ", ".join(str(h.model_id) for h in hits)
         )
+    if len(parts) == 1:
+        # Every valid v2 id has at least three separators, so a slash-free
+        # string is almost certainly a flat v1 model name (e.g.
+        # "2016_TOYOTA_Camry_4cyl_2WD"). Say so instead of describing a grammar
+        # the caller wasn't trying to use.
+        raise ValueError(_legacy_model_name_message(name_or_path))
     raise ValueError(
         f"Could not parse '{name_or_path}'. Expected either "
         "'<make>/<vehicle_slug>/<year>/<config_slug>/v<N>' (explicit version) "

@@ -8,7 +8,6 @@ converted model is required-contract-complete and loads cleanly.
 import base64
 import json
 import shutil
-import sys
 from pathlib import Path
 from unittest import TestCase
 
@@ -17,12 +16,12 @@ import pandas as pd
 
 import routee.powertrain as pt
 from routee.powertrain.estimators.onnx import ONNXEstimator
+from routee.powertrain.io.legacy import VehicleIdentity, convert_legacy_json
 from routee.powertrain.trainers.sklearn_random_forest import (
     SklearnRandomForestTrainer,
 )
 
 this_dir = Path(__file__).parent
-sys.path.insert(0, str(this_dir.parent / "scripts"))
 
 
 def _column(name: str, units: str) -> dict:
@@ -111,8 +110,6 @@ class TestConvertLegacyContract(TestCase):
         return json_path
 
     def test_converted_model_is_contract_complete(self) -> None:
-        from convert_legacy_models import VehicleIdentity, convert_legacy_json
-
         json_path = self._legacy_json()
         created = convert_legacy_json(
             json_path,

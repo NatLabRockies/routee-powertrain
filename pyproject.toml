@@ -12,7 +12,7 @@ license = { text = "BSD 3-Clause License Copyright (c) 2023, Alliance for Energy
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
-  "License :: Other/Proprietary License",
+  "License :: OSI Approved :: BSD License",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Topic :: Scientific/Engineering",
@@ -56,6 +56,9 @@ dev = [
   "pre-commit",
 ]
 
+[project.scripts]
+routee-powertrain = "routee.powertrain.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/NatLabRockies/routee-powertrain"
 
@@ -63,7 +66,8 @@ Homepage = "https://github.com/NatLabRockies/routee-powertrain"
 path = "routee/powertrain/__about__.py"
 
 [tool.hatch.build.targets.sdist]
-exclude = ["scripts/", "tests/", "docs/"]
+# compat/ is the separately-published nrel.routee.powertrain tombstone.
+exclude = ["scripts/", "tests/", "docs/", "compat/"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["routee"]
@@ -78,7 +82,9 @@ artifacts = [
 ignore_missing_imports = true
 namespace_packages = true
 explicit_package_bases = true
-exclude = ["docs/", "build/", "dist/", "py-notebooks/", "\\.ignore/"]
+# compat/ holds the standalone nrel.routee.powertrain tombstone distribution,
+# which is built and published separately and deliberately raises on import.
+exclude = ["docs/", "build/", "dist/", "py-notebooks/", "compat/", "\\.ignore/"]
 
 [tool.ruff]
 include = ["routee/**/*.py", "tests/*.py"]

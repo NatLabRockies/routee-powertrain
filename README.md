@@ -35,7 +35,7 @@ pip3 install pip --upgrade
 pip3 install routee.powertrain
 ```
 
-(For more detailed instructions, see [here](https://nrel.github.io/routee-powertrain/installation.html))
+(For more detailed instructions, see [here](https://natlabrockies.github.io/routee-powertrain/installation.html))
 
 Then, you can import the package and use a pre-trained model from the RouteE model catalog:
 
@@ -47,7 +47,7 @@ import routee.powertrain as pt
 print(pt.query_available_models(make="chevrolet", model="bolt", year=2017))
 
 # Load a pre-trained model
-model = pt.load_model("chevrolet/bolt/2017/rf_c3326385/v1")
+model = pt.load_model("chevrolet/bolt_bev/2017/rf_c3326385/v1")
 
 # Inspect the model to see what it expects for input
 print(model)
@@ -62,4 +62,30 @@ links_df = pd.DataFrame(
 )
 
 energy_result = model.predict(links_df)
+```
+
+## Upgrading from v1
+
+RouteE Powertrain 2.0 is a breaking release. It was previously published as
+**`nrel.routee.powertrain`**; it is now **`routee.powertrain`**, and the import path changed
+to match:
+
+```bash
+pip uninstall nrel.routee.powertrain
+pip install routee.powertrain
+```
+
+```diff
+-import nrel.routee.powertrain as pt
++import routee.powertrain as pt
+```
+
+Model names, the model file format, and much of the `Model` API changed as well. See the
+[migration guide](https://natlabrockies.github.io/routee-powertrain/migrating_from_v1.html)
+for the full list, and [CHANGELOG.md](CHANGELOG.md) for everything in 2.0.0.
+
+Custom v1 `.json` models can be converted in place:
+
+```bash
+routee-powertrain convert-v1 MyModel.json out/ --make toyota --model camry --year 2016
 ```
