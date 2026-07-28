@@ -1,4 +1,6 @@
-# <img src="docs/images/routeelogo.png" alt="Routee Powertrain" width="100"/>
+<!-- Absolute URL: this README is the PyPI long description, where relative paths do not resolve. -->
+
+# <img src="https://raw.githubusercontent.com/NatLabRockies/routee-powertrain/main/docs/images/routeelogo.png" alt="Routee Powertrain" width="100"/>
 
 <div align="left">
     <img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue"/>
@@ -82,7 +84,9 @@ pip install routee.powertrain
 
 Model names, the model file format, and much of the `Model` API changed as well. See the
 [migration guide](https://natlabrockies.github.io/routee-powertrain/migrating_from_v1.html)
-for the full list, and [CHANGELOG.md](CHANGELOG.md) for everything in 2.0.0.
+for the full list, and
+[CHANGELOG.md](https://github.com/NatLabRockies/routee-powertrain/blob/main/CHANGELOG.md)
+for everything in 2.0.0.
 
 Custom v1 `.json` models can be converted in place:
 

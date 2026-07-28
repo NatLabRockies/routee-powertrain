@@ -274,3 +274,29 @@ class TestIndexRequired(TestCase):
         )
         with self.assertRaises(IndexMissingError):
             registry.query()
+
+    def test_missing_boto3_is_not_reported_as_a_missing_index(self):
+        """boto3 is an optional extra; a missing install must say so.
+
+        The index fetch wraps failures as IndexMissingError. If it swallowed the
+        ImportError too, a user who set ROUTEE_REGISTRY_BACKEND=s3 without
+        installing the extra would be told to run build_index -- blaming a
+        missing index for what is really a missing package.
+        """
+        registry = S3Registry(
+            bucket="test-bucket",
+            schema_version=SCHEMA,
+            root_prefix=ROOT,
+        )
+
+        def _no_boto3(_key: str) -> bytes:
+            raise ImportError(
+                "The S3 registry backend requires boto3, which is not installed."
+            )
+
+        registry._fetch_bytes = _no_boto3  # type: ignore[assignment]
+
+        for call in (lambda: registry.query(make="toyota"), registry.list_models):
+            with self.assertRaises(ImportError) as ctx:
+                call()
+            self.assertIn("boto3", str(ctx.exception))

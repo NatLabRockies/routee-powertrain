@@ -161,6 +161,12 @@ class S3Registry(ModelRegistry):
         key = f"{self._s3_prefix()}/{INDEX_FILENAME}"
         try:
             data = self._fetch_bytes(key)
+        except ImportError:
+            # boto3 is an optional dependency; its "pip install
+            # routee.powertrain[s3]" guidance is the actionable message here.
+            # Wrapping it as IndexMissingError would blame a missing index for
+            # what is really a missing package.
+            raise
         except Exception as exc:
             raise IndexMissingError(
                 f"Could not read '{key}' from s3://{self.bucket}. "
