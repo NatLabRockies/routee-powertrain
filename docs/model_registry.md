@@ -34,7 +34,7 @@ Use this page to search and download trained RouteE Powertrain models.
     outline: none;
     box-shadow: 0 0 0 3px rgba(255, 127, 14, 0.25);
   }
-  .filters-grid input[type="search"] {
+  #model-search-input {
     grid-column: 1 / -1;
   }
   .result-card {
@@ -176,7 +176,7 @@ Use this page to search and download trained RouteE Powertrain models.
 <!-- Base div that everything gets dynamically added into -->
 <div class="dashboard-container">
   <div class="filters-grid">
-    <input type="search" id="search-input" placeholder="Search models, powertrain, features...">
+    <input type="text" id="model-search-input" placeholder="Search models, powertrain, features...">
     <select id="make-filter"><option value="">All Makes</option></select>
     <select id="model-filter"><option value="">All Models</option></select>
     <select id="powertrain-filter"><option value="">All Powertrains</option></select>
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentRenderedGroups = [];
 
   // --- DOM Elements ---
-  const searchInput = document.getElementById('search-input');
+  const searchInput = document.getElementById('model-search-input');
   const makeFilter = document.getElementById('make-filter');
   const modelFilter = document.getElementById('model-filter');
   const powertrainFilter = document.getElementById('powertrain-filter');
