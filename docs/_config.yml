@@ -1,12 +1,12 @@
 # Book settings
-# Learn more at https://jupyterbook.org/customize/config.html
+# Learn more at https://jupyterbook.org/en/stable/customize/config.html
 
 title: RouteE Powertrain
 author: National Laboratory of the Rockies
 logo: images/routeelogo.png
 
 # Force re-execution of notebooks on each build.
-# See https://jupyterbook.org/content/execute.html
+# See https://jupyterbook.org/en/stable/content/execute.html
 execute:
   execute_notebooks: force
   timeout: 300
@@ -23,7 +23,7 @@ repository:
   branch: main # Which branch of the repository should be used when creating links (optional)
 
 # Add GitHub buttons to your book
-# See https://jupyterbook.org/customize/config.html#add-a-link-to-your-repository
+# See https://jupyterbook.org/en/stable/customize/config.html#add-a-link-to-your-repository
 html:
   use_issues_button: true
   use_repository_button: true

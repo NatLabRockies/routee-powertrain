@@ -8,7 +8,7 @@ order wrong does not error; it silently produces wrong energy.
 
 To make that order unambiguous, every estimator ships a **self-describing
 input/output contract**. This page documents the contract so downstream
-consumers (notably [routee-compass](https://github.com/NREL/routee-compass))
+consumers (notably [routee-compass](https://github.com/NatLabRockies/routee-compass))
 can read it instead of relying on an out-of-band assumption.
 
 ## Where the contract lives

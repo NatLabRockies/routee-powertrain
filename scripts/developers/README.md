@@ -2,11 +2,6 @@
 
 Scripts used by the developers for various tasks.
 
-## train_model_catalog.py
-
-Trains the model catalog from a directory of drive-cycle datasets.
-`kestrel_train_model_catalog.sh` runs the same job as a Slurm batch script.
-
 ## cnn_training_example.py
 
 End-to-end example of training a 1D CNN model with `CNNTrainer` and exporting it to ONNX.

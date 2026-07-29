@@ -49,6 +49,7 @@ dev = [
   "pyarrow",
   "jupyter-book<2.0",
   "sphinx-book-theme",
+  "twine",
   "types-PyYAML",
   "types-protobuf",
   "types-python-dateutil",

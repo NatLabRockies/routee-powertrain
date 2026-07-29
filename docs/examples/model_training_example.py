@@ -26,7 +26,7 @@ from routee.powertrain.trainers.sklearn_random_forest import SklearnRandomForest
 
 """
 For demonstration purposes, we'll use a very small set of training data.
-You can access this dataset yourself [here](https://github.com/NREL/routee-powertrain/blob/main/tests/routee-powertrain-test-data/sample_train_data.csv)
+You can access this dataset yourself [here](https://github.com/NatLabRockies/routee-powertrain/blob/main/tests/routee-powertrain-test-data/sample_train_data.csv)
 """
 import pandas as pd
 
