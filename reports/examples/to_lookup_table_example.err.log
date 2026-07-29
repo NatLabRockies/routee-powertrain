@@ -228,7 +228,7 @@ File [0;32m/opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages
 [1;32m    418[0m         [38;5;124mf[39m[38;5;124m"[39m[38;5;132;01m{[39;00mresponse[38;5;241m.[39mstatus_code[38;5;132;01m}[39;00m[38;5;124m Client Error.[39m[38;5;124m"[39m [38;5;241m+[39m [38;5;124m"[39m[38;5;130;01m\n[39;00m[38;5;130;01m\n[39;00m[38;5;124m"[39m [38;5;241m+[39m [38;5;124mf[39m[38;5;124m"[39m[38;5;124mCannot access gated repo for url [39m[38;5;132;01m{[39;00mresponse[38;5;241m.[39murl[38;5;132;01m}[39;00m[38;5;124m.[39m[38;5;124m"[39m
 [1;32m    419[0m     )
 
-[0;31mEntryNotFoundError[0m: 404 Client Error. (Request ID: Root=1-6a691d25-1447e51c5c17397d7d25d7e4;e658ecf1-0951-4113-b55c-658de0751552)
+[0;31mEntryNotFoundError[0m: 404 Client Error. (Request ID: Root=1-6a6a285f-056a0de30cde68470934a612;72ba5df7-d654-4548-ba5a-208d6b9b25c9)
 
 Entry Not Found for url: https://huggingface.co/nreinicke/routee-powertrain-model-library/resolve/main/v2/tesla/model_3_rwd/2022/rf_c3326385/v1/metadata.json.
 
