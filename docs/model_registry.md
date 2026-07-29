@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /** Takes a raw model object pulls out the needed properties. */
   const processModelData = (model) => {
     const id = model.model_id || {};
-    const modelIdString = 'PLACEHOLDER';
+    const modelIdString = String(model.path).replace('v2/', '');
 
     return {
       ...model,
