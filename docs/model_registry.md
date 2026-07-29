@@ -37,6 +37,21 @@ Use this page to search and download trained RouteE Powertrain models.
   #model-search-input {
     grid-column: 1 / -1;
   }
+  .btn-reset {
+    padding: 8px 12px;
+    background-color: var(--pst-color-background, #fff);
+    color: var(--pst-color-text-muted, #555);
+    border: 1px solid var(--pst-color-border, #ccc);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+  .btn-reset:hover {
+    background-color: #e2e6ea;
+  }
   .result-card {
     border: 1px solid var(--pst-color-border, #ddd);
     border-radius: 8px;
@@ -183,6 +198,7 @@ Use this page to search and download trained RouteE Powertrain models.
     <select id="architecture-filter"><option value="">All Architectures</option></select>
     <input type="number" id="year-min" placeholder="Year Min">
     <input type="number" id="year-max" placeholder="Year Max">
+    <button id="reset-filters" class="btn-reset">Reset</button>
   </div>
 
   <div id="results-container">
@@ -214,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const yearMaxInput = document.getElementById('year-max');
   const resultsContainer = document.getElementById('results-container');
   const architectureFilter = document.getElementById('architecture-filter');
+  const resetBtn = document.getElementById('reset-filters');
 
   // --- Utility Functions ---
 
@@ -538,6 +555,20 @@ const renderArchitectureGroup = (arch, models) => `
     });
     renderResults(filtered);
   };
+
+  const handleReset = () => {
+    searchInput.value = '';
+    makeFilter.value = '';
+    powertrainFilter.value = '';
+    architectureFilter.value = '';
+    yearMinInput.value = '';
+    yearMaxInput.value = '';
+    
+    updateModelOptions(allModels);
+    handleSearch();
+  };
+
+  resetBtn.addEventListener('click', handleReset);
   
   const handleEventDelegation = (e) => {
     if (e.target.matches('.version-select')) {
@@ -616,6 +647,8 @@ const renderArchitectureGroup = (arch, models) => `
   };
 
   const init = async () => {
+    document.querySelectorAll('.filters-grid input, .filters-grid select').forEach(el => el.value = '');
+
     try {
       const response = await fetch(INDEX_URL);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
