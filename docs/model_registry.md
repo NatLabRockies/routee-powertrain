@@ -348,12 +348,13 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /** Re-populates the model dropdown based on the currently selected make */
-  const updateModelOptions = (models) => {
+  const updateModelOptions = (models = allModels) => {
+    const sourceModels = Array.isArray(models) ? models : [];
     const selectedMake = makeFilter.value;
     const currentSelectedModel = modelFilter.value;
 
     modelFilter.innerHTML = '<option value="">All Models</option>';
-    const filteredModels = selectedMake? models.filter(m => m.make === selectedMake): models;
+    const filteredModels = selectedMake ? sourceModels.filter(m => m.make === selectedMake) : sourceModels;
     const uniqueModels = [...new Set(filteredModels.map(m => m.vehicleModel).filter(Boolean))].sort();
     
     uniqueModels.forEach(m => {
@@ -559,6 +560,7 @@ const renderArchitectureGroup = (arch, models) => `
   const handleReset = () => {
     searchInput.value = '';
     makeFilter.value = '';
+    modelFilter.value = '';
     powertrainFilter.value = '';
     architectureFilter.value = '';
     yearMinInput.value = '';
