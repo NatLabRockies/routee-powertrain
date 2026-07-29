@@ -190,11 +190,17 @@ Use this page to search and download trained RouteE Powertrain models.
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
 <!-- The script controlling the dynamic portions of the page. -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-  const INDEX_URL = 'https://raw.githubusercontent.com/Byron-Selvage/Routee-Powertrain-Model-Dashboard/refs/heads/main/index.json';
+  // URLs used to fetch content from Hugging Face. If repo moved, only BASE_URL needs updated.
+  const BASE_URL = `https://huggingface.co/nreinicke/routee-powertrain-model-library/raw/main/`;
+  const INDEX_URL = BASE_URL + `v2/index.json`;
+  const HF_RESOLVE = BASE_URL.replace('/raw/main/', '/resolve/main/');
+  const HF_API_BASE = BASE_URL.replace('https://huggingface.co/', 'https://huggingface.co/api/models/').replace('/raw/main/', '/tree/main/');
   let allModels = [];
   let vehicleGroups = [];
   let currentRenderedGroups = [];
@@ -280,8 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /** Takes a raw model object pulls out the needed properties. */
   const processModelData = (model) => {
     const id = model.model_id || {};
-    const fallbackUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-    const modelIdString = 'PLACEHOLDER'; // Update to correct python model name here
+    const modelIdString = 'PLACEHOLDER';
 
     return {
       ...model,
@@ -291,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
       version: parseInt(id.version, 10) || 0,
       architectureTag: model.architecture_tag || 'unknown',
       variantName: formatTitle(id.config_slug || 'Feature Set').replace("RF ", "Random Forest ").replace("NGB ", "NGBoost "),
-      downloadUrl: fallbackUrl || model.path, // Switch ordering here when connected to S3 bucket for download link -- Update Fallback URL to something useful
+      modelPath: model.path || '',
       yearRange: parseYears(id.year),
       pySnippet: `import routee.powertrain as pt\n\nmodel = pt.load_model("${modelIdString}")`
     };
@@ -370,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <button class="copy-btn">Copy</button>
         <div class="snippet-box">${highlightPySnippet(model.pySnippet)}</div>
       </div>
-      <a href="${model.downloadUrl}" class="btn-download" target="_blank">Download Model</a>
+      <button class="btn-download" data-model-path="${model.modelPath}">Download Model</button>
     </div>`;
 
 const renderArchitectureGroup = (arch, models) => `
@@ -556,6 +561,58 @@ const renderArchitectureGroup = (arch, models) => `
         setTimeout(() => { e.target.textContent = 'Copy'; }, 2000);
       });
     }
+
+    if (e.target.matches('.btn-download')) {
+      const btn = e.target;
+      const modelPath = btn.dataset.modelPath;
+      if (modelPath) downloadModelZip(btn, modelPath);
+    }
+  };
+
+  /** Handles downloading the models - fetches all files in the model's folder and packages them into a .zip */
+  const downloadModelZip = async (btn, modelPath) => {
+    const HF_API = HF_API_BASE + modelPath;
+
+    btn.textContent = 'Fetching...';
+    btn.disabled = true;
+
+    try {
+      const fileList = await fetch(HF_API).then(r => {
+        if (!r.ok) throw new Error(`API ${r.status}`);
+        return r.json();
+      });
+
+      const files = fileList.filter(f => f.type === 'file');
+      if (files.length === 0) throw new Error('No files found at path.');
+
+      const zip = new JSZip();
+      let completed = 0;
+
+      await Promise.all(files.map(async (f) => {
+        const response = await fetch(HF_RESOLVE + f.path);
+        if (!response.ok) throw new Error(`Failed to fetch ${f.path}`);
+        const blob = await response.blob();
+        zip.file(f.path.split('/').pop(), blob);
+        completed++;
+        btn.textContent = `Downloading ${completed}/${files.length}...`;
+      }));
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(zipBlob);
+      a.download = `${modelPath.replace(/\//g, '_').replace('v2_', '')}.zip`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+
+    } catch (err) {
+      console.error('Download failed:', err);
+      btn.textContent = 'Error — Retry';
+      btn.disabled = false;
+      return;
+    }
+
+    btn.textContent = 'Download Model';
+    btn.disabled = false;
   };
 
   const init = async () => {
