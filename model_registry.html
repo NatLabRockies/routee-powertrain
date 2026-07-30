@@ -1,0 +1,1198 @@
+
+<!DOCTYPE html>
+
+
+<html lang="python" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Model Registry &#8212; RouteE Powertrain</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=30a733bc"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js?v=b8b12719"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'model_registry';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Model Prediction" href="examples/model_prediction_example.html" />
+    <link rel="prev" title="Estimator Input/Output Contract" href="estimator_input_contract.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="python"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="intro.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/routeelogo.png" class="logo__image only-light" alt="RouteE Powertrain - Home"/>
+    <script>document.write(`<img src="_static/routeelogo.png" class="logo__image only-dark" alt="RouteE Powertrain - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="intro.html">
+                    RouteE Powertrain
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="what_is_routee.html">What is RouteE?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrating_from_v1.html">Migrating from v1</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Reference</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">Python API Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="estimator_input_contract.html">Estimator Input/Output Contract</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Model Registry</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="examples/model_prediction_example.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/model_training_example.html">Model Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/temperature_models_example.html">Temperature Models Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/to_lookup_table_example.html">Lookup Table Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing_a_model.html">Publishing a Trained Model</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="build_the_docs.html">Build The Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/NatLabRockies/routee-powertrain/issues/new?title=Issue%20on%20page%20%2Fmodel_registry.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/model_registry.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Model Registry</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="model-registry">
+<h1>Model Registry<a class="headerlink" href="#model-registry" title="Link to this heading">#</a></h1>
+<p>Use this page to search and download trained RouteE Powertrain models.</p>
+<!-- Styling for the dynamic portions of the page. -->
+<style>
+  .dashboard-container {
+    max-width: 100%;
+    margin: 20px 0;
+    color: var(--pst-color-text-base, #333);
+  }
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--pst-color-surface, #f8f9fa);
+    border-radius: 8px;
+    border: 1px solid var(--pst-color-border, #ddd);
+  }
+  .filters-grid input,
+  .filters-grid select {
+    padding: 8px 12px;
+    border: 1px solid var(--pst-color-border, #ccc);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background-color: var(--pst-color-background, #fff);
+    color: var(--pst-color-text-base, #333);
+  }
+  .filters-grid input:focus,
+  .filters-grid select:focus,
+  .model-version-select:focus {
+    border-color: #ff7f0e;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 127, 14, 0.25);
+  }
+  #model-search-input {
+    grid-column: 1 / -1;
+  }
+  .btn-reset {
+    padding: 8px 12px;
+    background-color: var(--pst-color-background, #fff);
+    color: var(--pst-color-text-muted, #555);
+    border: 1px solid var(--pst-color-border, #ccc);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+  .btn-reset:hover {
+    background-color: #e2e6ea;
+  }
+  .result-card {
+    border: 1px solid var(--pst-color-border, #ddd);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: var(--pst-color-background, #fff);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .result-title {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #0f6cbd;
+    font-weight: 600;
+  }
+  .feature-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 16px 0;
+  }
+  .feature-list li {
+    background: rgba(15, 108, 189, 0.1);
+    color: #0f6cbd;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  .snippet-wrapper {
+    position: relative;
+    margin: 12px 0;
+  }
+  .snippet-box {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 12px 40px 12px 12px;
+    border-radius: 6px;
+    font-family: var(--pst-font-family-monospace, monospace);
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    overflow-x: auto;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .copy-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  .actions-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .feature-set-card {
+    border: 1px solid var(--pst-color-border, #e5e5e5);
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 12px;
+    background: var(--pst-color-surface, #fafafa);
+  }
+  .feature-set-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .feature-set-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--pst-color-text-base, #333);
+  }
+  .version-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--pst-color-text-muted, #777);
+  }
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background: #0f6cbd;
+    color: white !important;
+    text-decoration: none !important;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-download:hover {
+    background: #0a4b85;
+  }
+  .model-version-select {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--pst-color-border, #ccc);
+    background-color: var(--pst-color-background, #fff);
+    color: var(--pst-color-text-base, #333);
+    font-size: 0.85rem;
+  }
+  #status-message {
+    font-size: 1.1rem;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--pst-color-text-muted, #666);
+  }
+  .snippet-box .token-keyword { color: #c586c0; }
+  .snippet-box .token-variable { color: #9cdcfe; }
+  .snippet-box .token-function { color: #dcdcaa; }
+  .snippet-box .token-string { color: #ce9178; }
+  .snippet-box .token-punctuation { color: #d4d4d4; }
+</style>
+<!-- Base div that everything gets dynamically added into -->
+<div class="dashboard-container">
+  <div class="filters-grid">
+    <input type="text" id="model-search-input" placeholder="Search models, powertrain, features...">
+    <select id="make-filter"><option value="">All Makes</option></select>
+    <select id="model-filter"><option value="">All Models</option></select>
+    <select id="powertrain-filter"><option value="">All Powertrains</option></select>
+    <select id="architecture-filter"><option value="">All Architectures</option></select>
+    <input type="number" id="year-min" placeholder="Year Min">
+    <input type="number" id="year-max" placeholder="Year Max">
+    <button id="reset-filters" class="btn-reset">Reset</button>
+  </div>
+  <div id="results-container">
+    <div id="status-message">Loading model registry...</div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<!-- The script controlling the dynamic portions of the page. -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  // URLs used to fetch content from Hugging Face. If repo moved, only BASE_URL needs updated.
+  const BASE_URL = `https://huggingface.co/nreinicke/routee-powertrain-model-library/raw/main/`;
+  const INDEX_URL = BASE_URL + `v2/index.json`;
+  const HF_RESOLVE = BASE_URL.replace('/raw/main/', '/resolve/main/');
+  const HF_API_BASE = BASE_URL.replace('https://huggingface.co/', 'https://huggingface.co/api/models/').replace('/raw/main/', '/tree/main/');
+
+  let allModels = [];
+  let vehicleGroups = [];
+  let currentRenderedGroups = [];
+
+  // --- DOM Elements ---
+  const searchInput = document.getElementById('model-search-input');
+  const makeFilter = document.getElementById('make-filter');
+  const modelFilter = document.getElementById('model-filter');
+  const powertrainFilter = document.getElementById('powertrain-filter');
+  const yearMinInput = document.getElementById('year-min');
+  const yearMaxInput = document.getElementById('year-max');
+  const resultsContainer = document.getElementById('results-container');
+  const architectureFilter = document.getElementById('architecture-filter');
+  const resetBtn = document.getElementById('reset-filters');
+
+  // --- Utility Functions ---
+
+  /** Capitalizes words in a string. Words 3 letters or less all letters are capitalized. */
+  const formatTitle = (value) => {
+    if (!value) return 'Unknown';
+    return String(value)
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.length <= 3 ? word.toUpperCase() : word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  /** Applies syntax highlighting to a Python snippet. */
+  /** This one could be removed but it was bugging me to have code without syntax highlighting */
+  const highlightPySnippet = (code) => {
+    if (!code) return '';
+
+    // Regex patterns for Python tokens
+    const tokenRegex = /(".*?")|\b(import|as)\b|\b(load_model)\b|\b(pt|model)\b|([=().,])/g;
+
+    // Wrap tokens in styling
+    return code.replace(tokenRegex, (match, string, keyword, fn, variable, punctuation) => {
+      if (string) return `<span class="token-string">${string}</span>`;
+      else if (keyword) return `<span class="token-keyword">${keyword}</span>`;
+      else if (fn) return `<span class="token-function">${fn}</span>`;
+      else if (variable) return `<span class="token-variable">${variable}</span>`;
+      else if (punctuation) return `<span class="token-punctuation">${punctuation}</span>`;
+      return match;
+    });
+  };
+
+  /** Formatting for architecture keys. */
+  const formatArchitectureTag = (value) => {
+    const labels = { random_forest: 'Random Forest', ngboost: 'NGBoost', cnn: 'CNN' };
+    return labels[String(value || '').toLowerCase()] || formatTitle(value);
+  };
+  
+  /** Parses various year formats (number, array) into a range (used for searching) and display format (used in the vehicle card titles). */
+  const parseYears = (yearData) => {
+    if (!yearData) return { min: null, max: null, display: 'N/A' };
+    
+    if (Array.isArray(yearData)) {
+      const years = yearData.map(Number).filter(n => !isNaN(n));
+      if (years.length > 0) {
+        const min = Math.min(...years);
+        const max = Math.max(...years);
+        const display = min === max ? String(min) : `${min}-${max}`;
+        return { min, max, display };
+      }
+    }
+    
+    if (typeof yearData === 'number') {
+      return { min: yearData, max: yearData, display: String(yearData) };
+    }
+    
+    return { min: null, max: null, display: 'N/A' };
+  };
+
+
+  // --- Data Processing ---
+
+  /** Takes a raw model object and pulls out the needed properties. */
+  const processModelData = (model) => {
+    const id = model.model_id || {};
+    const modelIdString = String(model.path).replace('v2/', '');
+
+    return {
+      ...model,
+      make: id.make || 'Unknown',
+      vehicleModel: model.vehicle_model || 'Unknown',
+      powertrain: model.powertrain_type || 'Unknown',
+      version: parseInt(id.version, 10) || 0,
+      architectureTag: model.architecture_tag || 'unknown',
+      variantName: formatTitle(id.config_slug || '').replace("RF ", "Random Forest ").replace("NGB ", "NGBoost "),
+      modelPath: model.path || '',
+      yearRange: parseYears(id.year),
+      pySnippet: `import routee.powertrain as pt\n\nmodel = pt.load_model("${modelIdString}")`
+    };
+  };
+
+  /** Groups the flat list of models. */
+  /** Groups first by make, model, powertrain, and year. */
+  /** Then groups by estimator type and feature set. */
+  const groupModelsByVehicle = (models) => {
+    // Create groups
+    const groups = models.reduce((acc, model) => {
+      const yearKey = model.yearRange ? model.yearRange.display : 'unknown';
+      const key = `${model.make}|${model.vehicleModel}|${model.powertrain}|${yearKey}`.toLowerCase();
+      
+      if (!acc[key]) {
+        acc[key] = { key, make: model.make, vehicle: model.vehicleModel, powertrain: model.powertrain, yearRange: model.yearRange, featureSets: {} };
+      }
+      
+      const featureKey = `${model.architectureTag}|${model.variantName}`;
+      if (!acc[key].featureSets[featureKey]) {
+        acc[key].featureSets[featureKey] = [];
+      }
+      
+      acc[key].featureSets[featureKey].push(model);
+      return acc;
+    }, {});
+
+    // Organize the groups by version number (most recent (highest) first)
+    return Object.values(groups).map((group, groupIndex) => {
+      group.featureSetsList = Object.values(group.featureSets).map((versions, fsIndex) => {
+        versions.sort((a, b) => b.version - a.version);
+        return { fsIndex, versions, selectedVersionIndex: 0 };
+      });
+      return group;
+    });
+  };
+
+  /** Re-populates the model dropdown based on the currently selected make */
+  const updateModelOptions = (models = allModels) => {
+    const sourceModels = Array.isArray(models) ? models : [];
+    const selectedMake = makeFilter.value;
+    const currentSelectedModel = modelFilter.value;
+
+    modelFilter.innerHTML = '<option value="">All Models</option>';
+    const filteredModels = selectedMake ? sourceModels.filter(m => m.make === selectedMake) : sourceModels;
+    const uniqueModels = [...new Set(filteredModels.map(m => m.vehicleModel).filter(Boolean))].sort();
+    
+    uniqueModels.forEach(m => {
+      modelFilter.add(new Option(formatTitle(m), m));
+    });
+
+    if (uniqueModels.includes(currentSelectedModel)) {
+      modelFilter.value = currentSelectedModel;
+    } else {
+      modelFilter.value = "";
+    }
+  };
+
+  /** Populates the filters - Make, Powertrain, and Architecture are static, Model populates dynamically based on the value of the makeFilter. */
+  /** It'd be easier if they were all static but it bugged me. */
+  const populateFilters = (models) => {
+    const getOptions = (key) => [...new Set(models.map(m => m[key]).filter(Boolean))].sort();
+    
+    getOptions('make').forEach(v => makeFilter.add(new Option(formatTitle(v), v)));
+    getOptions('powertrain').forEach(v => powertrainFilter.add(new Option(String(v).replace(/_/g, ' '), v)));
+    getOptions('architectureTag').forEach(arch => architectureFilter.add(new Option(formatArchitectureTag(arch), arch)));
+
+    updateModelOptions(models);
+  };
+
+
+  // --- Rendering Functions ---
+  const renderFeatureSetCard = (fsData, groupIndex, selectedVersionIndex = 0) => {
+    const model = fsData.versions[selectedVersionIndex];
+    const hasMultipleVersions = fsData.versions.length > 1;
+    
+    // Add dropdown for previous version only if there are multiple model versions
+    let versionSelector = '';
+    if (hasMultipleVersions) {
+      const options = fsData.versions.map((v, i) =>
+        `<option value="${i}" ${i === selectedVersionIndex ? 'selected' : ''}>Version ${v.version}${i === 0 ? ' (Latest)' : ''}</option>`
+      ).join('');
+      
+      versionSelector = `
+        <select class="model-version-select" data-group-index="${groupIndex}" data-fs-index="${fsData.fsIndex}">
+          ${options}
+        </select>
+      `;
+    } else {
+      versionSelector = `<span class="version-label">v${model.version}</span>`;
+    }
+
+    // Model + feature set card
+    return `
+      <div class="feature-set-card">
+        <div class="feature-set-header">
+          <h3 class="feature-set-title">${model.variantName}</h3>
+          ${versionSelector}
+        </div>
+        <div style="font-size: 0.85rem; font-weight: bold;">Expected Features:</div>
+        <ul class="feature-list">
+          ${(model.feature_names || []).map(f => `<li>${f}</li>`).join('') || '<li>No features listed</li>'}
+        </ul>
+        <div class="snippet-wrapper">
+          <button class="copy-btn">Copy</button>
+          <div class="snippet-box">${highlightPySnippet(model.pySnippet)}</div>
+        </div>
+        <div class="actions-row" style="margin-top: 10px; justify-content: flex-start;">
+          <button class="btn-download" data-model-path="${model.modelPath}">Download Model</button>
+        </div>
+      </div>`;
+  };
+
+  // Delineate Random Forest / NGBoost / CNN within a vehicle
+  const renderArchitectureGroup = (arch, featureSets, groupIndex) => `
+    <div style="margin-top: 24px;">
+      <h2 style="margin: 0 0 8px 0; font-size: 1.4rem; color: var(--pst-color-text-base, #333); font-weight: 600;">
+        ${formatArchitectureTag(arch)}
+      </h2>
+      <hr style="border: 0; border-top: 2px solid var(--pst-color-border, #eee); margin-bottom: 16px;">
+      <div style="display: grid; gap: 12px;">
+        ${featureSets.map(fs => renderFeatureSetCard(fs, groupIndex, fs.selectedVersionIndex)).join('')}
+      </div>
+    </div>`;
+
+  const getVersionYearDisplay = (range) => {
+    if (!range || !range.display) return 'N/A';
+    return range.display;
+  };
+
+  // Limit vehicle card contents by current filters + search
+  const renderVehicleContent = (group, filterArch, groupIndex) => {
+    const query = searchInput.value.toLowerCase().trim();
+    const searchTerms = query.split(/\s+/).filter(Boolean);
+
+    const byArch = group.featureSetsList.reduce((acc, fsData) => {
+      const latestModel = fsData.versions[0];
+      if (filterArch && latestModel.architectureTag != filterArch) return acc;
+
+      if (searchTerms.length > 0) {
+        const allYears = [];
+        if (group.yearRange) {
+          for (let y = group.yearRange.min; y <= group.yearRange.max; y++) allYears.push(String(y));
+        }
+        const searchableMetadata = [
+          group.make, group.vehicle, group.powertrain,
+          latestModel.architectureTag, latestModel.variantName,
+          ...(latestModel.feature_names || []),
+          ...allYears
+        ].map(str => String(str || '').toLowerCase());
+
+        const matchesAllTerms = searchTerms.every(term => 
+          searchableMetadata.some(meta => meta.includes(term))
+        );
+        if (!matchesAllTerms) return acc;
+      }
+      
+      (acc[latestModel.architectureTag] = acc[latestModel.architectureTag] || []).push(fsData);
+      return acc;
+    }, {});
+
+    const content = Object.entries(byArch).map(([arch, featureSets]) => renderArchitectureGroup(arch, featureSets, groupIndex)).join('');
+    return content || '<div style="padding: 20px; text-align: center; color: #777;">No models match the search terms.</div>';
+  };
+
+  // Vehicle card
+  const renderVehicleCard = (group, groupIndex) => {
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    card.dataset.groupIndex = groupIndex;
+    
+    const activeArch = architectureFilter.value;
+    card.innerHTML = `
+      <div class="result-header">
+        <div>
+          <h2 class="result-title"><span class="year-display">${getVersionYearDisplay(group.yearRange)}</span> ${formatTitle(group.make)} ${formatTitle(group.vehicle)}</h2>
+          <div style="font-weight: bold; text-transform: uppercase;">${String(group.powertrain).replace(/_/g, ' ')}</div>
+        </div>
+      </div>
+      <div class="feature-sets-container">${renderVehicleContent(group, activeArch, groupIndex)}</div>
+    `;
+    resultsContainer.appendChild(card);
+  };
+  
+  // Page render
+  const renderResults = (filteredGroups) => {
+    resultsContainer.innerHTML = '';
+    currentRenderedGroups = filteredGroups;
+    if (filteredGroups.length === 0) {
+      resultsContainer.innerHTML = '<div id="status-message">No models match your search criteria.</div>';
+      return;
+    }
+    filteredGroups.forEach((group, index) => renderVehicleCard(group, index));
+  };
+
+
+  // --- Event Handlers ---
+
+  const handleSearch = () => {
+    // Dropdown and Year Range Filters
+    const query = searchInput.value.toLowerCase().trim();
+    const make = makeFilter.value;
+    const model = modelFilter.value;
+    const pt = powertrainFilter.value;
+    const arch = architectureFilter.value;
+    const yearMin = parseInt(yearMinInput.value, 10) || null;
+    const yearMax = parseInt(yearMaxInput.value, 10) || null;
+
+    const filtered = vehicleGroups.filter(group => {
+      if (make && group.make !== make) return false;
+      if (model && group.vehicle !== model) return false;
+      if (pt && group.powertrain !== pt) return false;
+      
+      if (yearMin && group.yearRange && group.yearRange.max < yearMin) return false;
+      if (yearMax && group.yearRange && group.yearRange.min > yearMax) return false;
+
+      if (arch) {
+        const hasMatchingArch = group.featureSetsList.some(fs => fs.versions.some(m => m.architectureTag === arch));
+        if (!hasMatchingArch) return false;
+      }
+
+      // Text Search
+      if (query) {
+        const searchTerms = query.split(/\s+/).filter(Boolean);
+        const allYears = group.yearRange ? 
+          Array.from({length: group.yearRange.max - group.yearRange.min + 1}, (_, i) => String(group.yearRange.min + i)) : [];
+        
+        const groupArchs = group.featureSetsList.map(fs => fs.versions[0].architectureTag || '');
+        const groupFeatures = group.featureSetsList.flatMap(fs => fs.versions[0].feature_names || []);
+        const groupVariants = group.featureSetsList.map(fs => fs.versions[0].variantName || '');
+
+        const searchableMetadata = [
+          group.make,
+          group.vehicle,
+          group.powertrain,
+          ...allYears,
+          ...groupArchs,
+          ...groupFeatures,
+          ...groupVariants
+        ].map(str => String(str).toLowerCase());
+
+        const matchesAllTerms = searchTerms.every(term => 
+          searchableMetadata.some(meta => meta.includes(term))
+        );
+
+        if (!matchesAllTerms) return false;
+      }
+      
+      return true;
+    });
+    
+    renderResults(filtered);
+  };
+
+  const handleReset = () => {
+    searchInput.value = '';
+    makeFilter.value = '';
+    modelFilter.value = '';
+    powertrainFilter.value = '';
+    architectureFilter.value = '';
+    yearMinInput.value = '';
+    yearMaxInput.value = '';
+    
+    updateModelOptions(allModels);
+    handleSearch();
+  };
+
+  resetBtn.addEventListener('click', handleReset);
+  
+  const handleEventDelegation = (e) => {
+    if (e.target.matches('.model-version-select')) {
+      if (e.type !== 'change') return; 
+      const groupIndex = e.target.dataset.groupIndex;
+      const fsIndex = parseInt(e.target.dataset.fsIndex, 10);
+      const versionIndex = parseInt(e.target.value, 10);
+      
+      const group = currentRenderedGroups[groupIndex];
+      if (group) {
+        const fsData = group.featureSetsList.find(fs => fs.fsIndex === fsIndex);
+        if (fsData) {
+          fsData.selectedVersionIndex = versionIndex;
+          const card = e.target.closest('.feature-set-card');
+          card.outerHTML = renderFeatureSetCard(fsData, groupIndex, versionIndex);
+        }
+      }
+    }
+
+    if (e.target.matches('.copy-btn')) {
+      const snippet = e.target.nextElementSibling.innerText;
+      navigator.clipboard.writeText(snippet).then(() => {
+        e.target.textContent = 'Copied!';
+        setTimeout(() => { e.target.textContent = 'Copy'; }, 2000);
+      });
+    }
+
+    if (e.target.matches('.btn-download')) {
+      const btn = e.target;
+      const modelPath = btn.dataset.modelPath;
+      if (modelPath) downloadModelZip(btn, modelPath);
+    }
+  };
+
+  /** Handles downloading the models - fetches all files in the model's folder and packages them into a .zip */
+  const downloadModelZip = async (btn, modelPath) => {
+    const HF_API = HF_API_BASE + modelPath;
+
+    btn.textContent = 'Fetching...';
+    btn.disabled = true;
+
+    try {
+      const fileList = await fetch(HF_API).then(r => {
+        if (!r.ok) throw new Error(`API ${r.status}`);
+        return r.json();
+      });
+
+      const files = fileList.filter(f => f.type === 'file');
+      if (files.length === 0) throw new Error('No files found at path.');
+
+      const zip = new JSZip();
+      let completed = 0;
+
+      await Promise.all(files.map(async (f) => {
+        const response = await fetch(HF_RESOLVE + f.path);
+        if (!response.ok) throw new Error(`Failed to fetch ${f.path}`);
+        const blob = await response.blob();
+        zip.file(f.path.split('/').pop(), blob);
+        completed++;
+        btn.textContent = `Downloading ${completed}/${files.length}...`;
+      }));
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(zipBlob);
+      a.download = `${modelPath.replace(/\//g, '_').replace('v2_', '')}.zip`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+
+    } catch (err) {
+      console.error('Download failed:', err);
+      btn.textContent = 'Error — Retry';
+      btn.disabled = false;
+      return;
+    }
+
+    btn.textContent = 'Download Model';
+    btn.disabled = false;
+  };
+
+  const init = async () => {
+    document.querySelectorAll('.filters-grid input, .filters-grid select').forEach(el => el.value = '');
+
+    try {
+      const response = await fetch(INDEX_URL);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const rawData = await response.json();
+      
+      allModels = (rawData.models || []).map(processModelData);
+      vehicleGroups = groupModelsByVehicle(allModels);
+      
+      populateFilters(allModels);
+      renderResults(vehicleGroups);
+
+    } catch (error) {
+      resultsContainer.innerHTML = `<div id="status-message" style="color: #d9534f;"><strong>Error: Failed to load model catalog.</strong><br><span>Could not fetch data from ${INDEX_URL}.</span></div>`;
+      console.error('Failed to load index.json:', error);
+    }
+  };
+
+  [searchInput, makeFilter, modelFilter, powertrainFilter, architectureFilter, yearMinInput, yearMaxInput].forEach(el => 
+    el.addEventListener('input', handleSearch)
+  );
+
+  makeFilter.addEventListener('change', () => {
+    updateModelOptions(allModels);
+    handleSearch();
+  });
+
+  resultsContainer.addEventListener('change', handleEventDelegation);
+  resultsContainer.addEventListener('click', handleEventDelegation);
+
+  init();
+});
+</script>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="estimator_input_contract.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Estimator Input/Output Contract</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="examples/model_prediction_example.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Model Prediction</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By National Laboratory of the Rockies
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
