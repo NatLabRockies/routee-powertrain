@@ -19,7 +19,8 @@ Use this page to search and download trained RouteE Powertrain models.
     border-radius: 8px;
     border: 1px solid var(--pst-color-border, #ddd);
   }
-  .filters-grid input, .filters-grid select {
+  .filters-grid input,
+  .filters-grid select {
     padding: 8px 12px;
     border: 1px solid var(--pst-color-border, #ccc);
     border-radius: 6px;
@@ -27,9 +28,9 @@ Use this page to search and download trained RouteE Powertrain models.
     background-color: var(--pst-color-background, #fff);
     color: var(--pst-color-text-base, #333);
   }
-  .filters-grid input:focus, 
+  .filters-grid input:focus,
   .filters-grid select:focus,
-  .version-select:focus {
+  .model-version-select:focus {
     border-color: #ff7f0e;
     outline: none;
     box-shadow: 0 0 0 3px rgba(255, 127, 14, 0.25);
@@ -134,10 +135,16 @@ Use this page to search and download trained RouteE Powertrain models.
     margin-top: 12px;
     background: var(--pst-color-surface, #fafafa);
   }
+  .feature-set-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
   .feature-set-title {
     font-size: 0.95rem;
     font-weight: 700;
-    margin: 0 0 10px 0;
+    margin: 0;
     color: var(--pst-color-text-base, #333);
   }
   .version-label {
@@ -161,13 +168,8 @@ Use this page to search and download trained RouteE Powertrain models.
   .btn-download:hover {
     background: #0a4b85;
   }
-  .version-select-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .version-select {
-    padding: 6px 10px;
+  .model-version-select {
+    padding: 4px 8px;
     border-radius: 6px;
     border: 1px solid var(--pst-color-border, #ccc);
     background-color: var(--pst-color-background, #fff);
@@ -180,7 +182,6 @@ Use this page to search and download trained RouteE Powertrain models.
     padding: 40px 20px;
     color: var(--pst-color-text-muted, #666);
   }
-
   .snippet-box .token-keyword { color: #c586c0; }
   .snippet-box .token-variable { color: #9cdcfe; }
   .snippet-box .token-function { color: #dcdcaa; }
@@ -200,7 +201,6 @@ Use this page to search and download trained RouteE Powertrain models.
     <input type="number" id="year-max" placeholder="Year Max">
     <button id="reset-filters" class="btn-reset">Reset</button>
   </div>
-
   <div id="results-container">
     <div id="status-message">Loading model registry...</div>
   </div>
@@ -217,6 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const INDEX_URL = BASE_URL + `v2/index.json`;
   const HF_RESOLVE = BASE_URL.replace('/raw/main/', '/resolve/main/');
   const HF_API_BASE = BASE_URL.replace('https://huggingface.co/', 'https://huggingface.co/api/models/').replace('/raw/main/', '/tree/main/');
+
   let allModels = [];
   let vehicleGroups = [];
   let currentRenderedGroups = [];
@@ -252,19 +253,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Regex patterns for Python tokens
     const tokenRegex = /(".*?")|\b(import|as)\b|\b(load_model)\b|\b(pt|model)\b|([=().,])/g;
 
-    //Wrap tokens in styling
+    // Wrap tokens in styling
     return code.replace(tokenRegex, (match, string, keyword, fn, variable, punctuation) => {
-      if (string) {
-        return `<span class="token-string">${string}</span>`;
-      } else if (keyword) {
-        return `<span class="token-keyword">${keyword}</span>`;
-      } else if (fn) {
-        return `<span class="token-function">${fn}</span>`;
-      } else if (variable) {
-        return `<span class="token-variable">${variable}</span>`;
-      } else if (punctuation) {
-        return `<span class="token-punctuation">${punctuation}</span>`;
-      }
+      if (string) return `<span class="token-string">${string}</span>`;
+      else if (keyword) return `<span class="token-keyword">${keyword}</span>`;
+      else if (fn) return `<span class="token-function">${fn}</span>`;
+      else if (variable) return `<span class="token-variable">${variable}</span>`;
+      else if (punctuation) return `<span class="token-punctuation">${punctuation}</span>`;
       return match;
     });
   };
@@ -287,7 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const display = min === max ? String(min) : `${min}-${max}`;
         return { min, max, display };
       }
-      return { min: null, max: null, display: 'N/A' };
     }
     
     if (typeof yearData === 'number') {
@@ -312,37 +306,41 @@ document.addEventListener('DOMContentLoaded', () => {
       powertrain: model.powertrain_type || 'Unknown',
       version: parseInt(id.version, 10) || 0,
       architectureTag: model.architecture_tag || 'unknown',
-      variantName: formatTitle(id.config_slug || 'Feature Set').replace("RF ", "Random Forest ").replace("NGB ", "NGBoost "),
+      variantName: formatTitle(id.config_slug || '').replace("RF ", "Random Forest ").replace("NGB ", "NGBoost "),
       modelPath: model.path || '',
       yearRange: parseYears(id.year),
       pySnippet: `import routee.powertrain as pt\n\nmodel = pt.load_model("${modelIdString}")`
     };
   };
 
-  /** Groups the flat list of models by vehicle, year, then by version tag. */
+  /** Groups the flat list of models. */
+  /** Groups first by make, model, powertrain, and year. */
+  /** Then groups by estimator type and feature set. */
   const groupModelsByVehicle = (models) => {
+    // Create groups
     const groups = models.reduce((acc, model) => {
       const yearKey = model.yearRange ? model.yearRange.display : 'unknown';
       const key = `${model.make}|${model.vehicleModel}|${model.powertrain}|${yearKey}`.toLowerCase();
       
       if (!acc[key]) {
-        acc[key] = { key, make: model.make, vehicle: model.vehicleModel, powertrain: model.powertrain, versions: {} };
+        acc[key] = { key, make: model.make, vehicle: model.vehicleModel, powertrain: model.powertrain, yearRange: model.yearRange, featureSets: {} };
       }
-      if (!acc[key].versions[model.version]) {
-        acc[key].versions[model.version] = [];
+      
+      const featureKey = `${model.architectureTag}|${model.variantName}`;
+      if (!acc[key].featureSets[featureKey]) {
+        acc[key].featureSets[featureKey] = [];
       }
-      acc[key].versions[model.version].push(model);
+      
+      acc[key].featureSets[featureKey].push(model);
       return acc;
     }, {});
 
-    return Object.values(groups).map(group => {
-      group.versions = Object.entries(group.versions)
-        .map(([versionNum, featureSets]) => ({
-          version: Number(versionNum),
-          featureSets,
-          yearRange: featureSets[0].yearRange
-        }))
-        .sort((a, b) => b.version - a.version);
+    // Organize the groups by version number (most recent (highest) first)
+    return Object.values(groups).map((group, groupIndex) => {
+      group.featureSetsList = Object.values(group.featureSets).map((versions, fsIndex) => {
+        versions.sort((a, b) => b.version - a.version);
+        return { fsIndex, versions, selectedVersionIndex: 0 };
+      });
       return group;
     });
   };
@@ -382,111 +380,119 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // --- Rendering Functions ---
+  const renderFeatureSetCard = (fsData, groupIndex, selectedVersionIndex = 0) => {
+    const model = fsData.versions[selectedVersionIndex];
+    const hasMultipleVersions = fsData.versions.length > 1;
+    
+    // Add dropdown for previous version only if there are multiple model versions
+    let versionSelector = '';
+    if (hasMultipleVersions) {
+      const options = fsData.versions.map((v, i) =>
+        `<option value="${i}" ${i === selectedVersionIndex ? 'selected' : ''}>Version ${v.version}${i === 0 ? ' (Latest)' : ''}</option>`
+      ).join('');
+      
+      versionSelector = `
+        <select class="model-version-select" data-group-index="${groupIndex}" data-fs-index="${fsData.fsIndex}">
+          ${options}
+        </select>
+      `;
+    } else {
+      versionSelector = `<span class="version-label">v${model.version}</span>`;
+    }
 
-  const renderFeatureSetCard = (model) => `
-    <div class="feature-set-card">
-      <h3 class="feature-set-title">${model.variantName}</h3>
-      <div style="font-size: 0.85rem; font-weight: bold;">Expected Features:</div>
-      <ul class="feature-list">
-        ${(model.feature_names || []).map(f => `<li>${f}</li>`).join('') || '<li>No features listed</li>'}
-      </ul>
-      <div class="snippet-wrapper">
-        <button class="copy-btn">Copy</button>
-        <div class="snippet-box">${highlightPySnippet(model.pySnippet)}</div>
-      </div>
-      <button class="btn-download" data-model-path="${model.modelPath}">Download Model</button>
-    </div>`;
+    // Model + feature set card
+    return `
+      <div class="feature-set-card">
+        <div class="feature-set-header">
+          <h3 class="feature-set-title">${model.variantName}</h3>
+          ${versionSelector}
+        </div>
+        <div style="font-size: 0.85rem; font-weight: bold;">Expected Features:</div>
+        <ul class="feature-list">
+          ${(model.feature_names || []).map(f => `<li>${f}</li>`).join('') || '<li>No features listed</li>'}
+        </ul>
+        <div class="snippet-wrapper">
+          <button class="copy-btn">Copy</button>
+          <div class="snippet-box">${highlightPySnippet(model.pySnippet)}</div>
+        </div>
+        <div class="actions-row" style="margin-top: 10px; justify-content: flex-start;">
+          <button class="btn-download" data-model-path="${model.modelPath}">Download Model</button>
+        </div>
+      </div>`;
+  };
 
-  const renderArchitectureGroup = (arch, models) => `
+  // Delineate Random Forest / NGBoost / CNN within a vehicle
+  const renderArchitectureGroup = (arch, featureSets, groupIndex) => `
     <div style="margin-top: 24px;">
       <h2 style="margin: 0 0 8px 0; font-size: 1.4rem; color: var(--pst-color-text-base, #333); font-weight: 600;">
         ${formatArchitectureTag(arch)}
       </h2>
       <hr style="border: 0; border-top: 2px solid var(--pst-color-border, #eee); margin-bottom: 16px;">
       <div style="display: grid; gap: 12px;">
-        ${models.map(renderFeatureSetCard).join('')}
+        ${featureSets.map(fs => renderFeatureSetCard(fs, groupIndex, fs.selectedVersionIndex)).join('')}
       </div>
     </div>`;
 
-  const renderVersionContent = (version, filterArch = '', group = null) => {
-    const query = searchInput.value.toLowerCase().trim();
-    const searchTerms = query.split(/\s+/).filter(Boolean);
-
-    const byArch = version.featureSets.reduce((acc, model) => {
-      if (filterArch && model.architectureTag != filterArch) return acc;
-
-      if (searchTerms.length > 0 && group) {
-        const allYears = [];
-        if (version.yearRange) {
-          for (let y = version.yearRange.min; y <= version.yearRange.max; y++) {
-            allYears.push(String(y));
-          }
-        }
-        
-        const searchableMetadata = [
-          group.make,
-          group.vehicle,
-          group.powertrain,
-          model.architectureTag,
-          model.variantName,
-          ...(model.feature_names || []),
-          ...allYears
-        ].map(str => String(str || '').toLowerCase());
-        
-        const matchesAllTerms = searchTerms.every(term => 
-          searchableMetadata.some(meta => meta.includes(term))
-        );
-        
-        if (!matchesAllTerms) return acc;
-      }
-
-      (acc[model.architectureTag] = acc[model.architectureTag] || []).push(model);
-      return acc;
-    }, {});
-
-    const content = Object.entries(byArch).map(([arch, models]) => renderArchitectureGroup(arch, models)).join('');
-    
-    return content || '<div style="padding: 20px; text-align: center; color: #777;">No models in this version match the specific search terms.</div>';
-  };
-
-  const renderVersionSelector = (group, groupIndex) => {
-    if (group.versions.length <= 1) return '';
-    const options = group.versions.map((v, i) =>
-      `<option value="${i}">Version ${v.version}${i === 0 ? ' (Latest)' : ''}</option>`
-    ).join('');
-    return `
-      <div class="version-select-wrapper">
-        <span>Previous Versions:</span>
-        <select class="version-select" data-group-index="${groupIndex}">${options}</select>
-      </div>`;
-  };
-  
   const getVersionYearDisplay = (range) => {
     if (!range || !range.display) return 'N/A';
     return range.display;
   };
 
+  // Limit vehicle card contents by current filters + search
+  const renderVehicleContent = (group, filterArch, groupIndex) => {
+    const query = searchInput.value.toLowerCase().trim();
+    const searchTerms = query.split(/\s+/).filter(Boolean);
+
+    const byArch = group.featureSetsList.reduce((acc, fsData) => {
+      const latestModel = fsData.versions[0];
+      if (filterArch && latestModel.architectureTag != filterArch) return acc;
+
+      if (searchTerms.length > 0) {
+        const allYears = [];
+        if (group.yearRange) {
+          for (let y = group.yearRange.min; y <= group.yearRange.max; y++) allYears.push(String(y));
+        }
+        const searchableMetadata = [
+          group.make, group.vehicle, group.powertrain,
+          latestModel.architectureTag, latestModel.variantName,
+          ...(latestModel.feature_names || []),
+          ...allYears
+        ].map(str => String(str || '').toLowerCase());
+
+        const matchesAllTerms = searchTerms.every(term => 
+          searchableMetadata.some(meta => meta.includes(term))
+        );
+        if (!matchesAllTerms) return acc;
+      }
+      
+      (acc[latestModel.architectureTag] = acc[latestModel.architectureTag] || []).push(fsData);
+      return acc;
+    }, {});
+
+    const content = Object.entries(byArch).map(([arch, featureSets]) => renderArchitectureGroup(arch, featureSets, groupIndex)).join('');
+    return content || '<div style="padding: 20px; text-align: center; color: #777;">No models match the search terms.</div>';
+  };
+
+  // Vehicle card
   const renderVehicleCard = (group, groupIndex) => {
-    const latestVersion = group.versions[0];
     const card = document.createElement('div');
     card.className = 'result-card';
     card.dataset.groupIndex = groupIndex;
     
     const activeArch = architectureFilter.value;
-
     card.innerHTML = `
       <div class="result-header">
         <div>
-          <h2 class="result-title"><span class="year-display">${getVersionYearDisplay(latestVersion.yearRange)}</span> ${formatTitle(group.make)} ${formatTitle(group.vehicle)}</h2>
+          <h2 class="result-title"><span class="year-display">${getVersionYearDisplay(group.yearRange)}</span> ${formatTitle(group.make)} ${formatTitle(group.vehicle)}</h2>
           <div style="font-weight: bold; text-transform: uppercase;">${String(group.powertrain).replace(/_/g, ' ')}</div>
         </div>
       </div>
-      <div class="feature-sets-container">${renderVersionContent(latestVersion, activeArch, group)}</div>
-      <div class="actions-row">${renderVersionSelector(group, groupIndex)}</div>
+      <div class="feature-sets-container">${renderVehicleContent(group, activeArch, groupIndex)}</div>
     `;
     resultsContainer.appendChild(card);
   };
   
+  // Page render
   const renderResults = (filteredGroups) => {
     resultsContainer.innerHTML = '';
     currentRenderedGroups = filteredGroups;
@@ -494,8 +500,9 @@ document.addEventListener('DOMContentLoaded', () => {
       resultsContainer.innerHTML = '<div id="status-message">No models match your search criteria.</div>';
       return;
     }
-    filteredGroups.forEach(renderVehicleCard);
+    filteredGroups.forEach((group, index) => renderVehicleCard(group, index));
   };
+
 
   // --- Event Handlers ---
 
@@ -514,36 +521,32 @@ document.addEventListener('DOMContentLoaded', () => {
       if (model && group.vehicle !== model) return false;
       if (pt && group.powertrain !== pt) return false;
       
-      const latestYear = group.versions[0].yearRange;
-      if (yearMin && latestYear && latestYear.max < yearMin) return false;
-      if (yearMax && latestYear && latestYear.min > yearMax) return false;
+      if (yearMin && group.yearRange && group.yearRange.max < yearMin) return false;
+      if (yearMax && group.yearRange && group.yearRange.min > yearMax) return false;
 
       if (arch) {
-        const hasMatchingArch = group.versions.some(v => v.featureSets.some(m => m.architectureTag === arch));
+        const hasMatchingArch = group.featureSetsList.some(fs => fs.versions.some(m => m.architectureTag === arch));
         if (!hasMatchingArch) return false;
       }
 
       // Text Search
       if (query) {
         const searchTerms = query.split(/\s+/).filter(Boolean);
-        const allYears = group.versions.flatMap(v => {
-          if (!v.yearRange) return [];
-          const years = [];
-          for (let y = v.yearRange.min; y <= v.yearRange.max; y++) {
-            years.push(String(y));
-          }
-          return years;
-        });
+        const allYears = group.yearRange ? 
+          Array.from({length: group.yearRange.max - group.yearRange.min + 1}, (_, i) => String(group.yearRange.min + i)) : [];
+        
+        const groupArchs = group.featureSetsList.map(fs => fs.versions[0].architectureTag || '');
+        const groupFeatures = group.featureSetsList.flatMap(fs => fs.versions[0].feature_names || []);
+        const groupVariants = group.featureSetsList.map(fs => fs.versions[0].variantName || '');
 
-        const groupArchs = group.versions.flatMap(v => v.featureSets.map(m => m.architectureTag || ''));
-        const groupFeatures = group.versions.flatMap(v => v.featureSets.flatMap(m => m.feature_names || []));
         const searchableMetadata = [
           group.make,
           group.vehicle,
           group.powertrain,
           ...allYears,
           ...groupArchs,
-          ...groupFeatures
+          ...groupFeatures,
+          ...groupVariants
         ].map(str => String(str).toLowerCase());
 
         const matchesAllTerms = searchTerms.every(term => 
@@ -555,6 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       return true;
     });
+    
     renderResults(filtered);
   };
 
@@ -574,17 +578,20 @@ document.addEventListener('DOMContentLoaded', () => {
   resetBtn.addEventListener('click', handleReset);
   
   const handleEventDelegation = (e) => {
-    if (e.target.matches('.version-select')) {
+    if (e.target.matches('.model-version-select')) {
+      if (e.type !== 'change') return; 
       const groupIndex = e.target.dataset.groupIndex;
-      const versionIndex = e.target.value;
+      const fsIndex = parseInt(e.target.dataset.fsIndex, 10);
+      const versionIndex = parseInt(e.target.value, 10);
+      
       const group = currentRenderedGroups[groupIndex];
-      const card = e.target.closest('.result-card');
-      if (group && card) {
-        const version = group.versions[versionIndex];
-        const activeArch = architectureFilter.value;
-        
-        card.querySelector('.year-display').textContent = getVersionYearDisplay(version.yearRange);
-        card.querySelector('.feature-sets-container').innerHTML = renderVersionContent(version, activeArch, group);
+      if (group) {
+        const fsData = group.featureSetsList.find(fs => fs.fsIndex === fsIndex);
+        if (fsData) {
+          fsData.selectedVersionIndex = versionIndex;
+          const card = e.target.closest('.feature-set-card');
+          card.outerHTML = renderFeatureSetCard(fsData, groupIndex, versionIndex);
+        }
       }
     }
 
