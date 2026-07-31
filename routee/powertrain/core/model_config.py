@@ -12,6 +12,15 @@ from routee.powertrain.core.features import (
 from routee.powertrain.core.powertrain_type import PowertrainType
 from routee.powertrain.core.predict_method import PredictMethod
 from routee.powertrain.core.real_world_adjustments import ADJUSTMENT_FACTORS
+from routee.powertrain.core.provenance import (
+    FastSimSource,
+    LegacySource,
+    Provenance,
+    RealWorldSource,
+    TrainingConfig,
+    TrainingMethod,
+    TrainingSource,
+)
 from routee.powertrain.core.pydantic_fields import (
     DrivetrainField,
     FuelTypeField,
@@ -20,13 +29,21 @@ from routee.powertrain.core.pydantic_fields import (
     YearField,
 )
 
-# Re-exported for backwards compatibility: ``PredictMethod`` used to live here.
+# ``PredictMethod`` is re-exported for backwards compatibility (it used to live
+# here); the provenance types are re-exported because ``TrainingConfig`` used to
+# be defined here and callers expect its neighbors alongside it.
 __all__ = [
     "ModelConfig",
     "PredictMethod",
     "Vehicle",
     "Contract",
+    "Provenance",
     "TrainingConfig",
+    "TrainingMethod",
+    "TrainingSource",
+    "FastSimSource",
+    "RealWorldSource",
+    "LegacySource",
 ]
 
 
@@ -58,14 +75,12 @@ class ModelConfig(BaseModel):
 
     trip_column: str = "trip_id"
 
-    #: Optional human-readable identifier of the training dataset (e.g. a file
-    #: name or dataset release label). Feeds the model digest, so two models
-    #: trained on differently-named data get distinct identities.
-    dataset_name: Optional[str] = None
-    #: Optional fingerprint of the training data — use
-    #: ``routee.powertrain.hash_dataframe(df)`` to compute one. Feeds the model
-    #: digest.
-    dataset_hash: Optional[str] = None
+    #: What produced the training data — a ``FastSimSource``,
+    #: ``RealWorldSource``, or ``LegacySource``. Carries the dataset labels
+    #: (``dataset_name`` / ``dataset_hash``) alongside the source-specific
+    #: fields. Stored in the persisted ``provenance`` section; descriptive, so
+    #: it does not feed the model digest.
+    training_source: Optional[TrainingSource] = None
 
     #: Multiplicative factor applied to predicted energy to correct for
     #: real-world conditions (e.g. temperature). Defaults to the
@@ -173,9 +188,10 @@ class ModelConfig(BaseModel):
 # ``ModelConfig`` is the flat object a user builds to train a model. When the
 # model is persisted, its fields are stored decomposed into the sections below,
 # grouped by the job a reader needs them for: identity (``Vehicle``),
-# input/output contract (``Contract``), and build-time reproduction
-# (``TrainingConfig``). ``Metadata.config`` reconstructs a flat ``ModelConfig``
-# from these on demand, so nothing is stored twice.
+# input/output contract (``Contract``), and where the model came from
+# (``Provenance``, defined in ``core.provenance``). ``Metadata.config``
+# reconstructs a flat ``ModelConfig`` from these on demand, so nothing is
+# stored twice.
 # ---------------------------------------------------------------------------
 
 
@@ -279,36 +295,4 @@ class Contract(BaseModel):
             target=config.target,
             predict_method=config.predict_method,
             real_world_adjustment_factor=config.real_world_adjustment_factor,
-        )
-
-
-class TrainingConfig(BaseModel):
-    """Build-time hyperparameters — needed to reproduce training, not to use the
-    model. Safe to drop from a shipped artifact without affecting prediction.
-    """
-
-    test_size: Optional[float] = None
-    validation_size: Optional[float] = None
-    random_seed: int = 42
-    trip_column: str = "trip_id"
-
-    #: Calendar date the model was trained, as an ISO ``YYYY-MM-DD`` string.
-    #: Stamped at training time by ``Trainer.train``; ``None`` when unknown
-    #: (e.g. legacy models converted from the v1 format).
-    trained_date: Optional[str] = None
-
-    #: Optional identifier of the training dataset (see ``ModelConfig``).
-    dataset_name: Optional[str] = None
-    #: Optional fingerprint of the training data (see ``ModelConfig``).
-    dataset_hash: Optional[str] = None
-
-    @classmethod
-    def from_config(cls, config: ModelConfig) -> TrainingConfig:
-        return cls(
-            test_size=config.test_size,
-            validation_size=config.validation_size,
-            random_seed=config.random_seed,
-            trip_column=config.trip_column,
-            dataset_name=config.dataset_name,
-            dataset_hash=config.dataset_hash,
         )

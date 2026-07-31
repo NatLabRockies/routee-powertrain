@@ -9,9 +9,9 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from routee.powertrain.core.model_config import (
     Contract,
     ModelConfig,
-    TrainingConfig,
     Vehicle,
 )
+from routee.powertrain.core.provenance import Provenance
 from routee.powertrain.utils.fs import get_version
 from routee.powertrain.validation.errors import ModelErrors
 
@@ -65,14 +65,14 @@ class Metadata(BaseModel):
     - ``vehicle`` — the model's identity and descriptive attributes
     - ``contract`` — the input/output contract needed to interpret a prediction
     - ``estimator`` — how to load and run the serialized binary
-    - ``training`` — build-time hyperparameters (reproduction only)
+    - ``provenance`` — where the model came from and how it was built
     - ``errors`` — validation metrics
     """
 
     vehicle: Vehicle
     contract: Contract
     estimator: EstimatorInfo
-    training: TrainingConfig
+    provenance: Provenance
     errors: ModelErrors
     routee_version: str = Field(default_factory=get_version)
     schema_version: int = SCHEMA_VERSION
@@ -107,7 +107,7 @@ class Metadata(BaseModel):
     def config(self) -> ModelConfig:
         """A flat ``ModelConfig`` view reconstructed from the grouped sections.
 
-        The identity/contract/training fields are stored decomposed, but many
+        The identity/contract/provenance fields are stored decomposed, but many
         runtime consumers (estimators, error computation, ``Model.predict``)
         want the single flat object the model was trained from. This derives it
         on demand — nothing is stored twice.
@@ -129,12 +129,11 @@ class Metadata(BaseModel):
             target=self.contract.target,
             predict_method=self.contract.predict_method,
             real_world_adjustment_factor=self.contract.real_world_adjustment_factor,
-            test_size=self.training.test_size,
-            validation_size=self.training.validation_size,
-            random_seed=self.training.random_seed,
-            trip_column=self.training.trip_column,
-            dataset_name=self.training.dataset_name,
-            dataset_hash=self.training.dataset_hash,
+            test_size=self.provenance.training.test_size,
+            validation_size=self.provenance.training.validation_size,
+            random_seed=self.provenance.training.random_seed,
+            trip_column=self.provenance.training.trip_column,
+            training_source=self.provenance.source,
         )
 
     @classmethod
@@ -152,20 +151,20 @@ class Metadata(BaseModel):
         """Build grouped metadata from a flat ``ModelConfig`` and estimator facts.
 
         The inverse of the ``config`` property: decomposes the flat training
-        config into the ``vehicle`` / ``contract`` / ``training`` sections and
+        config into the ``vehicle`` / ``contract`` / ``provenance`` sections and
         pairs them with the ``estimator`` descriptor. ``routee_version`` defaults
-        to the running package version; pass it explicitly to preserve the
-        provenance of a model trained under an older version (e.g. when
-        converting legacy archives). ``trained_date`` (ISO ``YYYY-MM-DD``) is
-        stamped onto the ``training`` section; leave it ``None`` when the
-        training date is unknown (e.g. converting legacy archives).
+        to the running package version; pass it explicitly to record the version
+        that actually trained a model (e.g. when converting legacy archives).
+        ``trained_date`` (ISO ``YYYY-MM-DD``) is stamped onto
+        ``provenance.training``; leave it ``None`` when the training date is
+        unknown (e.g. converting legacy archives).
         """
-        training = TrainingConfig.from_config(config)
-        training.trained_date = trained_date
+        provenance = Provenance.from_config(config)
+        provenance.training.trained_date = trained_date
         fields: dict = dict(
             vehicle=Vehicle.from_config(config),
             contract=Contract.from_config(config),
-            training=training,
+            provenance=provenance,
             estimator=EstimatorInfo(
                 estimator_type=estimator_type,
                 model_file=model_file,

@@ -7,7 +7,7 @@
     "year": 2016,
     "variant": null,
     "mass_lbs": null,
-    "fuel_type": null,
+    "fuel_type": "GASOLINE",
     "drivetrain": "FWD",
     "engine": "4cyl",
     "trim": null
@@ -67,14 +67,22 @@
     },
     "estimator_sha256": "ac35b66a70c3850c422673f7d98dfe741898ac4eaeeb1894a2a5711a7e56d57a"
   },
-  "training": {
-    "test_size": 0.2,
-    "validation_size": null,
-    "random_seed": 42,
-    "trip_column": "journey_id",
-    "trained_date": null,
-    "dataset_name": null,
-    "dataset_hash": null
+  "provenance": {
+    "source": {
+      "method": "legacy",
+      "original_source": "nrel_v1_json_library",
+      "converted_from": "v1",
+      "dataset_name": null,
+      "dataset_hash": null,
+      "notes": "Converted from the legacy v1 JSON model library. The v1 format recorded no simulator, pipeline, or dataset information, so none is available for these models."
+    },
+    "training": {
+      "test_size": 0.2,
+      "validation_size": null,
+      "random_seed": 42,
+      "trip_column": "journey_id",
+      "trained_date": null
+    }
   },
   "errors": {
     "estimator_errors": {
@@ -103,5 +111,5 @@
   },
   "routee_version": "1.0.0",
   "schema_version": 2,
-  "model_digest": "sha256:cd4f79730100ed3881c7abb4ea4106b91e832050dde99e57dec107cd51d41ec8"
+  "model_digest": "sha256:ba8e4ff96b7c3fb647e88c878ca716e37dedf03b67d3dfc15f641ce4db678344"
 }

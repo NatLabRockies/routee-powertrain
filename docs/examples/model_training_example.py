@@ -68,6 +68,26 @@ In our case we'll use "rate" since our training data is very sparse.
 """
 predict_method = "rate"
 """
+Next, it's worth recording where the training data came from. Six months from now, "which FASTSim version produced this?" is a question you'll want the model itself to answer.
+
+`training_source` is a tagged union — pick the variant that matches how the data was produced, and every field on it is optional, so record what you know and leave the rest. Our sample data came out of a FASTSim simulation, so we use `FastSimSource`:
+"""
+training_source = pt.FastSimSource(
+    # the vehicle in https://github.com/NatLabRockies/fastsim-vehicles
+    fastsim_vehicle_id="v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1",
+    # a git tag or commit sha pinning that repo
+    fastsim_vehicles_ref="v1.2.0",
+    fastsim_version="3.1.0",
+    # the pipeline, and the id of the training run that produced this model
+    pipeline_version="0.4.1",
+    pipeline_run_id="local-run",
+    dataset_run_ids=["ptd-2026-07-14-001", "ptd-2026-07-14-002"],
+    data_sources=["wm1"],
+)
+"""
+
+All of this lands in the `provenance` section of the saved `metadata.json`. None of it feeds the model digest, so you can correct a version or backfill a run id on an already-published model without changing its identity.
+
 Finally, we can build a model configuration that we can pass to the trainer. This will also include things like the vehicle powertrain type and a model name
 """
 config = pt.ModelConfig(
@@ -81,6 +101,7 @@ config = pt.ModelConfig(
     year=2024,
     test_size=0.2,
     predict_method=predict_method,
+    training_source=training_source,
 )
 """
 Now we build the random forest trainer and give it the desired parameters
@@ -97,8 +118,12 @@ With the model trained, we can inspect the errors for each estimator type and en
 """
 test_vehicle.metadata.errors
 """
-While this training dataset is far too small to draw real conclusions, these metrics can give you an idea of how well the model performed on a holdout test set (20% of the training data as we specificed by the `test_size` parameter in the configuration. 
+While this training dataset is far too small to draw real conclusions, these metrics can give you an idea of how well the model performed on a holdout test set (20% of the training data as we specificed by the `test_size` parameter in the configuration.
 """
+"""
+The provenance we supplied is on the trained model too, alongside the training hyperparameters and the date the model was trained:
+"""
+test_vehicle.metadata.provenance
 """
 Now, we can write the model to a `.zip` archive, `.tar.gz` archive, or a flat directory (auto-detected from the path's suffix):
 

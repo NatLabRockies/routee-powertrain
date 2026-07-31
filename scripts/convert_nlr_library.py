@@ -37,7 +37,22 @@ from typing import Dict, List, Optional
 
 from convert_legacy_models import VehicleIdentity, convert_legacy_json
 
+from routee.powertrain.core.provenance import LegacySource
+
 log = logging.getLogger(__name__)
+
+# The v1 JSON library records nothing about how its models were produced — no
+# FASTSim vehicle, no simulator version, no pipeline run. Rather than leave the
+# provenance source null, every converted model says so explicitly.
+NLR_LIBRARY_SOURCE = LegacySource(
+    original_source="nrel_v1_json_library",
+    converted_from="v1",
+    notes=(
+        "Converted from the legacy v1 JSON model library. The v1 format "
+        "recorded no simulator, pipeline, or dataset information, so none is "
+        "available for these models."
+    ),
+)
 
 
 # ---------------------------------------------------------------------------
@@ -595,6 +610,7 @@ def convert_library(
                 json_path=json_path,
                 output_dir=output_dir,
                 identity=identity,
+                provenance_source=NLR_LIBRARY_SOURCE,
             )
             all_created.extend(created)
         except Exception:

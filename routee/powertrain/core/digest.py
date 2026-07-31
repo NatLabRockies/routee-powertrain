@@ -9,10 +9,7 @@ if TYPE_CHECKING:
 
     from routee.powertrain.core.metadata import Metadata
 
-#: Version of the digest payload layout. The spec-1 payload built by
-#: ``digest_payload`` is frozen forever — any change to which fields feed the
-#: digest, or how they are encoded, must introduce a spec-2 builder instead of
-#: editing this one, so that digests recorded under spec 1 remain verifiable.
+#: Version of the digest payload layout.
 DIGEST_SPEC = 1
 
 DIGEST_PREFIX = "sha256:"
@@ -41,16 +38,11 @@ def digest_payload(metadata: Metadata) -> dict:
 
     The payload is constructed field-by-field (never from a full pydantic
     ``model_dump``) so its byte layout stays under our control as the schema
-    evolves. Inclusion rule: *what the model is + what produced it*. The
-    vehicle section carries every field that feeds the derived registry
-    coordinates (make/model/year/variant plus powertrain_type, which feeds
-    the ``vehicle_slug`` family token). Deliberately excluded: ``errors``
-    (derived metrics), ``routee_version`` (environment),
-    ``vehicle_description``, ``mass_lbs``, ``engine``, ``drivetrain``,
-    ``trim``, and ``fuel_type`` (descriptive attributes, legitimately
-    correctable on a published model), ``input_spec`` (already baked into the
-    estimator bytes), ``model_file`` and ``schema_version`` (storage details),
-    and ``trip_column`` (only feeds the excluded errors).
+    evolves. Inclusion rule: *what the model is, plus the exact bytes that
+    compute it*. The vehicle section carries every field that feeds the derived
+    registry coordinates (make/model/year/variant plus powertrain_type, which
+    feeds the ``vehicle_slug`` family token); ``estimator_sha256`` pins the
+    binary itself.
 
     Args:
         metadata: the model metadata to derive the payload from. Its
@@ -64,7 +56,6 @@ def digest_payload(metadata: Metadata) -> dict:
     vehicle = metadata.vehicle
     contract = metadata.contract
     estimator = metadata.estimator
-    training = metadata.training
 
     return {
         "digest_spec": DIGEST_SPEC,
@@ -94,14 +85,6 @@ def digest_payload(metadata: Metadata) -> dict:
             "estimator_type": estimator.estimator_type,
             "architecture_tag": estimator.architecture_tag,
             "estimator_sha256": estimator.estimator_sha256,
-        },
-        "training": {
-            "trained_date": training.trained_date,
-            "random_seed": training.random_seed,
-            "test_size": training.test_size,
-            "validation_size": training.validation_size,
-            "dataset_name": training.dataset_name,
-            "dataset_hash": training.dataset_hash,
         },
     }
 
@@ -169,7 +152,8 @@ def short_digest(digest: Optional[str]) -> Optional[str]:
 def hash_dataframe(df: pd.DataFrame) -> str:
     """Fingerprint a training DataFrame for dataset provenance.
 
-    Convenience for populating ``ModelConfig.dataset_hash``. The hash covers
+    Convenience for populating ``dataset_hash`` on a training source (e.g.
+    ``FastSimSource(dataset_hash=pt.hash_dataframe(df))``). The hash covers
     the row values (not the index) via ``pandas.util.hash_pandas_object``, so
     it is sensitive to row order, column order, and dtypes.
 

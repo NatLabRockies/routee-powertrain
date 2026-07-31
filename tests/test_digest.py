@@ -1,5 +1,6 @@
 import json
 import shutil
+import warnings
 from pathlib import Path
 from typing import Optional
 from unittest import TestCase
@@ -30,11 +31,12 @@ GOLDEN_FAKE_BYTES = b"golden fake estimator bytes"
 #: canonicalization drifted — that breaks every digest already published, so
 #: fix the drift; do NOT update this constant. A deliberate payload change
 #: must ship as digest spec 2 with its own builder.
-#: (Recomputed 2026-07 for the pre-release spec-1 amendment that settled the
-#: vehicle section on the coordinate-feeding fields — make/model/year/variant/
-#: powertrain_type — before any digest shipped.)
+#: (Recomputed twice pre-release, while no published library was in use: 2026-07
+#: to settle the vehicle section on the coordinate-feeding fields —
+#: make/model/year/variant/powertrain_type — and again for 2.0.1, which dropped
+#: the provenance section from the payload. The spec is frozen as of 2.0.1.)
 GOLDEN_MODEL_DIGEST = (
-    "sha256:4b60edf44bbe052155d9da94f3e9e2942160b6d200d7fc6aad1c39b5aef1b663"
+    "sha256:ce2c3606604901a40cc4cc6a9766301ee5b4e95d9b90286946e3feb823a211b9"
 )
 
 
@@ -56,8 +58,10 @@ def _golden_config(**overrides) -> pt.ModelConfig:
         test_size=0.2,
         random_seed=42,
         real_world_adjustment_factor=1.0,
-        dataset_name="golden-dataset",
-        dataset_hash="ab" * 32,
+        training_source=pt.LegacySource(
+            dataset_name="golden-dataset",
+            dataset_hash="ab" * 32,
+        ),
     )
     fields.update(overrides)
     return pt.ModelConfig.model_validate(fields)
@@ -104,8 +108,6 @@ class TestDigestSpec(TestCase):
 
         changed_configs = {
             "variant": _golden_config(variant="steady"),
-            "dataset_hash": _golden_config(dataset_hash="cd" * 32),
-            "dataset_name": _golden_config(dataset_name="other-dataset"),
             # powertrain_type feeds the derived vehicle_slug family token (the
             # registry path), so it is an identity field.
             "powertrain_type": _golden_config(powertrain_type=pt.PowertrainType.HEV),
@@ -119,24 +121,12 @@ class TestDigestSpec(TestCase):
                 f"changing {label} should change the digest",
             )
 
-        # different estimator bytes -> different digest (the same-day /
-        # different-training-data collision case)
+        # different estimator bytes -> different digest. This is what carries
+        # the training data and hyperparameters into identity now that the
+        # provenance section is out of the payload.
         other_bytes = _golden_metadata()
         stamp_digest(other_bytes, b"different estimator bytes")
         self.assertNotEqual(other_bytes.model_digest, base.model_digest)
-
-        # different trained_date -> different digest
-        errors = ModelErrors(estimator_errors=EstimatorErrors(error_by_target={}))
-        other_date = Metadata.from_config(
-            _golden_config(),
-            errors=errors,
-            estimator_type="ONNXEstimator",
-            model_file="model.onnx",
-            architecture_tag="random_forest",
-            trained_date="2026-07-10",
-        )
-        stamp_digest(other_date, GOLDEN_FAKE_BYTES)
-        self.assertNotEqual(other_date.model_digest, base.model_digest)
 
     def test_descriptive_fields_do_not_change_digest(self):
         base = _golden_metadata()
@@ -156,6 +146,52 @@ class TestDigestSpec(TestCase):
         metadata = _golden_metadata(config)
         stamp_digest(metadata, GOLDEN_FAKE_BYTES)
         self.assertEqual(metadata.model_digest, base.model_digest)
+
+    def test_provenance_does_not_change_digest(self):
+        """The whole provenance section sits outside identity, so it stays
+        correctable on a published model — backfilling a FASTSim version or a
+        dataset label must not change what the model *is*."""
+        base = _golden_metadata()
+        stamp_digest(base, GOLDEN_FAKE_BYTES)
+
+        changed_configs = {
+            "dataset_hash": _golden_config(
+                training_source=pt.LegacySource(dataset_hash="cd" * 32)
+            ),
+            "dataset_name": _golden_config(
+                training_source=pt.LegacySource(dataset_name="other-dataset")
+            ),
+            "random_seed": _golden_config(random_seed=7),
+            "test_size": _golden_config(test_size=0.5),
+            "training_source": _golden_config(
+                training_source=pt.FastSimSource(
+                    fastsim_vehicle_id="v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1",
+                    fastsim_version="3.1.0",
+                    pipeline_version="0.4.1",
+                )
+            ),
+        }
+        for label, config in changed_configs.items():
+            metadata = _golden_metadata(config)
+            stamp_digest(metadata, GOLDEN_FAKE_BYTES)
+            self.assertEqual(
+                metadata.model_digest,
+                base.model_digest,
+                f"changing {label} must not change the digest",
+            )
+
+        # trained_date rides on provenance too
+        errors = ModelErrors(estimator_errors=EstimatorErrors(error_by_target={}))
+        other_date = Metadata.from_config(
+            _golden_config(),
+            errors=errors,
+            estimator_type="ONNXEstimator",
+            model_file="model.onnx",
+            architecture_tag="random_forest",
+            trained_date="2026-07-10",
+        )
+        stamp_digest(other_date, GOLDEN_FAKE_BYTES)
+        self.assertEqual(other_date.model_digest, base.model_digest)
 
     def test_normalize_digest(self):
         bare = "ab" * 32
@@ -262,10 +298,31 @@ class TestDigestLifecycle(TestCase):
         self.model.to_file(outdir)
         meta_path = outdir / "metadata.json"
         metadata_dict = json.loads(meta_path.read_text())
-        metadata_dict["training"]["trained_date"] = "1999-01-01"
+        metadata_dict["vehicle"]["variant"] = "tampered"
         meta_path.write_text(json.dumps(metadata_dict))
         with self.assertWarns(UserWarning):
             pt.load_model(outdir)
+
+    def test_edited_provenance_loads_clean(self):
+        """Provenance is outside the digest, so correcting it after publish must
+        not trip the identity warning."""
+        outdir = self.out_path / "edited_provenance_dir"
+        self.model.to_file(outdir)
+        meta_path = outdir / "metadata.json"
+        metadata_dict = json.loads(meta_path.read_text())
+        metadata_dict["provenance"]["source"] = {
+            "method": "fastsim_simulation",
+            "fastsim_vehicle_id": "v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1",
+            "fastsim_version": "3.1.0",
+            "dataset_run_ids": ["ptd-backfilled"],
+        }
+        metadata_dict["provenance"]["training"]["trained_date"] = "1999-01-01"
+        meta_path.write_text(json.dumps(metadata_dict))
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            loaded = pt.load_model(outdir)
+        self.assertEqual(loaded.digest, self.model.digest)
+        self.assertIsInstance(loaded.metadata.provenance.source, pt.FastSimSource)
 
     def test_legacy_metadata_without_digest_loads_clean(self):
         outdir = self.out_path / "legacy_dir"

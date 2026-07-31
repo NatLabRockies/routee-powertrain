@@ -2,6 +2,65 @@
 
 All notable changes to this project are documented here.
 
+## [2.0.1]
+
+Adds a **provenance** section to model metadata and removes training information from the model
+digest. Both changes rewrite `metadata.json`, so the entire model library was regenerated and
+republished alongside this release.
+
+```{warning}
+Models published before 2.0.1 will not load — they carry a flat `training` block instead of
+`provenance`, which is a required field, so validation fails. The bundled models ship
+with the package, and the HuggingFace library was overwritten in place, so `pt.load_model()` picks
+up the new artifacts automatically. Only models you saved yourself need re-saving (re-train, or load
+under 2.0.0 and re-save under 2.0.1).
+```
+
+### Provenance
+
+- New `provenance` section in `metadata.json`, replacing `training`. It answers both "how was
+  training configured" and "where did this model come from":
+  - `provenance.source` — a tagged union on `method`, holding what produced the training data.
+    `FastSimSource` records the FASTSim vehicle id (from
+    [NatLabRockies/fastsim-vehicles](https://github.com/NatLabRockies/fastsim-vehicles)), the git
+    ref pinning that repo, the FASTSim version, the model pipeline's version / commit, the
+    `pipeline_run_id` of the **training** run, and the `dataset_run_ids` / `data_sources` of the
+    prepare-training-data runs it was fit to. `RealWorldSource` records the data source, fleet,
+    collection window, sample size, `dataset_name`, and `dataset_hash`. `LegacySource` marks models
+    whose origin predates this section. Every field is optional.
+
+    The run ids are **keys, not copies**: they resolve, in the pipeline's provenance database, to
+    the full configuration each run used — dataset filters, sampling seed, estimator settings, trip
+    caps, the identity of the assembled training frame. None of that is duplicated into the
+    artifact, because a copy gives the same fact a second place to drift and can't be verified
+    against the original. `FastSimSource` therefore carries no `dataset_name`, `dataset_hash`, or
+    sampling seed; `RealWorldSource` and `LegacySource` keep the dataset labels, since nothing
+    stands behind collected or converted data except the artifact itself.
+  - `provenance.training` — the former `training` block, slimmed to `test_size`,
+    `validation_size`, `random_seed`, `trip_column`, and `trained_date`.
+- New `ModelConfig.training_source` field carries the source into a trained model.
+- **`ModelConfig.dataset_name` and `ModelConfig.dataset_hash` were removed** — pass them to the
+  training source instead (`training_source=FastSimSource(..., dataset_name=...)`).
+  `Provenance.dataset_name` / `.dataset_hash` read through to whichever source variant is set.
+- New exports: `pt.Provenance`, `pt.TrainingMethod`, `pt.FastSimSource`, `pt.RealWorldSource`,
+  `pt.LegacySource`. `pt.TrainingConfig` moved to `routee.powertrain.core.provenance` and is still
+  exported from its old locations.
+- `convert_legacy_json` gained a `provenance_source` parameter, defaulting to
+  `LegacySource(converted_from="v1")`.
+- `scripts/upload_to_hf.py` gained `--replace`, which deletes repo files not present in the upload
+  so a regenerated library replaces rather than merges into the published tree.
+
+### Digest
+
+- **The entire provenance section left the digest payload.** `trained_date`, `random_seed`, the
+  split sizes, `dataset_name`, and `dataset_hash` no longer feed `model_digest` — anything that
+  changes a model's predictions already changes the estimator binary, which `estimator_sha256` pins.
+  Keeping provenance out makes it correctable: backfilling a FASTSim version onto a published model
+  no longer changes the model's identity.
+- Every published `model_digest` changed as a result. This was a pre-release amendment to digest
+  spec 1, made while no published library was in use; the spec is frozen as of 2.0.1, and any future
+  payload change ships as spec 2.
+
 ## [2.0.0]
 
 A breaking rewrite of the packaging, model file format, and model distribution story.
