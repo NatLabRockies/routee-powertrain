@@ -38,7 +38,7 @@ File [0;32m/opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages
 [1;32m   1166[0m [38;5;28;01mif[39;00m http_error_msg:
 [0;32m-> 1167[0m     [38;5;28;01mraise[39;00m HTTPError(http_error_msg, response[38;5;241m=[39m[38;5;28mself[39m)
 
-[0;31mHTTPError[0m: 404 Client Error: Not Found for url: https://huggingface.co/nreinicke/routee-powertrain-model-library/resolve/main/v2/tesla/model_3_rwd/2022/rf_c3326385/v1/metadata.json
+[0;31mHTTPError[0m: 404 Client Error: Not Found for url: https://huggingface.co/NatLabRockies/routee-powertrain-model-library/resolve/main/v2/tesla/model_3_rwd/2022/rf_c3326385/v1/metadata.json
 
 The above exception was the direct cause of the following exception:
 
@@ -228,7 +228,7 @@ File [0;32m/opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages
 [1;32m    418[0m         [38;5;124mf[39m[38;5;124m"[39m[38;5;132;01m{[39;00mresponse[38;5;241m.[39mstatus_code[38;5;132;01m}[39;00m[38;5;124m Client Error.[39m[38;5;124m"[39m [38;5;241m+[39m [38;5;124m"[39m[38;5;130;01m\n[39;00m[38;5;130;01m\n[39;00m[38;5;124m"[39m [38;5;241m+[39m [38;5;124mf[39m[38;5;124m"[39m[38;5;124mCannot access gated repo for url [39m[38;5;132;01m{[39;00mresponse[38;5;241m.[39murl[38;5;132;01m}[39;00m[38;5;124m.[39m[38;5;124m"[39m
 [1;32m    419[0m     )
 
-[0;31mEntryNotFoundError[0m: 404 Client Error. (Request ID: Root=1-6a6ba602-1379707358857247716a896c;95107633-0446-4d6b-bd75-515b05279e3b)
+[0;31mEntryNotFoundError[0m: 404 Client Error. (Request ID: Root=1-6a6ce3c6-5a4ab6c95504d6004f84bc4a;b7ac9d55-ec02-4e25-8564-29f184494813)
 
-Entry Not Found for url: https://huggingface.co/nreinicke/routee-powertrain-model-library/resolve/main/v2/tesla/model_3_rwd/2022/rf_c3326385/v1/metadata.json.
+Entry Not Found for url: https://huggingface.co/NatLabRockies/routee-powertrain-model-library/resolve/main/v2/tesla/model_3_rwd/2022/rf_c3326385/v1/metadata.json.
 
