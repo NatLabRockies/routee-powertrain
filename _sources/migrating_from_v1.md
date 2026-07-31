@@ -179,8 +179,13 @@ gone — use `model_validate()` and `model_dump()`.
 ```
 
 `make`, `model`, and `year` are now required — they feed the derived registry path. New optional
-fields include `variant`, `mass_lbs`, `fuel_type`, `drivetrain`, `engine`, `trim`, `dataset_name`,
-and `dataset_hash`.
+fields include `variant`, `mass_lbs`, `fuel_type`, `drivetrain`, `engine`, `trim`, and
+`training_source` (which carries the `dataset_name` / `dataset_hash` labels).
+
+Models converted from v1 record a `pt.LegacySource` under `provenance.source`: the v1 format stored
+nothing about how a model was produced, so there is no simulator, pipeline, or dataset information
+to carry over. Pass `provenance_source=` to `convert_legacy_json` when you know more than the format
+does.
 
 ```{note}
 Put the vehicle's full commercial designation in `model` (`golf_1.5tsi` vs `golf_2.0tdi`).

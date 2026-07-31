@@ -616,8 +616,12 @@ gone — use <code class="docutils literal notranslate"><span class="pre">model_
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">make</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, and <code class="docutils literal notranslate"><span class="pre">year</span></code> are now required — they feed the derived registry path. New optional
-fields include <code class="docutils literal notranslate"><span class="pre">variant</span></code>, <code class="docutils literal notranslate"><span class="pre">mass_lbs</span></code>, <code class="docutils literal notranslate"><span class="pre">fuel_type</span></code>, <code class="docutils literal notranslate"><span class="pre">drivetrain</span></code>, <code class="docutils literal notranslate"><span class="pre">engine</span></code>, <code class="docutils literal notranslate"><span class="pre">trim</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset_name</span></code>,
-and <code class="docutils literal notranslate"><span class="pre">dataset_hash</span></code>.</p>
+fields include <code class="docutils literal notranslate"><span class="pre">variant</span></code>, <code class="docutils literal notranslate"><span class="pre">mass_lbs</span></code>, <code class="docutils literal notranslate"><span class="pre">fuel_type</span></code>, <code class="docutils literal notranslate"><span class="pre">drivetrain</span></code>, <code class="docutils literal notranslate"><span class="pre">engine</span></code>, <code class="docutils literal notranslate"><span class="pre">trim</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">training_source</span></code> (which carries the <code class="docutils literal notranslate"><span class="pre">dataset_name</span></code> / <code class="docutils literal notranslate"><span class="pre">dataset_hash</span></code> labels).</p>
+<p>Models converted from v1 record a <code class="docutils literal notranslate"><span class="pre">pt.LegacySource</span></code> under <code class="docutils literal notranslate"><span class="pre">provenance.source</span></code>: the v1 format stored
+nothing about how a model was produced, so there is no simulator, pipeline, or dataset information
+to carry over. Pass <code class="docutils literal notranslate"><span class="pre">provenance_source=</span></code> to <code class="docutils literal notranslate"><span class="pre">convert_legacy_json</span></code> when you know more than the format
+does.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Put the vehicle's full commercial designation in <code class="docutils literal notranslate"><span class="pre">model</span></code> (<code class="docutils literal notranslate"><span class="pre">golf_1.5tsi</span></code> vs <code class="docutils literal notranslate"><span class="pre">golf_2.0tdi</span></code>).

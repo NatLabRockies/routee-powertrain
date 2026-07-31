@@ -403,7 +403,10 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-derived-config-slug">The derived <code class="docutils literal notranslate"><span class="pre">config_slug</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-and-publish">Train and Publish</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-it-back">Load It Back</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-in-metadata-json">What's in <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-in-metadata-json">What's in <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recording-provenance">Recording provenance</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sharing-your-model">Sharing Your Model</a></li>
 </ul>
             </nav>
@@ -574,8 +577,8 @@ with the default HuggingFace registry:</p>
 <h2>What's in <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code><a class="headerlink" href="#what-s-in-metadata-json" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">metadata.json</span></code> is written automatically by the save call. Its fields are
 grouped by the job a reader needs them for — <code class="docutils literal notranslate"><span class="pre">vehicle</span></code> (identity), <code class="docutils literal notranslate"><span class="pre">contract</span></code>
-(input/output), <code class="docutils literal notranslate"><span class="pre">estimator</span></code> (how to load the binary), and <code class="docutils literal notranslate"><span class="pre">training</span></code>
-(reproduction). Most of the contents come from your <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> and the
+(input/output), <code class="docutils literal notranslate"><span class="pre">estimator</span></code> (how to load the binary), and <code class="docutils literal notranslate"><span class="pre">provenance</span></code> (where
+the model came from). Most of the contents come from your <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> and the
 trainer:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
@@ -629,20 +632,78 @@ trainer:</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">contract.predict_method</span></code></p></td>
 <td><p>From <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">training.test_size</span> <span class="pre">/</span> <span class="pre">random_seed</span> <span class="pre">/</span> <span class="pre">trip_column</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">provenance.source</span></code></p></td>
+<td><p>From <code class="docutils literal notranslate"><span class="pre">ModelConfig.training_source</span></code> (optional)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">provenance.training.test_size</span> <span class="pre">/</span> <span class="pre">random_seed</span> <span class="pre">/</span> <span class="pre">trip_column</span></code></p></td>
 <td><p>From <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">provenance.training.trained_date</span></code></p></td>
+<td><p>Stamped by <code class="docutils literal notranslate"><span class="pre">Trainer.train()</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">Metadata.config</span></code> reconstructs the original flat <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> from these
 grouped sections on demand, so nothing is stored twice.</p>
+<section id="recording-provenance">
+<h3>Recording provenance<a class="headerlink" href="#recording-provenance" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">provenance.source</span></code> records <strong>how the training data was produced</strong>. It is a
+tagged union — set <code class="docutils literal notranslate"><span class="pre">ModelConfig.training_source</span></code> to one of three types and the
+<code class="docutils literal notranslate"><span class="pre">method</span></code> discriminator picks the right one back out on load:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The standard path: a model pipeline over FASTSim simulation output.</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">ModelConfig</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">training_source</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">FastSimSource</span><span class="p">(</span>
+        <span class="c1"># NatLabRockies/fastsim-vehicles, plus a git tag pinning that repo</span>
+        <span class="n">fastsim_vehicle_id</span><span class="o">=</span><span class="s2">&quot;v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1&quot;</span><span class="p">,</span>
+        <span class="n">fastsim_vehicles_ref</span><span class="o">=</span><span class="s2">&quot;v1.2.0&quot;</span><span class="p">,</span>
+        <span class="n">fastsim_version</span><span class="o">=</span><span class="s2">&quot;3.1.0&quot;</span><span class="p">,</span>
+        <span class="c1"># the pipeline, and the training run that produced this model</span>
+        <span class="n">pipeline_version</span><span class="o">=</span><span class="s2">&quot;0.4.1&quot;</span><span class="p">,</span>
+        <span class="n">pipeline_run_id</span><span class="o">=</span><span class="s2">&quot;gha-2026-07-14-8871&quot;</span><span class="p">,</span>
+        <span class="n">pipeline_repo_ref</span><span class="o">=</span><span class="s2">&quot;9f3c1ab&quot;</span><span class="p">,</span>
+        <span class="c1"># the prepare-training-data runs it was fit to, and their sources</span>
+        <span class="n">dataset_run_ids</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ptd-2026-07-14-001&quot;</span><span class="p">,</span> <span class="s2">&quot;ptd-2026-07-14-002&quot;</span><span class="p">],</span>
+        <span class="n">data_sources</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;wm1&quot;</span><span class="p">,</span> <span class="s2">&quot;wm2&quot;</span><span class="p">],</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Trained on real-world vehicle data instead.</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">ModelConfig</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">training_source</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">RealWorldSource</span><span class="p">(</span>
+        <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;fleet_dna&quot;</span><span class="p">,</span>
+        <span class="n">fleet</span><span class="o">=</span><span class="s2">&quot;delivery_vans&quot;</span><span class="p">,</span>
+        <span class="n">collection_start</span><span class="o">=</span><span class="s2">&quot;2023-01-01&quot;</span><span class="p">,</span>
+        <span class="n">collection_end</span><span class="o">=</span><span class="s2">&quot;2023-12-31&quot;</span><span class="p">,</span>
+        <span class="n">n_vehicles</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+        <span class="n">dataset_name</span><span class="o">=</span><span class="s2">&quot;fleet-dna-2023&quot;</span><span class="p">,</span>
+        <span class="n">dataset_hash</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">hash_dataframe</span><span class="p">(</span><span class="n">training_df</span><span class="p">),</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">RealWorldSource</span></code> and <code class="docutils literal notranslate"><span class="pre">LegacySource</span></code> end with two dataset labels — <code class="docutils literal notranslate"><span class="pre">dataset_name</span></code>
+(a human-readable identifier) and <code class="docutils literal notranslate"><span class="pre">dataset_hash</span></code> (a fingerprint, from
+<code class="docutils literal notranslate"><span class="pre">pt.hash_dataframe(df)</span></code>). They live on the source because labeling the data is
+part of describing where it came from. <code class="docutils literal notranslate"><span class="pre">FastSimSource</span></code> deliberately has neither;
+see below. <code class="docutils literal notranslate"><span class="pre">model.metadata.provenance.dataset_name</span></code> and <code class="docutils literal notranslate"><span class="pre">.dataset_hash</span></code> read
+through to whichever variant is set, and are <code class="docutils literal notranslate"><span class="pre">None</span></code> for a <code class="docutils literal notranslate"><span class="pre">FastSimSource</span></code>.</p>
+<p>Every field is optional — record what you know. <code class="docutils literal notranslate"><span class="pre">pt.LegacySource</span></code> is the third
+variant, used by the v1 converter for models whose origin predates this section.</p>
+<p>Provenance is <strong>not</strong> part of the model digest, so it stays correctable after
+publish: backfilling a FASTSim version onto a published model does not change
+its identity. What the digest does cover is the vehicle identity, the contract,
+and the estimator binary's own sha256 — and that binary already changes whenever
+the training data or hyperparameters do.</p>
 <p>Neither derived slug in the path is stored in <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code>: the
 <code class="docutils literal notranslate"><span class="pre">vehicle_slug</span></code> is derived from <code class="docutils literal notranslate"><span class="pre">vehicle.model</span></code> + the <code class="docutils literal notranslate"><span class="pre">powertrain_type</span></code> family,
 and the <code class="docutils literal notranslate"><span class="pre">config_slug</span></code> from <code class="docutils literal notranslate"><span class="pre">estimator.architecture_tag</span></code> + <code class="docutils literal notranslate"><span class="pre">vehicle.variant</span></code> +
 <code class="docutils literal notranslate"><span class="pre">contract.feature_set</span></code> (see <code class="docutils literal notranslate"><span class="pre">routee/powertrain/registry/slug.py</span></code>).</p>
 <p>See <code class="docutils literal notranslate"><span class="pre">routee/powertrain/core/metadata.py</span></code> for the full schema and
 <code class="docutils literal notranslate"><span class="pre">routee/powertrain/core/model_config.py</span></code> for the <code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code> fields.</p>
+</section>
 </section>
 <section id="sharing-your-model">
 <h2>Sharing Your Model<a class="headerlink" href="#sharing-your-model" title="Link to this heading">#</a></h2>
@@ -726,7 +787,10 @@ legacy S3 mirror).</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-derived-config-slug">The derived <code class="docutils literal notranslate"><span class="pre">config_slug</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-and-publish">Train and Publish</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-it-back">Load It Back</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-in-metadata-json">What's in <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-in-metadata-json">What's in <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recording-provenance">Recording provenance</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sharing-your-model">Sharing Your Model</a></li>
 </ul>
   </nav></div>

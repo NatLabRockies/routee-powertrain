@@ -174,31 +174,89 @@ pt.query_available_models(make="test", powertrain_type="ICE")
 
 `metadata.json` is written automatically by the save call. Its fields are
 grouped by the job a reader needs them for — `vehicle` (identity), `contract`
-(input/output), `estimator` (how to load the binary), and `training`
-(reproduction). Most of the contents come from your `ModelConfig` and the
+(input/output), `estimator` (how to load the binary), and `provenance` (where
+the model came from). Most of the contents come from your `ModelConfig` and the
 trainer:
 
-| Field                                            | Source                                                     |
-| ------------------------------------------------ | ---------------------------------------------------------- |
-| `schema_version`                                 | `routee.powertrain.core.metadata.SCHEMA_VERSION`           |
-| `routee_version`                                 | Package version at save time                               |
-| `errors`                                         | Computed during `Trainer.train()`                          |
-| `estimator.estimator_type`                       | The trainer (e.g. `"ONNXEstimator"`)                       |
-| `estimator.architecture_tag`                     | The trainer (e.g. `"random_forest"`, `"cnn"`)              |
-| `estimator.input_spec`                           | The estimator (lookback / grouping column / pad)           |
-| `estimator.model_file`                           | Filename of the binary (e.g. `"model.onnx"`)               |
-| `vehicle.make / model / year`                    | From `ModelConfig` — drives the path                       |
-| `vehicle.powertrain_type`                        | From `ModelConfig` — feeds the `vehicle_slug` family token |
-| `vehicle.variant`                                | From `ModelConfig` (optional) — feeds the `config_slug`    |
-| `vehicle.engine / drivetrain / trim`             | From `ModelConfig` (optional) — descriptive, filterable    |
-| `vehicle.vehicle_description`                    | From `ModelConfig`                                         |
-| `vehicle.mass_lbs / fuel_type`                   | From `ModelConfig` (optional)                              |
-| `contract.feature_set / target / distance`       | From `ModelConfig`                                         |
-| `contract.predict_method`                        | From `ModelConfig`                                         |
-| `training.test_size / random_seed / trip_column` | From `ModelConfig`                                         |
+| Field                                                       | Source                                                     |
+| ----------------------------------------------------------- | ---------------------------------------------------------- |
+| `schema_version`                                            | `routee.powertrain.core.metadata.SCHEMA_VERSION`           |
+| `routee_version`                                            | Package version at save time                               |
+| `errors`                                                    | Computed during `Trainer.train()`                          |
+| `estimator.estimator_type`                                  | The trainer (e.g. `"ONNXEstimator"`)                       |
+| `estimator.architecture_tag`                                | The trainer (e.g. `"random_forest"`, `"cnn"`)              |
+| `estimator.input_spec`                                      | The estimator (lookback / grouping column / pad)           |
+| `estimator.model_file`                                      | Filename of the binary (e.g. `"model.onnx"`)               |
+| `vehicle.make / model / year`                               | From `ModelConfig` — drives the path                       |
+| `vehicle.powertrain_type`                                   | From `ModelConfig` — feeds the `vehicle_slug` family token |
+| `vehicle.variant`                                           | From `ModelConfig` (optional) — feeds the `config_slug`    |
+| `vehicle.engine / drivetrain / trim`                        | From `ModelConfig` (optional) — descriptive, filterable    |
+| `vehicle.vehicle_description`                               | From `ModelConfig`                                         |
+| `vehicle.mass_lbs / fuel_type`                              | From `ModelConfig` (optional)                              |
+| `contract.feature_set / target / distance`                  | From `ModelConfig`                                         |
+| `contract.predict_method`                                   | From `ModelConfig`                                         |
+| `provenance.source`                                         | From `ModelConfig.training_source` (optional)              |
+| `provenance.training.test_size / random_seed / trip_column` | From `ModelConfig`                                         |
+| `provenance.training.trained_date`                          | Stamped by `Trainer.train()`                               |
 
 `Metadata.config` reconstructs the original flat `ModelConfig` from these
 grouped sections on demand, so nothing is stored twice.
+
+### Recording provenance
+
+`provenance.source` records **how the training data was produced**. It is a
+tagged union — set `ModelConfig.training_source` to one of three types and the
+`method` discriminator picks the right one back out on load:
+
+```python
+# The standard path: a model pipeline over FASTSim simulation output.
+config = pt.ModelConfig(
+    ...,
+    training_source=pt.FastSimSource(
+        # NatLabRockies/fastsim-vehicles, plus a git tag pinning that repo
+        fastsim_vehicle_id="v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1",
+        fastsim_vehicles_ref="v1.2.0",
+        fastsim_version="3.1.0",
+        # the pipeline, and the training run that produced this model
+        pipeline_version="0.4.1",
+        pipeline_run_id="gha-2026-07-14-8871",
+        pipeline_repo_ref="9f3c1ab",
+        # the prepare-training-data runs it was fit to, and their sources
+        dataset_run_ids=["ptd-2026-07-14-001", "ptd-2026-07-14-002"],
+        data_sources=["wm1", "wm2"],
+    ),
+)
+
+# Trained on real-world vehicle data instead.
+config = pt.ModelConfig(
+    ...,
+    training_source=pt.RealWorldSource(
+        data_source="fleet_dna",
+        fleet="delivery_vans",
+        collection_start="2023-01-01",
+        collection_end="2023-12-31",
+        n_vehicles=42,
+        dataset_name="fleet-dna-2023",
+        dataset_hash=pt.hash_dataframe(training_df),
+    ),
+)
+```
+
+`RealWorldSource` and `LegacySource` end with two dataset labels — `dataset_name`
+(a human-readable identifier) and `dataset_hash` (a fingerprint, from
+`pt.hash_dataframe(df)`). They live on the source because labeling the data is
+part of describing where it came from. `FastSimSource` deliberately has neither;
+see below. `model.metadata.provenance.dataset_name` and `.dataset_hash` read
+through to whichever variant is set, and are `None` for a `FastSimSource`.
+
+Every field is optional — record what you know. `pt.LegacySource` is the third
+variant, used by the v1 converter for models whose origin predates this section.
+
+Provenance is **not** part of the model digest, so it stays correctable after
+publish: backfilling a FASTSim version onto a published model does not change
+its identity. What the digest does cover is the vehicle identity, the contract,
+and the estimator binary's own sha256 — and that binary already changes whenever
+the training data or hyperparameters do.
 
 Neither derived slug in the path is stored in `metadata.json`: the
 `vehicle_slug` is derived from `vehicle.model` + the `powertrain_type` family,

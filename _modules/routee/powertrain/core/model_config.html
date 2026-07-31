@@ -366,6 +366,15 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.core.powertrain_type</span><span class="w"> </span><span class="kn">import</span> <span class="n">PowertrainType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.core.predict_method</span><span class="w"> </span><span class="kn">import</span> <span class="n">PredictMethod</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.core.real_world_adjustments</span><span class="w"> </span><span class="kn">import</span> <span class="n">ADJUSTMENT_FACTORS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.core.provenance</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FastSimSource</span><span class="p">,</span>
+    <span class="n">LegacySource</span><span class="p">,</span>
+    <span class="n">Provenance</span><span class="p">,</span>
+    <span class="n">RealWorldSource</span><span class="p">,</span>
+    <span class="n">TrainingConfig</span><span class="p">,</span>
+    <span class="n">TrainingMethod</span><span class="p">,</span>
+    <span class="n">TrainingSource</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.core.pydantic_fields</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DrivetrainField</span><span class="p">,</span>
     <span class="n">FuelTypeField</span><span class="p">,</span>
@@ -374,13 +383,21 @@ document.write(`
     <span class="n">YearField</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="c1"># Re-exported for backwards compatibility: ``PredictMethod`` used to live here.</span>
+<span class="c1"># ``PredictMethod`` is re-exported for backwards compatibility (it used to live</span>
+<span class="c1"># here); the provenance types are re-exported because ``TrainingConfig`` used to</span>
+<span class="c1"># be defined here and callers expect its neighbors alongside it.</span>
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;ModelConfig&quot;</span><span class="p">,</span>
     <span class="s2">&quot;PredictMethod&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Vehicle&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Contract&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Provenance&quot;</span><span class="p">,</span>
     <span class="s2">&quot;TrainingConfig&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;TrainingMethod&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;TrainingSource&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;FastSimSource&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;RealWorldSource&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;LegacySource&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -414,14 +431,12 @@ document.write(`
 
     <span class="n">trip_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;trip_id&quot;</span>
 
-    <span class="c1">#: Optional human-readable identifier of the training dataset (e.g. a file</span>
-    <span class="c1">#: name or dataset release label). Feeds the model digest, so two models</span>
-    <span class="c1">#: trained on differently-named data get distinct identities.</span>
-    <span class="n">dataset_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="c1">#: Optional fingerprint of the training data — use</span>
-    <span class="c1">#: ``routee.powertrain.hash_dataframe(df)`` to compute one. Feeds the model</span>
-    <span class="c1">#: digest.</span>
-    <span class="n">dataset_hash</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">#: What produced the training data — a ``FastSimSource``,</span>
+    <span class="c1">#: ``RealWorldSource``, or ``LegacySource``. Carries the dataset labels</span>
+    <span class="c1">#: (``dataset_name`` / ``dataset_hash``) alongside the source-specific</span>
+    <span class="c1">#: fields. Stored in the persisted ``provenance`` section; descriptive, so</span>
+    <span class="c1">#: it does not feed the model digest.</span>
+    <span class="n">training_source</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TrainingSource</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1">#: Multiplicative factor applied to predicted energy to correct for</span>
     <span class="c1">#: real-world conditions (e.g. temperature). Defaults to the</span>
@@ -530,9 +545,10 @@ document.write(`
 <span class="c1"># ``ModelConfig`` is the flat object a user builds to train a model. When the</span>
 <span class="c1"># model is persisted, its fields are stored decomposed into the sections below,</span>
 <span class="c1"># grouped by the job a reader needs them for: identity (``Vehicle``),</span>
-<span class="c1"># input/output contract (``Contract``), and build-time reproduction</span>
-<span class="c1"># (``TrainingConfig``). ``Metadata.config`` reconstructs a flat ``ModelConfig``</span>
-<span class="c1"># from these on demand, so nothing is stored twice.</span>
+<span class="c1"># input/output contract (``Contract``), and where the model came from</span>
+<span class="c1"># (``Provenance``, defined in ``core.provenance``). ``Metadata.config``</span>
+<span class="c1"># reconstructs a flat ``ModelConfig`` from these on demand, so nothing is</span>
+<span class="c1"># stored twice.</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
 
@@ -641,41 +657,6 @@ document.write(`
             <span class="n">target</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
             <span class="n">predict_method</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">predict_method</span><span class="p">,</span>
             <span class="n">real_world_adjustment_factor</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">real_world_adjustment_factor</span><span class="p">,</span>
-        <span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="TrainingConfig">
-<a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.core.model_config.TrainingConfig">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">TrainingConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build-time hyperparameters — needed to reproduce training, not to use the</span>
-<span class="sd">    model. Safe to drop from a shipped artifact without affecting prediction.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">test_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">validation_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span>
-    <span class="n">trip_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;trip_id&quot;</span>
-
-    <span class="c1">#: Calendar date the model was trained, as an ISO ``YYYY-MM-DD`` string.</span>
-    <span class="c1">#: Stamped at training time by ``Trainer.train``; ``None`` when unknown</span>
-    <span class="c1">#: (e.g. legacy models converted from the v1 format).</span>
-    <span class="n">trained_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="c1">#: Optional identifier of the training dataset (see ``ModelConfig``).</span>
-    <span class="n">dataset_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="c1">#: Optional fingerprint of the training data (see ``ModelConfig``).</span>
-    <span class="n">dataset_hash</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ModelConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrainingConfig</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="n">test_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">test_size</span><span class="p">,</span>
-            <span class="n">validation_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">validation_size</span><span class="p">,</span>
-            <span class="n">random_seed</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
-            <span class="n">trip_column</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">trip_column</span><span class="p">,</span>
-            <span class="n">dataset_name</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">dataset_name</span><span class="p">,</span>
-            <span class="n">dataset_hash</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">dataset_hash</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 </pre></div>
