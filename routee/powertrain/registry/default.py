@@ -10,7 +10,7 @@ DEFAULT_BUCKET = "routeecore-bucket"
 DEFAULT_REGION = "us-west-2"
 DEFAULT_ROOT_PREFIX = "routee-powertrain-model-library"
 
-DEFAULT_HF_REPO_ID = "nreinicke/routee-powertrain-model-library"
+DEFAULT_HF_REPO_ID = "NatLabRockies/routee-powertrain-model-library"
 DEFAULT_HF_REPO_TYPE = "model"
 
 
