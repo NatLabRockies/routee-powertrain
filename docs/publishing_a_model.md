@@ -213,14 +213,17 @@ tagged union — set `ModelConfig.training_source` to one of three types and the
 config = pt.ModelConfig(
     ...,
     training_source=pt.FastSimSource(
-        fastsim_vehicle_id="v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1",  # NatLabRockies/fastsim-vehicles
-        fastsim_vehicles_ref="v1.2.0",                    # git tag pinning that repo
+        # NatLabRockies/fastsim-vehicles, plus a git tag pinning that repo
+        fastsim_vehicle_id="v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1",
+        fastsim_vehicles_ref="v1.2.0",
         fastsim_version="3.1.0",
+        # the pipeline, and the training run that produced this model
         pipeline_version="0.4.1",
         pipeline_run_id="gha-2026-07-14-8871",
         pipeline_repo_ref="9f3c1ab",
-        dataset_name="camry-2016-cycles",
-        dataset_hash=pt.hash_dataframe(training_df),
+        # the prepare-training-data runs it was fit to, and their sources
+        dataset_run_ids=["ptd-2026-07-14-001", "ptd-2026-07-14-002"],
+        data_sources=["wm1", "wm2"],
     ),
 )
 
@@ -239,11 +242,12 @@ config = pt.ModelConfig(
 )
 ```
 
-Every variant ends with the same two dataset labels — `dataset_name` (a
-human-readable identifier) and `dataset_hash` (a fingerprint, from
+`RealWorldSource` and `LegacySource` end with two dataset labels — `dataset_name`
+(a human-readable identifier) and `dataset_hash` (a fingerprint, from
 `pt.hash_dataframe(df)`). They live on the source because labeling the data is
-part of describing where it came from. `model.metadata.provenance.dataset_name`
-and `.dataset_hash` read through to whichever variant is set.
+part of describing where it came from. `FastSimSource` deliberately has neither;
+see below. `model.metadata.provenance.dataset_name` and `.dataset_hash` read
+through to whichever variant is set, and are `None` for a `FastSimSource`.
 
 Every field is optional — record what you know. `pt.LegacySource` is the third
 variant, used by the v1 converter for models whose origin predates this section.

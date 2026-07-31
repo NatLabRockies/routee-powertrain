@@ -314,7 +314,7 @@ class TestDigestLifecycle(TestCase):
             "method": "fastsim_simulation",
             "fastsim_vehicle_id": "v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1",
             "fastsim_version": "3.1.0",
-            "dataset_name": "backfilled",
+            "dataset_run_ids": ["ptd-backfilled"],
         }
         metadata_dict["provenance"]["training"]["trained_date"] = "1999-01-01"
         meta_path.write_text(json.dumps(metadata_dict))

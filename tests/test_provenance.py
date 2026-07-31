@@ -28,8 +28,8 @@ FASTSIM_SOURCE = pt.FastSimSource(
     pipeline_version="0.4.1",
     pipeline_run_id="gha-2026-07-14-8871",
     pipeline_repo_ref="9f3c1ab",
-    dataset_name="camry-2016-cycles",
-    dataset_hash="ab" * 32,
+    dataset_run_ids=["ptd-2026-07-14-001", "ptd-2026-07-14-002"],
+    data_sources=["wm1", "wm2"],
 )
 REAL_WORLD_SOURCE = pt.RealWorldSource(
     data_source="fleet_dna",
@@ -105,14 +105,63 @@ class TestProvenanceSection(TestCase):
         self.assertEqual(source["fastsim_version"], "3.1.0")
         self.assertEqual(source["pipeline_run_id"], "gha-2026-07-14-8871")
 
-    def test_dataset_labels_live_on_the_source(self):
-        """``dataset_name`` / ``dataset_hash`` are part of describing the
-        source, not a section of their own."""
+    def test_multi_valued_dataset_provenance_persists(self):
+        """A training run samples across every matching dataset, so the run ids
+        and their sources are lists — they must survive JSON as lists, not get
+        flattened to a first element or a joined string."""
+        as_json = json.loads(
+            _metadata(_config(training_source=FASTSIM_SOURCE)).model_dump_json()
+        )
+        source = as_json["provenance"]["source"]
+        self.assertEqual(
+            source["dataset_run_ids"], ["ptd-2026-07-14-001", "ptd-2026-07-14-002"]
+        )
+        self.assertEqual(source["data_sources"], ["wm1", "wm2"])
+
+        restored = Metadata.model_validate(as_json).provenance.source
+        assert isinstance(restored, pt.FastSimSource)
+        self.assertEqual(restored.dataset_run_ids, FASTSIM_SOURCE.dataset_run_ids)
+        self.assertEqual(restored.data_sources, FASTSIM_SOURCE.data_sources)
+
+    def test_list_fields_default_empty_and_are_not_shared(self):
+        """A mutable default leaking across instances would silently attribute
+        one model's datasets to another."""
+        a = pt.FastSimSource()
+        b = pt.FastSimSource()
+        self.assertEqual(a.dataset_run_ids, [])
+        self.assertEqual(a.data_sources, [])
+        a.dataset_run_ids.append("ptd-0001")
+        self.assertEqual(b.dataset_run_ids, [])
+
+    def test_fastsim_delegates_dataset_identity_to_the_run_ids(self):
+        """Simulated training data is described by keys into the pipeline's
+        provenance database, not by copies in the artifact. Anything the run ids
+        already resolve — the assembled frame's name and hash, the sampling seed
+        — is deliberately absent, so nothing here can drift from the database.
+        """
+        for field in ("dataset_name", "dataset_hash", "sampling_seed"):
+            with self.subTest(field=field):
+                self.assertNotIn(field, pt.FastSimSource.model_fields)
+
         source = json.loads(
             _metadata(_config(training_source=FASTSIM_SOURCE)).model_dump_json()
         )["provenance"]["source"]
-        self.assertEqual(source["dataset_name"], "camry-2016-cycles")
-        self.assertEqual(source["dataset_hash"], "ab" * 32)
+        self.assertNotIn("dataset_name", source)
+        self.assertNotIn("dataset_hash", source)
+
+    def test_dataset_labels_live_on_collected_and_converted_sources(self):
+        """Real-world and legacy data have no pipeline database behind them, so
+        for those the artifact is the only record and the labels stay."""
+        for source_obj in (REAL_WORLD_SOURCE, LEGACY_SOURCE):
+            with self.subTest(method=source_obj.method.value):
+                self.assertIn("dataset_name", type(source_obj).model_fields)
+                self.assertIn("dataset_hash", type(source_obj).model_fields)
+
+        source = json.loads(
+            _metadata(_config(training_source=REAL_WORLD_SOURCE)).model_dump_json()
+        )["provenance"]["source"]
+        self.assertEqual(source["dataset_name"], "fleet-dna-2023")
+        self.assertEqual(source["dataset_hash"], "cd" * 32)
 
     def test_source_is_optional(self):
         metadata = _metadata(_config())
@@ -125,6 +174,13 @@ class TestProvenanceSection(TestCase):
         provenance = _metadata(_config(training_source=REAL_WORLD_SOURCE)).provenance
         self.assertEqual(provenance.dataset_name, "fleet-dna-2023")
         self.assertEqual(provenance.dataset_hash, "cd" * 32)
+
+    def test_dataset_accessors_are_none_for_fastsim(self):
+        """The union is heterogeneous now, so the accessors must not blow up on
+        the variant that doesn't carry the labels."""
+        provenance = _metadata(_config(training_source=FASTSIM_SOURCE)).provenance
+        self.assertIsNone(provenance.dataset_name)
+        self.assertIsNone(provenance.dataset_hash)
 
     def test_training_config_lands_in_provenance(self):
         config = _config(training_source=FASTSIM_SOURCE, validation_size=0.1)
@@ -186,10 +242,7 @@ class TestProvenanceOnDisk(TestCase):
                 targets=[pt.DataColumn(name="gallons_fastsim", units="gallons")]
             ),
             training_source=FASTSIM_SOURCE.model_copy(
-                update={
-                    "dataset_name": "sample-train-data",
-                    "dataset_hash": pt.hash_dataframe(df),
-                }
+                update={"dataset_run_ids": ["ptd-" + pt.hash_dataframe(df)[:8]]}
             ),
         )
         cls.model = SklearnRandomForestTrainer(max_depth=5).train(df, config)

@@ -23,11 +23,19 @@ under 2.0.0 and re-save under 2.0.1).
   - `provenance.source` — a tagged union on `method`, holding what produced the training data.
     `FastSimSource` records the FASTSim vehicle id (from
     [NatLabRockies/fastsim-vehicles](https://github.com/NatLabRockies/fastsim-vehicles)), the git
-    ref pinning that repo, the FASTSim version, and the model pipeline's version / run id / commit.
-    `RealWorldSource` records the data source, fleet, collection window, and sample size.
-    `LegacySource` marks models whose origin predates this section. Every variant also carries
-    `dataset_name` and `dataset_hash` — labeling the data is part of describing where it came from.
-    Every field is optional.
+    ref pinning that repo, the FASTSim version, the model pipeline's version / commit, the
+    `pipeline_run_id` of the **training** run, and the `dataset_run_ids` / `data_sources` of the
+    prepare-training-data runs it was fit to. `RealWorldSource` records the data source, fleet,
+    collection window, sample size, `dataset_name`, and `dataset_hash`. `LegacySource` marks models
+    whose origin predates this section. Every field is optional.
+
+    The run ids are **keys, not copies**: they resolve, in the pipeline's provenance database, to
+    the full configuration each run used — dataset filters, sampling seed, estimator settings, trip
+    caps, the identity of the assembled training frame. None of that is duplicated into the
+    artifact, because a copy gives the same fact a second place to drift and can't be verified
+    against the original. `FastSimSource` therefore carries no `dataset_name`, `dataset_hash`, or
+    sampling seed; `RealWorldSource` and `LegacySource` keep the dataset labels, since nothing
+    stands behind collected or converted data except the artifact itself.
   - `provenance.training` — the former `training` block, slimmed to `test_size`,
     `validation_size`, `random_seed`, `trip_column`, and `trained_date`.
 - New `ModelConfig.training_source` field carries the source into a trained model.

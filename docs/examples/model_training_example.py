@@ -78,15 +78,13 @@ training_source = pt.FastSimSource(
     # a git tag or commit sha pinning that repo
     fastsim_vehicles_ref="v1.2.0",
     fastsim_version="3.1.0",
-    # the pipeline that drove the simulation and the training
+    # the pipeline, and the id of the training run that produced this model
     pipeline_version="0.4.1",
     pipeline_run_id="local-run",
-    # labels for the data itself; hash_dataframe fingerprints the rows
-    dataset_name="sample_train_data.csv",
-    dataset_hash=pt.hash_dataframe(df),
+    dataset_run_ids=["ptd-2026-07-14-001", "ptd-2026-07-14-002"],
+    data_sources=["wm1"],
 )
 """
-If you trained on real-world vehicle data instead, use `pt.RealWorldSource(data_source=..., fleet=..., collection_start=..., collection_end=..., n_vehicles=...)`. It carries the same `dataset_name` / `dataset_hash` labels.
 
 All of this lands in the `provenance` section of the saved `metadata.json`. None of it feeds the model digest, so you can correct a version or backfill a run id on an already-published model without changing its identity.
 

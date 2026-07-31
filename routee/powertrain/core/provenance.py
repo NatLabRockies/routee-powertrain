@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Annotated, Literal, Optional, Union
+from typing import TYPE_CHECKING, Annotated, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -17,13 +17,6 @@ __all__ = [
     "TrainingConfig",
     "Provenance",
 ]
-
-# Every source variant ends with the same three fields — ``dataset_name``,
-# ``dataset_hash``, and ``notes``. They are repeated per variant rather than
-# lifted into a shared base class so that the serialized field order reads
-# method → what makes this source distinctive → how the data is labeled;
-# pydantic always emits base-class fields first, which would put the dataset
-# labels ahead of the fields they belong to.
 
 
 class TrainingMethod(str, Enum):
@@ -45,6 +38,24 @@ class FastSimSource(BaseModel):
     trains on the resulting energy traces. Recording the vehicle, the simulator
     version, and the pipeline that drove them is what makes a published model
     reproducible.
+
+    The pipeline keeps its own provenance database, so this records **keys, not
+    copies**. ``pipeline_run_id`` and ``dataset_run_ids`` resolve there to the
+    full configuration each run used — dataset filters, estimator settings, trip
+    caps, the sampling seed, the identity of the assembled training frame, and
+    everything else that would have to match to recreate the model. None of that
+    is duplicated here: a copy drifts from the source of truth and can't be
+    verified against it, while a key can't drift.
+
+    What remains alongside the keys describes *what was simulated* rather than
+    how the training data was assembled — the vehicle, the simulator version,
+    the pipeline version. Those are cheap, stable, and readable at a glance.
+
+    This assumes the provenance database is reachable whenever a model needs to
+    be reproduced. That is a deliberate trade, and a cheap one to revisit:
+    provenance is excluded from ``model_digest``, so a field added here later is
+    non-breaking and can even be backfilled onto already-published models
+    without changing their identity.
     """
 
     method: Literal[TrainingMethod.FASTSIM_SIMULATION] = (
@@ -62,17 +73,15 @@ class FastSimSource(BaseModel):
 
     #: Version of the model pipeline that orchestrated simulation and training.
     pipeline_version: Optional[str] = None
-    #: Identifier of the specific pipeline execution (e.g. a CI run id), so a
-    #: published model traces back to the run that produced it.
     pipeline_run_id: Optional[str] = None
     #: Git commit sha of the pipeline repo at run time.
     pipeline_repo_ref: Optional[str] = None
 
-    #: Human-readable identifier of the simulation output the model was fit to.
-    dataset_name: Optional[str] = None
-    #: Fingerprint of that data — see ``routee.powertrain.hash_dataframe``.
-    dataset_hash: Optional[str] = None
-
+    dataset_run_ids: List[str] = Field(default_factory=list)
+    #: Dataset sources the training data was drawn from (e.g. ``["wm1"]``).
+    #: Usually one, but a run can be configured to sample across several
+    #: (e.g. ``["wm1", "wm2"]``).
+    data_sources: List[str] = Field(default_factory=list)
     notes: Optional[str] = None
 
 
@@ -184,13 +193,22 @@ class Provenance(BaseModel):
 
     @property
     def dataset_name(self) -> Optional[str]:
-        """The training dataset's label, or ``None`` when no source is set."""
-        return self.source.dataset_name if self.source is not None else None
+        """The training dataset's label, when the source records one.
+
+        ``None`` for a ``FastSimSource`` — simulated training data is described
+        by ``dataset_run_ids`` against the pipeline's provenance database rather
+        than by a label in the artifact — and ``None`` when no source is set.
+        """
+        return getattr(self.source, "dataset_name", None)
 
     @property
     def dataset_hash(self) -> Optional[str]:
-        """The training data's fingerprint, or ``None`` when no source is set."""
-        return self.source.dataset_hash if self.source is not None else None
+        """The training data's fingerprint, when the source records one.
+
+        ``None`` for a ``FastSimSource``, for the same reason as
+        ``dataset_name``, and ``None`` when no source is set.
+        """
+        return getattr(self.source, "dataset_hash", None)
 
     @classmethod
     def from_config(cls, config: ModelConfig) -> Provenance:
