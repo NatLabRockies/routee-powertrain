@@ -37,6 +37,7 @@ from typing import List, Optional, Union
 from routee.powertrain.__about__ import MIGRATION_GUIDE_URL
 from routee.powertrain.core.metadata import Metadata
 from routee.powertrain.core.model_config import ModelConfig
+from routee.powertrain.core.provenance import LegacySource, TrainingSource
 from routee.powertrain.io.archive import save_model_directory
 from routee.powertrain.registry.model_id import ModelId
 from routee.powertrain.validation.errors import ModelErrors
@@ -181,6 +182,7 @@ def convert_legacy_json(
     output_dir: Union[str, Path],
     identity: VehicleIdentity,
     *,
+    provenance_source: Optional[TrainingSource] = None,
     version: int = 1,
     schema_version: int = 2,
 ) -> List[Path]:
@@ -217,6 +219,12 @@ def convert_legacy_json(
         ``engine``/``drivetrain``/``trim`` are descriptive, filterable
         metadata, not identity. ``variant`` feeds the derived ``config_slug``;
         the sentinel ``"default"`` is treated as "no variant".
+    provenance_source:
+        What produced the training data, recorded in the ``provenance``
+        section. Defaults to ``LegacySource(converted_from="v1")`` — v1
+        archives record no simulator, pipeline, or dataset information, so
+        "converted from v1, origin unknown" is the honest answer. Pass a
+        populated source when the caller knows more.
     version:
         Model version number (default 1).
     schema_version:
@@ -238,6 +246,9 @@ def convert_legacy_json(
 
     json_path = Path(json_path)
     output_dir = Path(output_dir)
+
+    if provenance_source is None:
+        provenance_source = LegacySource(converted_from="v1")
 
     with json_path.open("r") as f:
         data = json.load(f)
@@ -332,6 +343,7 @@ def convert_legacy_json(
             "test_size": old_config.get("test_size", 0.2),
             "random_seed": old_config.get("random_seed", 42),
             "trip_column": old_config.get("trip_column", "trip_id"),
+            "training_source": provenance_source,
         }
 
         # Legacy models stored a boolean flag; map it to the numeric factor.

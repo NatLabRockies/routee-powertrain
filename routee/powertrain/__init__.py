@@ -12,7 +12,12 @@ __all__ = [
     "ModelConfig",
     "Vehicle",
     "Contract",
+    "Provenance",
     "TrainingConfig",
+    "TrainingMethod",
+    "FastSimSource",
+    "RealWorldSource",
+    "LegacySource",
     "Metadata",
     "EstimatorInfo",
     "PowertrainType",
@@ -37,7 +42,15 @@ from .core.drivetrain import Drivetrain
 from .core.features import DataColumn, FeatureSet, Constraints, TargetSet
 from .core.fuel_type import FuelType
 from .core.model import Model
-from .core.model_config import ModelConfig, Vehicle, Contract, TrainingConfig
+from .core.model_config import ModelConfig, Vehicle, Contract
+from .core.provenance import (
+    FastSimSource,
+    LegacySource,
+    Provenance,
+    RealWorldSource,
+    TrainingConfig,
+    TrainingMethod,
+)
 from .core.metadata import Metadata, EstimatorInfo
 from .core.powertrain_type import PowertrainType
 from .io.archive import save_to_registry

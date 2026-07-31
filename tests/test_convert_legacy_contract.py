@@ -149,6 +149,43 @@ class TestConvertLegacyContract(TestCase):
         )
         self.assertNotIn("input_columns", meta["estimator"]["input_spec"])
 
+    def test_converted_model_records_legacy_provenance(self) -> None:
+        """v1 archives record no simulator, pipeline, or dataset, so the
+        converter says so explicitly rather than leaving the source null."""
+        json_path = self._legacy_json()
+        created = convert_legacy_json(
+            json_path,
+            self.out_path / "converted_provenance",
+            VehicleIdentity(make="toyota", model="camry", year=2016),
+            version=1,
+        )
+        loaded = pt.load_model(created[0])
+        source = loaded.metadata.provenance.source
+        assert isinstance(source, pt.LegacySource)
+        self.assertEqual(source.converted_from, "v1")
+        # The training date is genuinely unknown for a converted archive.
+        self.assertIsNone(loaded.metadata.provenance.training.trained_date)
+
+    def test_converted_model_accepts_an_explicit_source(self) -> None:
+        json_path = self._legacy_json()
+        created = convert_legacy_json(
+            json_path,
+            self.out_path / "converted_fastsim",
+            VehicleIdentity(make="toyota", model="camry", year=2016),
+            provenance_source=pt.FastSimSource(
+                fastsim_vehicle_id="v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1",
+                fastsim_version="3.1.0",
+            ),
+            version=1,
+        )
+        loaded = pt.load_model(created[0])
+        source = loaded.metadata.provenance.source
+        assert isinstance(source, pt.FastSimSource)
+        self.assertEqual(
+            source.fastsim_vehicle_id,
+            "v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1",
+        )
+
 
 if __name__ == "__main__":
     import unittest

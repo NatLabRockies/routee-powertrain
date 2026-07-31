@@ -105,6 +105,14 @@ def main(argv: list[str] | None = None) -> int:
         help="Create the repo (public) if it does not already exist.",
     )
     parser.add_argument(
+        "--replace",
+        action="store_true",
+        help="Replace the uploaded tree instead of merging into it: files in "
+        "the repo that are not present locally are deleted in the same commit. "
+        "Use when republishing a regenerated library, so retired models and "
+        "stale versions don't linger.",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Show what would be uploaded without actually uploading.",
@@ -151,6 +159,17 @@ def main(argv: list[str] | None = None) -> int:
 
     allow_patterns = [f"{d.relative_to(root)}/*" for d in model_dirs]
 
+    # ``delete_patterns`` is evaluated against the uploaded folder's scope, so
+    # every repo file under it that isn't in this upload is removed as part of
+    # the same commit — the repo never sits in a half-replaced state. Scope the
+    # deletion to --prefix when one is given, so a partial upload can't wipe the
+    # models it never looked at.
+    delete_patterns = None
+    if args.replace:
+        delete_patterns = (
+            f"{args.prefix.strip('/')}/*" if args.prefix else f"{args.schema_version}/*"
+        )
+
     log.info(
         "Found %d model(s) to upload to %s (%s)",
         len(model_dirs),
@@ -160,6 +179,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.dry_run:
         log.info("--- DRY RUN (nothing will be uploaded) ---")
+        if args.replace:
+            log.info(
+                "[dry-run] --replace: repo files under '%s' not in this upload "
+                "would be DELETED",
+                delete_patterns,
+            )
         for d in model_dirs:
             log.info("[dry-run] Would upload %s -> %s", d, d.relative_to(root))
         return 0
@@ -177,6 +202,18 @@ def main(argv: list[str] | None = None) -> int:
             private=False,
         )
 
+    if args.replace:
+        log.warning(
+            "--replace: repo files under '%s' not in this upload will be deleted",
+            delete_patterns,
+        )
+
+    commit_message = (
+        f"Replace library with {len(model_dirs)} model(s)"
+        if args.replace
+        else f"Publish {len(model_dirs)} model(s)"
+    )
+
     try:
         api.upload_folder(
             folder_path=str(root),
@@ -185,7 +222,8 @@ def main(argv: list[str] | None = None) -> int:
             repo_type=args.repo_type,
             revision=args.revision,
             allow_patterns=allow_patterns,
-            commit_message=f"Publish {len(model_dirs)} model(s)",
+            delete_patterns=delete_patterns,
+            commit_message=commit_message,
         )
     except Exception:
         log.exception("Failed to upload models to %s", args.repo_id)
