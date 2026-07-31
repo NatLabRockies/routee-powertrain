@@ -213,7 +213,7 @@ Use this page to search and download trained RouteE Powertrain models.
 document.addEventListener('DOMContentLoaded', () => {
 
   // URLs used to fetch content from Hugging Face. If repo moved, only BASE_URL needs updated.
-  const BASE_URL = `https://huggingface.co/nreinicke/routee-powertrain-model-library/raw/main/`;
+  const BASE_URL = `https://huggingface.co/NatLabRockies/routee-powertrain-model-library/raw/main/`;
   const INDEX_URL = BASE_URL + `v2/index.json`;
   const HF_RESOLVE = BASE_URL.replace('/raw/main/', '/resolve/main/');
   const HF_API_BASE = BASE_URL.replace('https://huggingface.co/', 'https://huggingface.co/api/models/').replace('/raw/main/', '/tree/main/');
@@ -269,11 +269,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const labels = { random_forest: 'Random Forest', ngboost: 'NGBoost', cnn: 'CNN' };
     return labels[String(value || '').toLowerCase()] || formatTitle(value);
   };
-  
+
   /** Parses various year formats (number, array) into a range (used for searching) and display format (used in the vehicle card titles). */
   const parseYears = (yearData) => {
     if (!yearData) return { min: null, max: null, display: 'N/A' };
-    
+
     if (Array.isArray(yearData)) {
       const years = yearData.map(Number).filter(n => !isNaN(n));
       if (years.length > 0) {
@@ -283,11 +283,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return { min, max, display };
       }
     }
-    
+
     if (typeof yearData === 'number') {
       return { min: yearData, max: yearData, display: String(yearData) };
     }
-    
+
     return { min: null, max: null, display: 'N/A' };
   };
 
@@ -321,16 +321,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const groups = models.reduce((acc, model) => {
       const yearKey = model.yearRange ? model.yearRange.display : 'unknown';
       const key = `${model.make}|${model.vehicleModel}|${model.powertrain}|${yearKey}`.toLowerCase();
-      
+
       if (!acc[key]) {
         acc[key] = { key, make: model.make, vehicle: model.vehicleModel, powertrain: model.powertrain, yearRange: model.yearRange, featureSets: {} };
       }
-      
+
       const featureKey = `${model.architectureTag}|${model.variantName}`;
       if (!acc[key].featureSets[featureKey]) {
         acc[key].featureSets[featureKey] = [];
       }
-      
+
       acc[key].featureSets[featureKey].push(model);
       return acc;
     }, {});
@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
     modelFilter.innerHTML = '<option value="">All Models</option>';
     const filteredModels = selectedMake ? sourceModels.filter(m => m.make === selectedMake) : sourceModels;
     const uniqueModels = [...new Set(filteredModels.map(m => m.vehicleModel).filter(Boolean))].sort();
-    
+
     uniqueModels.forEach(m => {
       modelFilter.add(new Option(formatTitle(m), m));
     });
@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /** It'd be easier if they were all static but it bugged me. */
   const populateFilters = (models) => {
     const getOptions = (key) => [...new Set(models.map(m => m[key]).filter(Boolean))].sort();
-    
+
     getOptions('make').forEach(v => makeFilter.add(new Option(formatTitle(v), v)));
     getOptions('powertrain').forEach(v => powertrainFilter.add(new Option(String(v).replace(/_/g, ' '), v)));
     getOptions('architectureTag').forEach(arch => architectureFilter.add(new Option(formatArchitectureTag(arch), arch)));
@@ -383,14 +383,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const renderFeatureSetCard = (fsData, groupIndex, selectedVersionIndex = 0) => {
     const model = fsData.versions[selectedVersionIndex];
     const hasMultipleVersions = fsData.versions.length > 1;
-    
+
     // Add dropdown for previous version only if there are multiple model versions
     let versionSelector = '';
     if (hasMultipleVersions) {
       const options = fsData.versions.map((v, i) =>
         `<option value="${i}" ${i === selectedVersionIndex ? 'selected' : ''}>Version ${v.version}${i === 0 ? ' (Latest)' : ''}</option>`
       ).join('');
-      
+
       versionSelector = `
         <select class="model-version-select" data-group-index="${groupIndex}" data-fs-index="${fsData.fsIndex}">
           ${options}
@@ -459,12 +459,12 @@ document.addEventListener('DOMContentLoaded', () => {
           ...allYears
         ].map(str => String(str || '').toLowerCase());
 
-        const matchesAllTerms = searchTerms.every(term => 
+        const matchesAllTerms = searchTerms.every(term =>
           searchableMetadata.some(meta => meta.includes(term))
         );
         if (!matchesAllTerms) return acc;
       }
-      
+
       (acc[latestModel.architectureTag] = acc[latestModel.architectureTag] || []).push(fsData);
       return acc;
     }, {});
@@ -478,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const card = document.createElement('div');
     card.className = 'result-card';
     card.dataset.groupIndex = groupIndex;
-    
+
     const activeArch = architectureFilter.value;
     card.innerHTML = `
       <div class="result-header">
@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     resultsContainer.appendChild(card);
   };
-  
+
   // Page render
   const renderResults = (filteredGroups) => {
     resultsContainer.innerHTML = '';
@@ -520,7 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (make && group.make !== make) return false;
       if (model && group.vehicle !== model) return false;
       if (pt && group.powertrain !== pt) return false;
-      
+
       if (yearMin && group.yearRange && group.yearRange.max < yearMin) return false;
       if (yearMax && group.yearRange && group.yearRange.min > yearMax) return false;
 
@@ -532,9 +532,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Text Search
       if (query) {
         const searchTerms = query.split(/\s+/).filter(Boolean);
-        const allYears = group.yearRange ? 
+        const allYears = group.yearRange ?
           Array.from({length: group.yearRange.max - group.yearRange.min + 1}, (_, i) => String(group.yearRange.min + i)) : [];
-        
+
         const groupArchs = group.featureSetsList.map(fs => fs.versions[0].architectureTag || '');
         const groupFeatures = group.featureSetsList.flatMap(fs => fs.versions[0].feature_names || []);
         const groupVariants = group.featureSetsList.map(fs => fs.versions[0].variantName || '');
@@ -549,16 +549,16 @@ document.addEventListener('DOMContentLoaded', () => {
           ...groupVariants
         ].map(str => String(str).toLowerCase());
 
-        const matchesAllTerms = searchTerms.every(term => 
+        const matchesAllTerms = searchTerms.every(term =>
           searchableMetadata.some(meta => meta.includes(term))
         );
 
         if (!matchesAllTerms) return false;
       }
-      
+
       return true;
     });
-    
+
     renderResults(filtered);
   };
 
@@ -570,20 +570,20 @@ document.addEventListener('DOMContentLoaded', () => {
     architectureFilter.value = '';
     yearMinInput.value = '';
     yearMaxInput.value = '';
-    
+
     updateModelOptions(allModels);
     handleSearch();
   };
 
   resetBtn.addEventListener('click', handleReset);
-  
+
   const handleEventDelegation = (e) => {
     if (e.target.matches('.model-version-select')) {
-      if (e.type !== 'change') return; 
+      if (e.type !== 'change') return;
       const groupIndex = e.target.dataset.groupIndex;
       const fsIndex = parseInt(e.target.dataset.fsIndex, 10);
       const versionIndex = parseInt(e.target.value, 10);
-      
+
       const group = currentRenderedGroups[groupIndex];
       if (group) {
         const fsData = group.featureSetsList.find(fs => fs.fsIndex === fsIndex);
@@ -663,10 +663,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(INDEX_URL);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const rawData = await response.json();
-      
+
       allModels = (rawData.models || []).map(processModelData);
       vehicleGroups = groupModelsByVehicle(allModels);
-      
+
       populateFilters(allModels);
       renderResults(vehicleGroups);
 
@@ -676,7 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  [searchInput, makeFilter, modelFilter, powertrainFilter, architectureFilter, yearMinInput, yearMaxInput].forEach(el => 
+  [searchInput, makeFilter, modelFilter, powertrainFilter, architectureFilter, yearMinInput, yearMaxInput].forEach(el =>
     el.addEventListener('input', handleSearch)
   );
 
