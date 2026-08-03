@@ -435,69 +435,14 @@ We'll use models with different feature sets to show the flexibility of the appr
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">toyota_camry</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;toyota/camry_ice/2016/rf_db8522fb/v1&quot;</span><span class="p">)</span>
-<span class="n">tesla_model3</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;tesla/model_3_rwd/2022/rf_c3326385/v1&quot;</span><span class="p">)</span>
-<span class="n">tesla_with_temp</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;tesla/model_3_rwd/2022/rf_steady_thermal_ab1db342/v1&quot;</span><span class="p">)</span>
+<span class="n">tesla_model3</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;tesla/model_3_bev/2022/rf_c3326385/v1&quot;</span><span class="p">)</span>
+<span class="n">tesla_with_temp</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;tesla/model_3_bev/2022/rf_steady_thermal_ab1db342/v1&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
-</pre></div>
-</div>
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">ValidationError</span><span class="g g-Whitespace">                           </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">toyota_camry</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;toyota/camry_ice/2016/rf_db8522fb/v1&quot;</span><span class="p">)</span>
-<span class="g g-Whitespace">      </span><span class="mi">2</span> <span class="n">tesla_model3</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;tesla/model_3_rwd/2022/rf_c3326385/v1&quot;</span><span class="p">)</span>
-<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="n">tesla_with_temp</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;tesla/model_3_rwd/2022/rf_steady_thermal_ab1db342/v1&quot;</span><span class="p">)</span>
-
-<span class="nn">File /opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages/routee/powertrain/io/load.py:272,</span> in <span class="ni">load_model</span><span class="nt">(name_or_path, registry)</span>
-<span class="g g-Whitespace">    </span><span class="mi">270</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name_or_path</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
-<span class="g g-Whitespace">    </span><span class="mi">271</span>     <span class="n">mid</span> <span class="o">=</span> <span class="n">_resolve_load_target</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name_or_path</span><span class="p">),</span> <span class="n">registry</span><span class="p">)</span>
-<span class="ne">--&gt; </span><span class="mi">272</span>     <span class="k">return</span> <span class="n">registry</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">mid</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">274</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">275</span>     <span class="sa">f</span><span class="s2">&quot;Could not load model: </span><span class="si">{</span><span class="n">name_or_path</span><span class="si">}</span><span class="s2">. &quot;</span>
-<span class="g g-Whitespace">    </span><span class="mi">276</span>     <span class="s2">&quot;Provide a valid local file/directory or a valid ModelId/string with a registry.&quot;</span>
-<span class="g g-Whitespace">    </span><span class="mi">277</span> <span class="p">)</span>
-
-<span class="nn">File /opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages/routee/powertrain/registry/hf.py:236,</span> in <span class="ni">HFRegistry.load</span><span class="nt">(self, model_id)</span>
-<span class="g g-Whitespace">    </span><span class="mi">233</span> <span class="n">model_filename</span> <span class="o">=</span> <span class="n">_model_filename</span><span class="p">(</span><span class="n">metadata_dict</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">235</span> <span class="n">model_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_bytes</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dir_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">model_filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="ne">--&gt; </span><span class="mi">236</span> <span class="n">model</span> <span class="o">=</span> <span class="n">_model_from_metadata_and_bytes</span><span class="p">(</span><span class="n">metadata_dict</span><span class="p">,</span> <span class="n">model_bytes</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">237</span> <span class="n">assert_metadata_matches_id</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">model_id</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">238</span> <span class="k">return</span> <span class="n">model</span>
-
-<span class="nn">File /opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages/routee/powertrain/io/archive.py:228,</span> in <span class="ni">_model_from_metadata_and_bytes</span><span class="nt">(metadata_dict, model_bytes)</span>
-<span class="g g-Whitespace">    </span><span class="mi">222</span> <span class="k">if</span> <span class="n">estimator_cls</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">223</span>     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">224</span>         <span class="sa">f</span><span class="s2">&quot;Estimator type &#39;</span><span class="si">{</span><span class="n">estimator_type_str</span><span class="si">}</span><span class="s2">&#39; is not registered. &quot;</span>
-<span class="g g-Whitespace">    </span><span class="mi">225</span>         <span class="sa">f</span><span class="s2">&quot;Available types: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">registry</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="g g-Whitespace">    </span><span class="mi">226</span>     <span class="p">)</span>
-<span class="ne">--&gt; </span><span class="mi">228</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">Metadata</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">metadata_dict</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">229</span> <span class="c1"># Verify against the raw bytes as read, before deserializing the binary.</span>
-<span class="g g-Whitespace">    </span><span class="mi">230</span> <span class="n">_verify_digest</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">model_bytes</span><span class="p">)</span>
-
-<span class="nn">File /opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages/pydantic/main.py:732,</span> in <span class="ni">BaseModel.model_validate</span><span class="nt">(cls, obj, strict, extra, from_attributes, context, by_alias, by_name)</span>
-<span class="g g-Whitespace">    </span><span class="mi">726</span> <span class="k">if</span> <span class="n">by_alias</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">by_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">727</span>     <span class="k">raise</span> <span class="n">PydanticUserError</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">728</span>         <span class="s1">&#39;At least one of `by_alias` or `by_name` must be set to True.&#39;</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">729</span>         <span class="n">code</span><span class="o">=</span><span class="s1">&#39;validate-by-alias-and-name-false&#39;</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">730</span>     <span class="p">)</span>
-<span class="ne">--&gt; </span><span class="mi">732</span> <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__pydantic_validator__</span><span class="o">.</span><span class="n">validate_python</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">733</span>     <span class="n">obj</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">734</span>     <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">735</span>     <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">736</span>     <span class="n">from_attributes</span><span class="o">=</span><span class="n">from_attributes</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">737</span>     <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">738</span>     <span class="n">by_alias</span><span class="o">=</span><span class="n">by_alias</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">739</span>     <span class="n">by_name</span><span class="o">=</span><span class="n">by_name</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">740</span> <span class="p">)</span>
-
-<span class="ne">ValidationError</span>: 1 validation error for Metadata
-<span class="n">provenance</span>
-  <span class="n">Field</span> <span class="n">required</span> <span class="p">[</span><span class="nb">type</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span> <span class="n">input_value</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;vehicle&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;vehicle_des...a720e62a0aae0c4e4a158f&#39;</span><span class="p">},</span> <span class="n">input_type</span><span class="o">=</span><span class="nb">dict</span><span class="p">]</span>
-    <span class="n">For</span> <span class="n">further</span> <span class="n">information</span> <span class="n">visit</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">errors</span><span class="o">.</span><span class="n">pydantic</span><span class="o">.</span><span class="n">dev</span><span class="o">/</span><span class="mf">2.13</span><span class="o">/</span><span class="n">v</span><span class="o">/</span><span class="n">missing</span>
 </pre></div>
 </div>
 </div>
@@ -516,6 +461,18 @@ We'll use models with different feature sets to show the flexibility of the appr
     <span class="s2">&quot;Tesla with Temperature targets:&quot;</span><span class="p">,</span>
     <span class="n">tesla_with_temp</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">target_name_list</span><span class="p">,</span>
 <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Toyota Camry features: [&#39;speed_mph&#39;]
+Toyota Camry targets: [&#39;gge&#39;]
+
+Tesla Model 3 features: [&#39;speed_mph&#39;, &#39;grade_percent&#39;]
+Tesla Model 3 targets: [&#39;kwh&#39;]
+
+Tesla with Temperature features: [&#39;speed_mph&#39;, &#39;grade_percent&#39;, &#39;ambient_temp_f&#39;]
+Tesla with Temperature targets: [&#39;kwh&#39;]
 </pre></div>
 </div>
 </div>
@@ -545,6 +502,17 @@ This creates a 1D lookup table showing how energy consumption varies with vehicl
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Single feature lookup table (first 5 rows):&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">camry_speed_lookup</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Single feature lookup table (first 5 rows):
+   speed_mph  gge_per_distance
+0        5.0          0.079209
+1       10.0          0.050484
+2       15.0          0.045138
+3       20.0          0.045888
+4       25.0          0.042178
 </pre></div>
 </div>
 </div>
@@ -581,6 +549,23 @@ This shows how energy consumption varies with both vehicle speed and road grade.
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Two feature lookup table shape: </span><span class="si">{</span><span class="n">tesla_speed_grade_lookup</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sample rows:&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">tesla_speed_grade_lookup</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Two feature lookup table shape: (63, 3)
+Sample rows:
+   speed_mph  grade_percent  kwh_per_distance
+0       25.0           -6.0         -0.211147
+1       30.0           -6.0         -0.211147
+2       35.0           -6.0         -0.211147
+3       40.0           -6.0         -0.208576
+4       45.0           -6.0         -0.201589
+5       50.0           -6.0         -0.201589
+6       55.0           -6.0         -0.201589
+7       60.0           -6.0         -0.201589
+8       65.0           -6.0         -0.201589
+9       25.0           -4.0         -0.087312
 </pre></div>
 </div>
 </div>
@@ -626,6 +611,25 @@ This is particularly useful for electric vehicles where temperature significantl
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Three feature lookup table shape: (48, 4)
+Sample rows showing temperature effects:
+    speed_mph  grade_percent  ambient_temp_f  kwh_per_distance
+0        35.0           -2.0            20.0          0.124237
+1        35.0           -2.0            40.0          0.063225
+2        35.0           -2.0            60.0          0.063225
+3        35.0           -2.0            80.0          0.063225
+4        45.0           -2.0            20.0          0.124237
+5        45.0           -2.0            40.0          0.063225
+6        45.0           -2.0            60.0          0.063225
+7        45.0           -2.0            80.0          0.063225
+8        55.0           -2.0            20.0          0.124237
+9        55.0           -2.0            40.0          0.063225
+10       55.0           -2.0            60.0          0.063225
+11       55.0           -2.0            80.0          0.063225
+</pre></div>
+</div>
+</div>
 </div>
 </section>
 <section id="practical-usage-interpolation-for-route-prediction">
@@ -654,6 +658,11 @@ Here's how you might use a lookup table for route prediction:</p>
 <span class="nb">print</span><span class="p">(</span>
     <span class="sa">f</span><span class="s2">&quot;Interpolated energy consumption at </span><span class="si">{</span><span class="n">example_speed</span><span class="si">}</span><span class="s2"> mph: </span><span class="si">{</span><span class="n">predicted_energy</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> gge/mile&quot;</span>
 <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Interpolated energy consumption at 42.5 mph: 0.0264 gge/mile
 </pre></div>
 </div>
 </div>
