@@ -17,8 +17,8 @@ We'll use models with different feature sets to show the flexibility of the appr
 """
 
 toyota_camry = pt.load_model("toyota/camry_ice/2016/rf_db8522fb/v1")
-tesla_model3 = pt.load_model("tesla/model_3_rwd/2022/rf_c3326385/v1")
-tesla_with_temp = pt.load_model("tesla/model_3_rwd/2022/rf_steady_thermal_ab1db342/v1")
+tesla_model3 = pt.load_model("tesla/model_3_bev/2022/rf_c3326385/v1")
+tesla_with_temp = pt.load_model("tesla/model_3_bev/2022/rf_steady_thermal_ab1db342/v1")
 """
 Let's examine the available features and targets for each model.
 """
