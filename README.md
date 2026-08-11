@@ -7,6 +7,9 @@
   <a href="https://pypi.org/project/routee.powertrain/">
     <img src="https://img.shields.io/pypi/v/routee.powertrain" alt="PyPi Latest Release"/>
   </a>
+  <a href="https://huggingface.co/NatLabRockies/routee-powertrain-model-library">
+    <img src="https://img.shields.io/badge/HuggingFace-Model-blue?logo=huggingface" alt="Hugging Face Badge">
+  </a>
 </div>
 
 ## Overview
