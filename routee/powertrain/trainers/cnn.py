@@ -7,7 +7,6 @@ from typing import Literal
 import numpy as np
 import onnxruntime as rt
 import pandas as pd
-import torch
 
 from routee.powertrain.core.model_config import ModelConfig
 from routee.powertrain.estimators.estimator_interface import Estimator, InputSpec
