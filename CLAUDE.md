@@ -1,5 +1,12 @@
 # CLAUDE.md — Project Guide for AI Coding Assistants
 
+## General Instructions
+
+Please use ISO 24495-1 Technical English for all text responses and comments, keeping the intent simple and easy to understand.
+When writing comments, don't refer to the previous state of the code, just state plainly and simply what needs to be contextualized as the code is in its current state.
+Don't over-comment the code, only in places where there is ambiguity or in user facing comments like doc-strings.
+Make sure to ask for clarification when instructions are ambiguous to get clarification from the user.
+
 ## Project Overview
 
 **routee.powertrain** is a Python package for predicting vehicle energy consumption over road network links. It ships pre-trained mesoscopic vehicle energy models (ICE, HEV, BEV, PHEV, heavy-duty) and supports training custom models from drive-cycle data.
@@ -109,6 +116,7 @@ Two-layer identity, mirroring OCI/MLflow: an immutable **instance digest** minte
 - `save_to_registry` is **idempotent**: with `version=None`, an existing version holding the same `model_digest` is returned instead of minting v<N+1>.
 - Coordinate lookup: `registry.find_by_digest(digest)` / `query(model_digest=...)` / `query_available_models(model_digest=...)` resolve a metadata file in hand back to its registry entry (exact match, `sha256:` prefix optional).
 - `dataset_name`/`dataset_hash` (optional) live on the training source (`ModelConfig.training_source`), not on `ModelConfig` itself. `pt.hash_dataframe(df)` computes a fingerprint. Neither feeds the digest.
+- `Metadata.model_key` (`make/vehicle_slug/year/config_slug`) — the version-less identity, cached in `metadata.json` so a consumer holding a detached archive can place it in a registry tree without re-implementing slug derivation (the same "denormalize across artifacts" reason the input contract is embedded in the ONNX binary). **Required on save, optional on read**: `io/archive.py:_build_metadata_dict` re-derives and stamps it on every save path (directory/zip/tar/registry), so it is never carried forward from a loaded value; `_verify_model_key` re-derives on load and **warns** on disagreement, matching `model_digest`. Derivation (`Metadata.derived_model_key` → `ModelKey.from_metadata`) stays the source of truth — the stored value is a cache, never trusted over it. `None` on artifacts published before the field existed, which load clean. **The registry `version` is deliberately not stored**: `_next_version` assigns it from whatever tree is being written, so it is a property of a registry's history rather than of the model, and an artifact cannot own it. Use `find_by_digest` to resolve an artifact to a coordinate in a specific registry. Excluded from the digest payload (its inputs are already covered there).
 - `scripts/backfill_digests.py` stamps digests onto pre-digest registry entries (requires the binaries).
 
 ## Coding Conventions
