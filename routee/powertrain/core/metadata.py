@@ -20,6 +20,8 @@ SCHEMA_VERSION_STRING = f"v{SCHEMA_VERSION}"
 
 _MODEL_DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _ESTIMATOR_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+#: ``<make>/<vehicle_slug>/<year>/<config_slug>`` — four non-empty segments.
+_MODEL_KEY_RE = re.compile(r"^[^/]+/[^/]+/[^/]+/[^/]+$")
 
 
 class EstimatorInfo(BaseModel):
@@ -76,6 +78,15 @@ class Metadata(BaseModel):
     errors: ModelErrors
     routee_version: str = Field(default_factory=get_version)
     schema_version: int = SCHEMA_VERSION
+    #: The version-less identity, ``make/vehicle_slug/year/config_slug``. Both
+    #: slugs are derived from the fields above, so this is a cache: it lets a
+    #: consumer place a detached archive into a registry tree without
+    #: re-implementing slug derivation. Derivation stays the source of truth —
+    #: the stored value is re-derived and checked on load, never trusted over
+    #: it. The registry ``version`` is deliberately absent: a registry assigns
+    #: it at publish time, so an artifact cannot own it. Written on every save;
+    #: ``None`` on artifacts saved before this field existed.
+    model_key: Optional[str] = None
     #: Registry-independent instance identity, minted at train time:
     #: ``sha256:<64 hex>`` over the frozen spec-1 identity payload (see
     #: ``core.digest``), which embeds ``estimator.estimator_sha256`` — so the
@@ -96,12 +107,36 @@ class Metadata(BaseModel):
             )
         return v
 
+    @field_validator("model_key", mode="after")
+    @classmethod
+    def _valid_model_key(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip().lower()
+        if not _MODEL_KEY_RE.match(v):
+            raise ValueError(
+                "model_key must have the form "
+                f"'<make>/<vehicle_slug>/<year>/<config_slug>', got '{v}'"
+            )
+        return v
+
     @property
     def short_digest(self) -> Optional[str]:
         """Truncated display form of ``model_digest`` (``sha256:<12 hex>``)."""
         from routee.powertrain.core.digest import short_digest
 
         return short_digest(self.model_digest)
+
+    @property
+    def derived_model_key(self) -> str:
+        """The version-less identity derived from these metadata fields.
+
+        The authority behind the stored ``model_key``: saving stamps this value
+        and loading checks the stored one against it.
+        """
+        from routee.powertrain.registry.model_id import ModelKey
+
+        return ModelKey.from_metadata(self).to_path()
 
     @property
     def config(self) -> ModelConfig:

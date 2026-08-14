@@ -96,11 +96,18 @@ def _build_metadata_dict(model: Model) -> dict:
     positional contract still travels embedded in the estimator binary for
     consumers that only have the binary). ``input_spec`` is excluded from the
     digest payload, so this never affects ``model_digest``.
+
+    The version-less ``model_key`` is stamped here too, so every artifact this
+    package writes carries it. Neither it nor ``input_spec`` is part of the
+    digest payload.
     """
     _require_input_contract(model)
     model.metadata.estimator.input_spec = model.estimator.input_spec.model_dump(
         mode="json", include={"lookback", "grouping_column", "pad_strategy"}
     )
+    # Re-derive rather than carry a loaded value forward, so an edit to the
+    # identity fields reaches what gets written.
+    model.metadata.model_key = model.metadata.derived_model_key
     return model.metadata.model_dump(mode="json")
 
 
@@ -173,6 +180,27 @@ def _verify_digest(metadata: Metadata, model_bytes: bytes) -> None:
             )
 
 
+def _verify_model_key(metadata: Metadata) -> None:
+    """Check a loaded artifact's ``model_key`` against a fresh derivation.
+
+    The stored value caches an identity the metadata fields own, so a
+    disagreement means those fields were edited after the artifact was written,
+    or the slug derivation changed. Warn and let the derived value stand, which
+    matches how a ``model_digest`` mismatch is handled. Artifacts saved without
+    the field skip the check.
+    """
+    if metadata.model_key is None:
+        return
+    derived = metadata.derived_model_key
+    if metadata.model_key != derived:
+        warnings.warn(
+            f"model_key mismatch: stored '{metadata.model_key}', derived "
+            f"'{derived}'. Identity-relevant metadata was edited after the "
+            "artifact was written, or the slug derivation changed. The derived "
+            "value is authoritative."
+        )
+
+
 def _verify_input_contract(metadata: Metadata, estimator) -> None:
     """Cross-check the estimator binary's embedded input order against metadata.
 
@@ -228,6 +256,7 @@ def _model_from_metadata_and_bytes(metadata_dict: dict, model_bytes: bytes) -> M
     metadata = Metadata.model_validate(metadata_dict)
     # Verify against the raw bytes as read, before deserializing the binary.
     _verify_digest(metadata, model_bytes)
+    _verify_model_key(metadata)
 
     estimator = estimator_cls.from_bytes(model_bytes)
     _verify_input_contract(metadata, estimator)
