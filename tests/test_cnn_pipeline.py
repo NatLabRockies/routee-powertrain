@@ -16,6 +16,24 @@ this_dir = Path(__file__).parent
 _HAS_TORCH = find_spec("torch") is not None
 
 
+class TestCNNOptionalDependency(TestCase):
+    def test_importing_cnn_trainer_does_not_import_torch(self):
+        """The trainer module stays importable without the PyTorch extra."""
+        import subprocess
+        import sys
+
+        code = (
+            "import sys;"
+            "from routee.powertrain.trainers.cnn import CNNTrainer;"
+            "assert 'torch' not in sys.modules, 'torch was imported eagerly';"
+            "assert CNNTrainer.__name__ == 'CNNTrainer'"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", code], capture_output=True, text=True
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
 @skipUnless(_HAS_TORCH, "torch is required for CNN training")
 class TestCNNPipeline(TestCase):
     def setUp(self) -> None:

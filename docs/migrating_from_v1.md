@@ -4,7 +4,8 @@ RouteE-Powertrain 2.0 is a breaking release. Beyond the package rename, the mode
 the model catalog, and much of the `Model` API changed. This page walks through the migration in
 the order you are likely to hit each change.
 
-If you just want the checklist, jump to [Migration checklist](#migration-checklist).
+If you just want the checklist, jump to
+{ref}`Migration checklist <migration-checklist>`.
 
 ## 1. Install the new package
 
@@ -218,6 +219,8 @@ Worth knowing about even though nothing forces you to use it:
   downstream consumer can reconstruct the exact positional input order without `metadata.json`.
   See [Estimator input contract](estimator_input_contract.md).
 - **CNN trainer** — a 1D CNN with sequence/lookback support, via the `pytorch` extra.
+
+(migration-checklist)=
 
 ## Migration checklist
 
