@@ -31,6 +31,10 @@ __all__ = [
     "load_sample_route",
     "save_to_registry",
     "visualize_features",
+    "check_physics",
+    "check_model",
+    "PhysicsReport",
+    "PhysicsAssumptions",
     "contour_plot",
     "compute_model_digest",
     "hash_dataframe",
@@ -64,6 +68,12 @@ from .io.load import (
 from .registry.model_id import ModelId, ModelInfo, ModelKey
 from .registry.registry import ModelRegistry
 from .validation.feature_visualization import visualize_features, contour_plot
+from .validation.physics import (
+    check_model,
+    check_physics,
+    PhysicsAssumptions,
+    PhysicsReport,
+)
 
 log = logging.getLogger()
 log.setLevel(logging.INFO)

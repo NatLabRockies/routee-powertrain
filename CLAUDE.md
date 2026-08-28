@@ -20,19 +20,20 @@ Make sure to ask for clarification when instructions are ambiguous to get clarif
 
 ## Quick Commands
 
-| Action            | Command                                                 |
-| ----------------- | ------------------------------------------------------- |
-| Install (dev)     | `pip install -e ".[dev]"` or `pixi install`             |
-| Test              | `pytest tests/` or `python -m unittest discover tests/` |
-| Lint              | `ruff check`                                            |
-| Lint (fix)        | `ruff check --fix`                                      |
-| Format            | `ruff format`                                           |
-| Format (check)    | `ruff format --check`                                   |
-| Type check        | `mypy .`                                                |
-| Build             | `hatch build`                                           |
-| Docs              | `jupyter-book build docs`                               |
-| All checks (Pixi) | `pixi run check` (fmt + lint + typing + test)           |
-| CI checks (Pixi)  | `pixi run ci` (fmt_check + lint_check + typing + test)  |
+| Action            | Command                                                    |
+| ----------------- | ---------------------------------------------------------- |
+| Install (dev)     | `pip install -e ".[dev]"` or `pixi install`                |
+| Test              | `pytest tests/` or `python -m unittest discover tests/`    |
+| Lint              | `ruff check`                                               |
+| Lint (fix)        | `ruff check --fix`                                         |
+| Format            | `ruff format`                                              |
+| Format (check)    | `ruff format --check`                                      |
+| Type check        | `mypy .`                                                   |
+| Build             | `hatch build`                                              |
+| Docs              | `jupyter-book build docs`                                  |
+| All checks (Pixi) | `pixi run check` (fmt + lint + typing + test)              |
+| Physics report    | `routee-powertrain validate-physics <model...>` or `--all` |
+| CI checks (Pixi)  | `pixi run ci` (fmt_check + lint_check + typing + test)     |
 
 ## Architecture
 
@@ -49,7 +50,7 @@ Package source lives under `routee/powertrain/`.
   - `CNNTrainer` → produces `ONNXEstimator` with a non-default `InputSpec` (1D CNN exported via `torch.onnx.export`); requires a `grouping_column` (e.g. `route_id`) to bucket sequences.
   - `NGBoostTrainer` → produces `NGBoostEstimator`
 - **`io/`** — `load_model()`, `list_available_models()`, `query_available_models()`, `load_sample_route()`, plus archive helpers (`load_model_from_path`, `save_model_directory`, `save_archive`, `save_tar_archive`) and the `to_lookup_table` helper backing `Model.to_lookup_table()`.
-- **`validation/`** — `ModelErrors`, `compute_errors()`, `visualize_features()`, `contour_plot()`
+- **`validation/`** — `ModelErrors`, `compute_errors()`, `visualize_features()`, `contour_plot()`, plus `physics.py`: `check_physics()` / `check_model()` return a `PhysicsReport` of physical-plausibility checks (round-trip convexity, monotonicity in grade, fuel ≥ 0, climb floor, absolute bounds) and diagnostics (implied η_drive/η_regen, flat-ground economy, length invariance) from a synthetic link sweep — no ground truth needed. **Not run at train time and not stored in `metadata.json`**; it is a standalone report, exposed as `routee-powertrain validate-physics`.
 - **`resources/`** — Bundled pre-trained models (`bundled_registry/v2/...`) and sample route data
 - **`registry/`** — Pluggable model discovery and retrieval system with multiple backends:
   - `ModelRegistry` (ABC) — Interface with `query()`, `load()`, `list_models()`, `get_metadata()`. `find_by_digest()` is concrete and delegates to `query()`, so a new backend gets it free. Also holds `INDEX_FILENAME` and `IndexMissingError`, shared by the remote backends.
@@ -68,7 +69,7 @@ Package source lives under `routee/powertrain/`.
 The Registry system abstracts model discovery and retrieval, allowing pre-trained models to be served from HuggingFace Hub, S3, or the local filesystem with an identical API. All three read the **same tree**, so a `ModelId` path means the same thing everywhere.
 
 - **Directory/bucket/repo layout**: `<root>/<schema_version>/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/` containing `metadata.json` + a binary estimator file (e.g. `model.onnx` or a `.joblib` blob)
-- **Bundled models**: `routee/powertrain/resources/bundled_registry/v2/` (currently `toyota/camry_ice` 2016 and `chevrolet/bolt_bev` 2017, both `rf_c3326385/v1` — the derived slug for a random forest over speed & grade)
+- **Bundled models**: `routee/powertrain/resources/bundled_registry/v2/` (currently `toyota/rav4_xle_ice` 2022 `rf_fe510e40/v1` and `polestar/2_bev` 2023 `rf_base_fe510e40/v1` — the derived slug for a random forest over speed, grade & distance). Both carry `mass_lbs`, so the mass-dependent physics checks apply to them.
 - **Public entry points** (in `io/load.py`):
   - `list_available_models(registry=None, version_strategy="latest")` — Returns all `ModelId`s. `version_strategy="all"` returns every version; default keeps only the latest per `(make, vehicle_slug, year, config_slug)` group.
   - `query_available_models(...)` — Filtered search returning `ModelInfo` objects; supports fuzzy matching (`fuzzy=True`, `fuzzy_threshold=80`) and the same filter set as `filter_models()`.

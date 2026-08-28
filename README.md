@@ -52,7 +52,7 @@ import routee.powertrain as pt
 print(pt.query_available_models(make="chevrolet", model="bolt", year=2017))
 
 # Load a pre-trained model
-model = pt.load_model("chevrolet/bolt_bev/2017/rf_c3326385/v1")
+model = pt.load_model("chevrolet/bolt_bev/2017/rf_base_fe510e40/v1")
 
 # Inspect the model to see what it expects for input
 print(model)
@@ -60,9 +60,9 @@ print(model)
 # Predict energy consumption for a set of road links
 links_df = pd.DataFrame(
     {
-        "distance": [0.1, 0.2, 0.3], # miles
+        "distance_mi": [0.1, 0.2, 0.3], # miles
         "speed_mph": [30, 40, 50], # mph
-        "grade_percent": [-5.0, 0.0, 5.0], # percent
+        "grade_pct": [-5.0, 0.0, 5.0], # percent
     }
 )
 

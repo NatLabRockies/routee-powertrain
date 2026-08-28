@@ -22,13 +22,13 @@ pt.list_available_models()
 # Use query_available_models for richer metadata with optional filters
 pt.query_available_models(make="toyota")
 
-camry = pt.load_model("toyota/camry_ice/2016/rf_c3326385/v1")
+rav4 = pt.load_model("toyota/rav4_xle_ice/2022/rf_fe510e40/v1")
 """
 After loading a model, we can inspect it to see what features (and units) the model expects.
 Each model contains a single estimator trained on a specific feature set.
 The model summary shows the features, distance column, energy target, and predicted fuel economy.
 """
-camry
+rav4
 """
 Now, let's predict energy consumption over a sample route.
 RouteE Powertrain expects the inputs to be a pandas dataframe in which each row represents a road network link.
@@ -37,15 +37,18 @@ There is a sample route included with the package that we'll use for demonstrati
 sample_route = pt.load_sample_route()
 sample_route
 """
-`predict` always uses the feature set the model was trained on. The sample route has `speed_mph`, `grade_percent`, and `distance` columns which match the Camry model's expected inputs.
+`predict` always uses the feature set the model was trained on. The sample route is labeled with the older column names (`grade_percent`, `distance`), which the temperature models still use; the base configs name the same quantities `grade_pct` and `distance_mi`, so the route is relabeled to match the model consuming it.
 """
-camry.predict(sample_route)
+route = sample_route.rename(
+    columns={"grade_percent": "grade_pct", "distance": "distance_mi"}
+)
+rav4.predict(route)
 """
 If your input DataFrame only has a subset of the features a model needs, pick a model whose feature set matches what you have. The `feature_names` filter on `query_available_models` makes this easy:
 
 ```python
-# Find Toyota Camry models trained on speed alone
-results = pt.query_available_models(make="toyota", model="camry", feature_names=["speed_mph"])
+# Find Toyota RAV4 models trained on speed alone
+results = pt.query_available_models(make="toyota", model="rav4", feature_names=["speed_mph"])
 ```
 """
 """
@@ -58,15 +61,17 @@ In order to use this we first have to define what ranges the features should be 
 """
 feature_ranges = {
     "speed_mph": {"lower": 2, "upper": 100, "n_samples": 50},
-    "grade_percent": {"lower": -20.0, "upper": 20.0, "n_samples": 50},
+    "grade_pct": {"lower": -20.0, "upper": 20.0, "n_samples": 50},
+    # Every feature the model takes needs a range, distance included.
+    "distance_mi": {"lower": 0.1, "upper": 1.0, "n_samples": 5},
 }
-results = pt.visualize_features(camry, feature_ranges)
+results = pt.visualize_features(rav4, feature_ranges)
 """
 We can also look at two features simultaneously with the `contour_plot` function. 
 """
 pt.contour_plot(
-    camry,
+    rav4,
     x_feature="speed_mph",
-    y_feature="grade_percent",
+    y_feature="grade_pct",
     feature_ranges=feature_ranges,
 )

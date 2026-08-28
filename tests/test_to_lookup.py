@@ -18,7 +18,7 @@ this_dir = Path(__file__).parent
 class TestToLookup(TestCase):
     def setUp(self) -> None:
         registry = LocalRegistry(root=bundled_registry_root(), schema_version="v2")
-        model_id = ModelId("toyota", "camry_ice", 2016, "rf_c3326385", 1)
+        model_id = ModelId("toyota", "rav4_xle_ice", 2022, "rf_fe510e40", 1)
         self.mock_model = registry.load(model_id)
 
     def test_to_lookup_single_feature(self):
@@ -31,9 +31,17 @@ class TestToLookup(TestCase):
                 "n_samples": 6,
             },
             {
-                "feature_name": "grade_percent",
+                "feature_name": "grade_pct",
                 "lower_bound": -5.0,
                 "upper_bound": 5.0,
+                "n_samples": 1,
+            },
+            # The bundled model takes distance as a feature as well as using it
+            # as the distance column, and every feature must be parameterized.
+            {
+                "feature_name": "distance_mi",
+                "lower_bound": 0.5,
+                "upper_bound": 1.5,
                 "n_samples": 1,
             },
         ]
@@ -41,15 +49,15 @@ class TestToLookup(TestCase):
         result = to_lookup_table(
             model=self.mock_model,
             feature_parameters=feature_parameters,
-            energy_target="gge",
+            energy_target="fuel_gge",
         )
 
         # Check basic structure
         self.assertIsInstance(result, pd.DataFrame)
         self.assertEqual(len(result), 6)  # 6 * 1 = 6 rows
         self.assertIn("speed_mph", result.columns)
-        self.assertIn("grade_percent", result.columns)
-        self.assertIn("gge_per_distance", result.columns)
+        self.assertIn("grade_pct", result.columns)
+        self.assertIn("fuel_gge_per_distance_mi", result.columns)
 
         # Check speed values are correctly distributed
         expected_speeds = np.linspace(10.0, 60.0, 6)
@@ -58,8 +66,10 @@ class TestToLookup(TestCase):
         )
 
         # Check that gge predictions are numeric and positive
-        self.assertTrue(result["gge_per_distance"].dtype in [np.float64, np.float32])
-        self.assertTrue((result["gge_per_distance"] > 0).all())
+        self.assertTrue(
+            result["fuel_gge_per_distance_mi"].dtype in [np.float64, np.float32]
+        )
+        self.assertTrue((result["fuel_gge_per_distance_mi"] > 0).all())
 
     def test_to_lookup_two_features(self):
         """Test lookup table generation with all features varied."""
@@ -71,32 +81,38 @@ class TestToLookup(TestCase):
                 "n_samples": 3,
             },
             {
-                "feature_name": "grade_percent",
+                "feature_name": "grade_pct",
                 "lower_bound": -5.0,
                 "upper_bound": 5.0,
                 "n_samples": 3,
+            },
+            {
+                "feature_name": "distance_mi",
+                "lower_bound": 0.5,
+                "upper_bound": 1.5,
+                "n_samples": 1,
             },
         ]
 
         result = to_lookup_table(
             model=self.mock_model,
             feature_parameters=feature_parameters,
-            energy_target="gge",
+            energy_target="fuel_gge",
         )
 
         # Check basic structure - should have 3 * 3 = 9 combinations
         self.assertIsInstance(result, pd.DataFrame)
         self.assertEqual(len(result), 9)
         self.assertIn("speed_mph", result.columns)
-        self.assertIn("grade_percent", result.columns)
-        self.assertIn("gge_per_distance", result.columns)
+        self.assertIn("grade_pct", result.columns)
+        self.assertIn("fuel_gge_per_distance_mi", result.columns)
 
         # Check that we have all combinations
         expected_speeds = [20.0, 30.0, 40.0]
         expected_grades = [-5.0, 0.0, 5.0]
 
         unique_speeds = sorted(result["speed_mph"].unique())
-        unique_grades = sorted(result["grade_percent"].unique())
+        unique_grades = sorted(result["grade_pct"].unique())
 
         np.testing.assert_array_almost_equal(unique_speeds, expected_speeds)
         np.testing.assert_array_almost_equal(unique_grades, expected_grades)
@@ -105,7 +121,7 @@ class TestToLookup(TestCase):
         for speed in expected_speeds:
             for grade in expected_grades:
                 combo_exists = (
-                    (result["speed_mph"] == speed) & (result["grade_percent"] == grade)
+                    (result["speed_mph"] == speed) & (result["grade_pct"] == grade)
                 ).any()
                 self.assertTrue(
                     combo_exists, f"Missing combination: speed={speed}, grade={grade}"
@@ -149,10 +165,16 @@ class TestToLookup(TestCase):
                 "n_samples": 5,
             },
             {
-                "feature_name": "grade_percent",
+                "feature_name": "grade_pct",
                 "lower_bound": -5.0,
                 "upper_bound": 5.0,
                 "n_samples": 5,
+            },
+            {
+                "feature_name": "distance_mi",
+                "lower_bound": 0.5,
+                "upper_bound": 1.5,
+                "n_samples": 1,
             },
         ]
 
@@ -160,7 +182,7 @@ class TestToLookup(TestCase):
             to_lookup_table(
                 model=self.mock_model,
                 feature_parameters=feature_parameters,
-                energy_target="gge",
+                energy_target="fuel_gge",
             )
 
         self.assertIn(
@@ -183,7 +205,7 @@ class TestToLookup(TestCase):
             to_lookup_table(
                 model=self.mock_model,
                 feature_parameters=feature_parameters,
-                energy_target="gge",
+                energy_target="fuel_gge",
             )
 
         self.assertIn(
@@ -201,9 +223,17 @@ class TestToLookup(TestCase):
                 "n_samples": 1,
             },
             {
-                "feature_name": "grade_percent",
+                "feature_name": "grade_pct",
                 "lower_bound": -5.0,
                 "upper_bound": 5.0,
+                "n_samples": 1,
+            },
+            # The bundled model takes distance as a feature as well as using it
+            # as the distance column, and every feature must be parameterized.
+            {
+                "feature_name": "distance_mi",
+                "lower_bound": 0.5,
+                "upper_bound": 1.5,
                 "n_samples": 1,
             },
         ]
@@ -211,7 +241,7 @@ class TestToLookup(TestCase):
         result = to_lookup_table(
             model=self.mock_model,
             feature_parameters=feature_parameters,
-            energy_target="gge",
+            energy_target="fuel_gge",
         )
 
         # Should have exactly 1 row (1 * 1)
@@ -219,7 +249,7 @@ class TestToLookup(TestCase):
         self.assertEqual(
             result["speed_mph"].iloc[0], 30.0
         )  # linspace with 1 sample returns the start
-        self.assertIn("gge_per_distance", result.columns)
+        self.assertIn("fuel_gge_per_distance_mi", result.columns)
 
     def test_large_number_of_samples(self):
         """Test lookup table generation with a larger number of samples."""
@@ -231,9 +261,17 @@ class TestToLookup(TestCase):
                 "n_samples": 101,  # 101 samples from 0 to 100
             },
             {
-                "feature_name": "grade_percent",
+                "feature_name": "grade_pct",
                 "lower_bound": -5.0,
                 "upper_bound": 5.0,
+                "n_samples": 1,
+            },
+            # The bundled model takes distance as a feature as well as using it
+            # as the distance column, and every feature must be parameterized.
+            {
+                "feature_name": "distance_mi",
+                "lower_bound": 0.5,
+                "upper_bound": 1.5,
                 "n_samples": 1,
             },
         ]
@@ -241,7 +279,7 @@ class TestToLookup(TestCase):
         result = to_lookup_table(
             model=self.mock_model,
             feature_parameters=feature_parameters,
-            energy_target="gge",
+            energy_target="fuel_gge",
         )
 
         # Should have exactly 101 rows (101 * 1)
@@ -264,7 +302,7 @@ class TestToLookup(TestCase):
             to_lookup_table(
                 model=self.mock_model,
                 feature_parameters=feature_parameters,
-                energy_target="gge",
+                energy_target="fuel_gge",
             )
 
 

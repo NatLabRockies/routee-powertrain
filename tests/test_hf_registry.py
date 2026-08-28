@@ -245,7 +245,7 @@ class TestIndexRequired(TestCase):
 class TestLoadAndMetadata(TestCase):
     """load() and get_metadata() against a real bundled model served over the mock."""
 
-    MODEL_PATH = "toyota/camry_ice/2016/rf_c3326385/v1"
+    MODEL_PATH = "toyota/rav4_xle_ice/2022/rf_fe510e40/v1"
 
     def setUp(self):
         source = bundled_registry_root() / SCHEMA / self.MODEL_PATH
@@ -264,7 +264,7 @@ class TestLoadAndMetadata(TestCase):
     def test_load_returns_a_usable_model(self):
         model = self.registry.load(self.MODEL_PATH)
         # The path must agree with the identity derived from the metadata.
-        self.assertEqual(model.key.to_path(), "toyota/camry_ice/2016/rf_c3326385")
+        self.assertEqual(model.key.to_path(), "toyota/rav4_xle_ice/2022/rf_fe510e40")
         self.assertIn("speed_mph", model.metadata.config.feature_set.feature_name_list)
 
     def test_load_accepts_a_model_id_object(self):
@@ -278,7 +278,7 @@ class TestLoadAndMetadata(TestCase):
         # the mock here); what matters is that load() raises rather than
         # silently returning something.
         with self.assertRaises(Exception):
-            self.registry.load("toyota/camry_ice/2016/rf_c3326385/v99")
+            self.registry.load("toyota/rav4_xle_ice/2022/rf_fe510e40/v99")
 
 
 class TestBuildIndex(TestCase):

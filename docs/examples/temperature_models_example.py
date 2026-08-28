@@ -19,7 +19,7 @@ It's important to understand the distinction between steady-state and transient 
 - **Transient Temperature Models**: These models account for the period when the vehicle is still adjusting to the ambient temperature.
     For example, when a vehicle starts a trip in cold weather and has been sitting outside, it takes some time for the battery and cabin to warm up.
 """
-tesla = pt.load_model("tesla/model_3_bev/2022/rf_c3326385/v1")
+tesla = pt.load_model("tesla/model_3_bev/2022/rf_base_fe510e40/v1")
 tesla_with_temp_steady = pt.load_model(
     "tesla/model_3_bev/2022/rf_steady_thermal_ab1db342/v1"
 )
@@ -57,7 +57,12 @@ sample_route_32F_steady = sample_route_32F[
 """
 Predict energy consumption using the different models and ambient temperatures. Each model uses its own configured feature set, so we just need to make sure the input DataFrame contains the columns the model expects.
 """
-energy = tesla.predict(sample_route)
+# The base configs label grade and distance differently from the thermal
+# configs, and emit "electric_kwh" rather than "kwh".
+sample_route_base = sample_route.rename(
+    columns={"grade_percent": "grade_pct", "distance": "distance_mi"}
+)
+energy = tesla.predict(sample_route_base).rename(columns={"electric_kwh": "kwh"})
 energy_with_temp_72F = tesla_with_temp_steady.predict(sample_route_72F)
 energy_with_temp_32F_transient = tesla_with_temp_transient.predict(
     sample_route_32F_transient

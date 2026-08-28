@@ -16,8 +16,8 @@ First, let's load a few different models to demonstrate lookup table generation.
 We'll use models with different feature sets to show the flexibility of the approach.
 """
 
-toyota_camry = pt.load_model("toyota/camry_ice/2016/rf_db8522fb/v1")
-tesla_model3 = pt.load_model("tesla/model_3_bev/2022/rf_c3326385/v1")
+toyota_camry = pt.load_model("toyota/camry_ice/2016/rf_base_67ae9982/v1")
+tesla_model3 = pt.load_model("tesla/model_3_bev/2022/rf_base_fe510e40/v1")
 tesla_with_temp = pt.load_model("tesla/model_3_bev/2022/rf_steady_thermal_ab1db342/v1")
 """
 Let's examine the available features and targets for each model.
@@ -49,13 +49,21 @@ speed_only_params = [
         "lower_bound": 5.0,
         "upper_bound": 80.0,
         "n_samples": 16,  # Every 5 mph from 5 to 80
-    }
+    },
+    # Every feature the model takes needs a range. Holding distance at a single
+    # sample keeps this a one-dimensional sweep over speed.
+    {
+        "feature_name": "distance_mi",
+        "lower_bound": 0.5,
+        "upper_bound": 1.5,
+        "n_samples": 1,
+    },
 ]
 
 # Generate lookup table for Toyota Camry
 camry_speed_lookup = toyota_camry.to_lookup_table(
     feature_parameters=speed_only_params,
-    energy_target="gge",  # Gallons of gasoline equivalent
+    energy_target="fuel_gge",  # Gallons of gasoline equivalent
 )
 
 print("Single feature lookup table (first 5 rows):")
@@ -77,17 +85,23 @@ speed_grade_params = [
         "n_samples": 9,  # Every 5 mph from 25 to 65
     },
     {
-        "feature_name": "grade_percent",
+        "feature_name": "grade_pct",
         "lower_bound": -6.0,
         "upper_bound": 6.0,
         "n_samples": 7,  # Every 2% grade from -6% to +6%
+    },
+    {
+        "feature_name": "distance_mi",
+        "lower_bound": 0.5,
+        "upper_bound": 1.5,
+        "n_samples": 1,
     },
 ]
 
 # Generate lookup table for Tesla Model 3
 tesla_speed_grade_lookup = tesla_model3.to_lookup_table(
     feature_parameters=speed_grade_params,
-    energy_target="kwh",
+    energy_target="electric_kwh",
 )
 
 print(f"Two feature lookup table shape: {tesla_speed_grade_lookup.shape}")

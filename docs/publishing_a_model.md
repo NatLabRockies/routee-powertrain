@@ -18,7 +18,7 @@ Every model in the registry lives in a five-segment path:
 ```
 
 The bundled example at
-`routee/powertrain/resources/bundled_registry/v2/toyota/camry_ice/2016/rf_c3326385/v1/`
+`routee/powertrain/resources/bundled_registry/v2/toyota/rav4_xle_ice/2022/rf_fe510e40/v1/`
 is a concrete reference for what the on-disk layout looks like.
 
 ## The derived `vehicle_slug`
