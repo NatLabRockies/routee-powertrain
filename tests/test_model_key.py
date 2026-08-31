@@ -173,39 +173,61 @@ class TestExistingArtifactsWithoutModelKey(TestCase):
         if self.out_path.exists():
             shutil.rmtree(self.out_path)
 
-    def test_bundled_models_load(self):
-        """The bundled registry holds artifacts written without a model_key —
-        the same shape as everything already published to HuggingFace."""
+    def _artifact_without_model_key(self, name: str) -> Path:
+        """Write a copy of a bundled model with the ``model_key`` key removed.
+
+        The field is built rather than borrowed from the bundled registry, so
+        this stays a test about pre-field artifacts even as the bundled models
+        are refreshed to ones that carry the key.
+        """
+        registry = LocalRegistry(root=bundled_registry_root(), schema_version="v2")
+        model_id = registry.list_models()[0]
+        outdir = self.out_path / name
+        registry.load(model_id).to_file(outdir)
+
+        meta_path = outdir / "metadata.json"
+        metadata_dict = json.loads(meta_path.read_text())
+        metadata_dict.pop("model_key", None)
+        meta_path.write_text(json.dumps(metadata_dict))
+        return outdir
+
+    def test_artifact_without_the_field_loads(self):
+        """An artifact predating the field loads with no key and no warning."""
+        outdir = self._artifact_without_model_key("no_key_dir")
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            model = pt.load_model(outdir)
+
+        self.assertIsNone(model.metadata.model_key)
+        # Derivation stays the source of truth when nothing is stored.
+        self.assertEqual(model.key.to_path(), model.metadata.derived_model_key)
+
+    def test_bundled_models_load_and_agree_with_their_path(self):
         registry = LocalRegistry(root=bundled_registry_root(), schema_version="v2")
         model_ids = registry.list_models()
         self.assertGreater(len(model_ids), 0)
 
         for model_id in model_ids:
             with self.subTest(model_id=str(model_id)):
-                metadata_dict = registry.get_metadata(model_id)
-                self.assertNotIn("model_key", metadata_dict)
-
                 with warnings.catch_warnings():
                     warnings.simplefilter("error")
                     model = registry.load(model_id)
-
-                self.assertIsNone(model.metadata.model_key)
                 self.assertEqual(model.key, model_id.key)
 
     def test_missing_model_key_survives_a_save(self):
         """Loading an artifact without the field and saving it stamps one."""
-        registry = LocalRegistry(root=bundled_registry_root(), schema_version="v2")
-        model_id = registry.list_models()[0]
-        model = registry.load(model_id)
+        outdir = self._artifact_without_model_key("unstamped_dir")
+        model = pt.load_model(outdir)
         self.assertIsNone(model.metadata.model_key)
 
-        outdir = self.out_path / "restamped_dir"
-        model.to_file(outdir)
-        metadata_dict = json.loads((outdir / "metadata.json").read_text())
-        self.assertEqual(metadata_dict["model_key"], model_id.key.to_path())
+        restamped = self.out_path / "restamped_dir"
+        model.to_file(restamped)
+        metadata_dict = json.loads((restamped / "metadata.json").read_text())
+        self.assertEqual(metadata_dict["model_key"], model.key.to_path())
 
-        reloaded = pt.load_model(outdir)
-        self.assertEqual(reloaded.metadata.model_key, model_id.key.to_path())
+        reloaded = pt.load_model(restamped)
+        self.assertEqual(reloaded.metadata.model_key, model.key.to_path())
         self.assertEqual(reloaded.digest, model.digest)
 
     def test_explicit_null_model_key_loads(self):

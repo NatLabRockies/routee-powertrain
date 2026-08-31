@@ -12,7 +12,7 @@ from routee.powertrain.resources.bundled_registry import bundled_registry_root
 
 def mock_model() -> Model:
     registry = LocalRegistry(root=bundled_registry_root(), schema_version="v2")
-    model_id = ModelId("toyota", "camry_ice", 2016, "rf_c3326385", 1)
+    model_id = ModelId("toyota", "rav4_xle_ice", 2022, "rf_fe510e40", 1)
     return registry.load(model_id)
 
 

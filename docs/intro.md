@@ -20,8 +20,8 @@ import routee.powertrain as pt
 print(pt.list_available_models())
 
 # [
-#   toyota/camry_ice/2016/rf_c3326385/v1,
-#   chevrolet/bolt_bev/2017/rf_c3326385/v1,
+#   toyota/camry_ice/2016/rf_base_fe510e40/v1,
+#   chevrolet/bolt_bev/2017/rf_base_fe510e40/v1,
 #   ...
 # ]
 
@@ -29,7 +29,7 @@ print(pt.list_available_models())
 results = pt.query_available_models(make="toyota", model="camry")
 
 # Load a pre-trained model using its registry path
-model = pt.load_model("toyota/camry_ice/2016/rf_c3326385/v1")
+model = pt.load_model("toyota/camry_ice/2016/rf_base_fe510e40/v1")
 
 # Inspect the model to see what it expects for input
 print(model)
@@ -37,26 +37,27 @@ print(model)
 # ========================================
 # Model Summary
 # --------------------
-# Vehicle description: 2016_TOYOTA_Camry_4cyl_2WD trained July 2024
+# Vehicle description: 2016_Toyota_Camry_4cyl_2WD | fastsim 3.1.0 | routee-powertrain 2.0.1
 # Powertrain type: ICE
 # ========================================
 # Estimator Summary
 # --------------------
 # Feature: speed_mph (mph)
-# Feature: grade_percent (percent)
-# Distance: distance (miles)
-# Target: gge (gallons gasoline)
-# Raw Predicted Consumption: 30.289 (miles/gallons gasoline)
-# Real World Predicted Consumption: 25.977 (miles/gallons gasoline)
+# Feature: grade_pct (percent)
+# Feature: distance_mi (miles)
+# Distance: distance_mi (miles)
+# Target: fuel_gge (gallons gasoline)
+# Raw Predicted Consumption: 31.012 (miles/gallons gasoline)
+# Real World Predicted Consumption: 26.597 (miles/gallons gasoline)
 # Predict Method: RATE
 # ========================================
 
 # Predict energy consumption for a set of road links
 links_df = pd.DataFrame(
     {
-        "distance": [0.1, 0.2, 0.3], # miles
+        "distance_mi": [0.1, 0.2, 0.3], # miles
         "speed_mph": [30, 40, 50], # mph
-        "grade_percent": [-5.0, 0, 5.0], # percent
+        "grade_pct": [-5.0, 0, 5.0], # percent
     }
 )
 

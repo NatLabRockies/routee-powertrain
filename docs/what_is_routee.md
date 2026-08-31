@@ -33,8 +33,8 @@ results = pt.query_available_models(make="chevrolet", model="bolt", year=2017)
 To predict with any of these models you can use the `pt.load_model()` function. Pass the registry path string (or a `ModelId` object) to load a model:
 
 ```python
-camry = pt.load_model('toyota/camry_ice/2016/rf_c3326385/v1')
-bolt = pt.load_model('chevrolet/bolt_bev/2017/rf_c3326385/v1')
+camry = pt.load_model('toyota/camry_ice/2016/rf_base_fe510e40/v1')
+bolt = pt.load_model('chevrolet/bolt_bev/2017/rf_base_fe510e40/v1')
 ```
 
 ## Model Registry
@@ -43,7 +43,7 @@ Model discovery and retrieval go through a `ModelRegistry` abstraction. By defau
 
 Setting `ROUTEE_HF_REVISION` to a commit sha pins the entire library — every model and the index — to an exact state, which is the simplest way to make a downstream analysis reproducible.
 
-A `ModelId` is structured as `<make>/<vehicle_slug>/<year>/<config_slug>/v<N>`. Both slugs are _derived_ from the model's metadata: the `vehicle_slug` is the model name plus the coarse powertrain family (e.g. `camry_ice`, `bolt_bev`, `volt_phev` — both PHEV operating modes collapse to one `phev` family), and the `config_slug` disambiguates multiple trained configurations for the same vehicle as `<architecture>_<variant?>_<feature_hash>` (e.g. `rf_c3326385`, `ngb_stochastic_96224f1f`) — so different architectures, feature sets, or `variant` labels each get a distinct slug automatically. Omit the trailing `v<N>` to load the latest version. The version-less part (`<make>/<vehicle_slug>/<year>/<config_slug>`) is a model's `ModelKey`, exposed on any loaded or trained model as `model.key`.
+A `ModelId` is structured as `<make>/<vehicle_slug>/<year>/<config_slug>/v<N>`. Both slugs are _derived_ from the model's metadata: the `vehicle_slug` is the model name plus the coarse powertrain family (e.g. `camry_ice`, `bolt_bev`, `volt_phev` — both PHEV operating modes collapse to one `phev` family), and the `config_slug` disambiguates multiple trained configurations for the same vehicle as `<architecture>_<variant?>_<feature_hash>` (e.g. `rf_base_fe510e40`, `ngb_stochastic_aaa9554f`) — so different architectures, feature sets, or `variant` labels each get a distinct slug automatically. Omit the trailing `v<N>` to load the latest version. The version-less part (`<make>/<vehicle_slug>/<year>/<config_slug>`) is a model's `ModelKey`, exposed on any loaded or trained model as `model.key`.
 
 For a step-by-step walkthrough of training a new model and writing it into the registry layout, see [Publishing a Model](publishing_a_model.md).
 
