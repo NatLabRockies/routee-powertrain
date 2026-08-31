@@ -505,9 +505,11 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata"><code class="docutils literal notranslate"><span class="pre">Metadata</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.config"><code class="docutils literal notranslate"><span class="pre">Metadata.config</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.derived_model_key"><code class="docutils literal notranslate"><span class="pre">Metadata.derived_model_key</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.from_config"><code class="docutils literal notranslate"><span class="pre">Metadata.from_config()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.model_config"><code class="docutils literal notranslate"><span class="pre">Metadata.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.model_digest"><code class="docutils literal notranslate"><span class="pre">Metadata.model_digest</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.model_key"><code class="docutils literal notranslate"><span class="pre">Metadata.model_key</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.short_digest"><code class="docutils literal notranslate"><span class="pre">Metadata.short_digest</span></code></a></li>
 </ul>
 </li>
@@ -676,21 +678,21 @@ paths may omit the <code class="docutils literal notranslate"><span class="pre">
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">routee.powertrain</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pt</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># load from a directory</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;path/to/my_model/&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"path/to/my_model/"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># load from a zip</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;MyModel.zip&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"MyModel.zip"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># load via registry</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelId</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mid</span> <span class="o">=</span> <span class="n">ModelId</span><span class="p">(</span><span class="s2">&quot;toyota&quot;</span><span class="p">,</span> <span class="s2">&quot;camry&quot;</span><span class="p">,</span> <span class="mi">2016</span><span class="p">,</span> <span class="s2">&quot;rf_default&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mid</span> <span class="o">=</span> <span class="n">ModelId</span><span class="p">(</span><span class="s2">"toyota"</span><span class="p">,</span> <span class="s2">"camry"</span><span class="p">,</span> <span class="mi">2016</span><span class="p">,</span> <span class="s2">"rf_default"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">mid</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># explicit version</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;toyota/camry/2016/rf_default/v1&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"toyota/camry/2016/rf_default/v1"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># latest version (no version segment)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;toyota/camry/2016/rf_default&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"toyota/camry/2016/rf_default"</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1331,7 +1333,7 @@ Allows a registry consumer to see lookback requirements before loading the binar
 
 <dl class="py class">
 <dt class="sig sig-object py" id="routee.powertrain.core.metadata.Metadata">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">routee.powertrain.core.metadata.</span></span><span class="sig-name descname"><span class="pre">Metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vehicle:</span> <span class="pre">~routee.powertrain.core.model_config.Vehicle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contract:</span> <span class="pre">~routee.powertrain.core.model_config.Contract</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator:</span> <span class="pre">~routee.powertrain.core.metadata.EstimatorInfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance:</span> <span class="pre">~routee.powertrain.core.provenance.Provenance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors:</span> <span class="pre">~routee.powertrain.validation.errors.ModelErrors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routee_version:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_version:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_digest:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/routee/powertrain/core/metadata.html#Metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#routee.powertrain.core.metadata.Metadata" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">routee.powertrain.core.metadata.</span></span><span class="sig-name descname"><span class="pre">Metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vehicle:</span> <span class="pre">~routee.powertrain.core.model_config.Vehicle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contract:</span> <span class="pre">~routee.powertrain.core.model_config.Contract</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator:</span> <span class="pre">~routee.powertrain.core.metadata.EstimatorInfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance:</span> <span class="pre">~routee.powertrain.core.provenance.Provenance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors:</span> <span class="pre">~routee.powertrain.validation.errors.ModelErrors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routee_version:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_version:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_key:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_digest:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/routee/powertrain/core/metadata.html#Metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#routee.powertrain.core.metadata.Metadata" title="Link to this definition">#</a></dt>
 <dd><p>Carries all model metadata that gets persisted alongside the estimator binary.</p>
 <p>Serializes 1:1 with the <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code> file inside a model archive. Fields
 are grouped by the job a reader needs them for:</p>
@@ -1350,6 +1352,14 @@ are grouped by the job a reader needs them for:</p>
 runtime consumers (estimators, error computation, <code class="docutils literal notranslate"><span class="pre">Model.predict</span></code>)
 want the single flat object the model was trained from. This derives it
 on demand — nothing is stored twice.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="routee.powertrain.core.metadata.Metadata.derived_model_key">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">derived_model_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#routee.powertrain.core.metadata.Metadata.derived_model_key" title="Link to this definition">#</a></dt>
+<dd><p>The version-less identity derived from these metadata fields.</p>
+<p>The authority behind the stored <code class="docutils literal notranslate"><span class="pre">model_key</span></code>: saving stamps this value
+and loading checks the stored one against it.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1381,6 +1391,19 @@ unknown (e.g. converting legacy archives).</p>
 digest pins the binary transitively while remaining recomputable from
 metadata alone. Registry versions (<code class="docutils literal notranslate"><span class="pre">v&lt;N&gt;</span></code>) are coordinates that map to
 this identity, never the reverse. <code class="docutils literal notranslate"><span class="pre">None</span></code> for legacy models.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="routee.powertrain.core.metadata.Metadata.model_key">
+<span class="sig-name descname"><span class="pre">model_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#routee.powertrain.core.metadata.Metadata.model_key" title="Link to this definition">#</a></dt>
+<dd><p>The version-less identity, <code class="docutils literal notranslate"><span class="pre">make/vehicle_slug/year/config_slug</span></code>. Both
+slugs are derived from the fields above, so this is a cache: it lets a
+consumer place a detached archive into a registry tree without
+re-implementing slug derivation. Derivation stays the source of truth —
+the stored value is re-derived and checked on load, never trusted over
+it. The registry <code class="docutils literal notranslate"><span class="pre">version</span></code> is deliberately absent: a registry assigns
+it at publish time, so an artifact cannot own it. Written on every save;
+<code class="docutils literal notranslate"><span class="pre">None</span></code> on artifacts saved before this field existed.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -2337,9 +2360,11 @@ n_samples must be an integer and lower/upper are floats.</p></li>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata"><code class="docutils literal notranslate"><span class="pre">Metadata</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.config"><code class="docutils literal notranslate"><span class="pre">Metadata.config</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.derived_model_key"><code class="docutils literal notranslate"><span class="pre">Metadata.derived_model_key</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.from_config"><code class="docutils literal notranslate"><span class="pre">Metadata.from_config()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.model_config"><code class="docutils literal notranslate"><span class="pre">Metadata.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.model_digest"><code class="docutils literal notranslate"><span class="pre">Metadata.model_digest</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.model_key"><code class="docutils literal notranslate"><span class="pre">Metadata.model_key</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#routee.powertrain.core.metadata.Metadata.short_digest"><code class="docutils literal notranslate"><span class="pre">Metadata.short_digest</span></code></a></li>
 </ul>
 </li>

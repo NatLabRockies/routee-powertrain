@@ -387,17 +387,17 @@ document.write(`
 <span class="c1"># here); the provenance types are re-exported because ``TrainingConfig`` used to</span>
 <span class="c1"># be defined here and callers expect its neighbors alongside it.</span>
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;ModelConfig&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;PredictMethod&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Vehicle&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Contract&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Provenance&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;TrainingConfig&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;TrainingMethod&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;TrainingSource&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;FastSimSource&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;RealWorldSource&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;LegacySource&quot;</span><span class="p">,</span>
+    <span class="s2">"ModelConfig"</span><span class="p">,</span>
+    <span class="s2">"PredictMethod"</span><span class="p">,</span>
+    <span class="s2">"Vehicle"</span><span class="p">,</span>
+    <span class="s2">"Contract"</span><span class="p">,</span>
+    <span class="s2">"Provenance"</span><span class="p">,</span>
+    <span class="s2">"TrainingConfig"</span><span class="p">,</span>
+    <span class="s2">"TrainingMethod"</span><span class="p">,</span>
+    <span class="s2">"TrainingSource"</span><span class="p">,</span>
+    <span class="s2">"FastSimSource"</span><span class="p">,</span>
+    <span class="s2">"RealWorldSource"</span><span class="p">,</span>
+    <span class="s2">"LegacySource"</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -419,7 +419,7 @@ document.write(`
     <span class="n">year</span><span class="p">:</span> <span class="n">YearField</span>
 
     <span class="c1">#: Short label distinguishing configs that share the same architecture and</span>
-    <span class="c1">#: feature set (e.g. ``&quot;steady&quot;`` vs ``&quot;warmup&quot;`` thermal regimes). Feeds the</span>
+    <span class="c1">#: feature set (e.g. ``"steady"`` vs ``"warmup"`` thermal regimes). Feeds the</span>
     <span class="c1">#: derived ``config_slug``; leave ``None`` when no such distinction is needed.</span>
     <span class="n">variant</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -429,7 +429,7 @@ document.write(`
     <span class="n">validation_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span>
 
-    <span class="n">trip_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;trip_id&quot;</span>
+    <span class="n">trip_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"trip_id"</span>
 
     <span class="c1">#: What produced the training data — a ``FastSimSource``,</span>
     <span class="c1">#: ``RealWorldSource``, or ``LegacySource``. Carries the dataset labels</span>
@@ -451,13 +451,13 @@ document.write(`
     <span class="n">engine</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">trim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_default_adjustment_factor</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
         <span class="c1"># When no factor is supplied, derive it from the powertrain type so the</span>
-        <span class="c1"># real-world adjustment matches the vehicle&#39;s default behavior.</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;real_world_adjustment_factor&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">pt_val</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;powertrain_type&quot;</span><span class="p">)</span>
+        <span class="c1"># real-world adjustment matches the vehicle's default behavior.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"real_world_adjustment_factor"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pt_val</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"powertrain_type"</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">pt</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="n">pt_val</span>
@@ -467,17 +467,17 @@ document.write(`
             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                 <span class="n">pt</span> <span class="o">=</span> <span class="n">PowertrainType</span><span class="o">.</span><span class="n">UNDEFINED</span>
             <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;real_world_adjustment_factor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"real_world_adjustment_factor"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
                 <span class="n">ADJUSTMENT_FACTORS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;make&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"make"</span><span class="p">,</span> <span class="s2">"model"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_lowercase</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;variant&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"variant"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_slug_safe_variant</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -485,43 +485,43 @@ document.write(`
         <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="n">v</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">isspace</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">"/"</span> <span class="ow">in</span> <span class="n">v</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">isspace</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">v</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;variant &#39;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&#39; must not contain &#39;/&#39; or whitespace; &quot;</span>
-                <span class="s2">&quot;use a short slug-safe label like &#39;steady&#39; or &#39;warmup&#39;&quot;</span>
+                <span class="sa">f</span><span class="s2">"variant '</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">' must not contain '/' or whitespace; "</span>
+                <span class="s2">"use a short slug-safe label like 'steady' or 'warmup'"</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">v</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;feature_set&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"feature_set"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_coerce_feature_set</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
         <span class="c1"># accept a bare list of columns; dicts/FeatureSet handled natively</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"features"</span><span class="p">:</span> <span class="n">v</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">v</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"target"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_coerce_target</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
         <span class="c1"># accept a single column or a bare list; dicts/TargetSet handled natively</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">DataColumn</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">v</span><span class="p">]}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"targets"</span><span class="p">:</span> <span class="p">[</span><span class="n">v</span><span class="p">]}</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"targets"</span><span class="p">:</span> <span class="n">v</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">v</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">feature_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Returns the list of feature names from the feature set.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_set</span><span class="o">.</span><span class="n">feature_name_list</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">all_feature_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Returns the list of feature names, including distance if predict method is RAW.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_set</span><span class="o">.</span><span class="n">feature_name_list</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_method</span> <span class="o">==</span> <span class="n">PredictMethod</span><span class="o">.</span><span class="n">RAW</span><span class="p">:</span>
             <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -529,9 +529,9 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">all_features</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DataColumn</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Returns the list of features, including distance if predict method is RAW.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">features</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_set</span><span class="o">.</span><span class="n">features</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_method</span> <span class="o">==</span> <span class="n">PredictMethod</span><span class="o">.</span><span class="n">RAW</span><span class="p">:</span>
             <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">distance</span><span class="p">)</span>
@@ -555,11 +555,11 @@ document.write(`
 <div class="viewcode-block" id="Vehicle">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.core.model_config.Vehicle">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Vehicle</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The vehicle a model describes — identity plus descriptive attributes.</span>
+<span class="w">    </span><span class="sd">"""The vehicle a model describes — identity plus descriptive attributes.</span>
 
 <span class="sd">    ``make``/``model``/``year``/``variant`` feed the derived ``config_slug`` and</span>
 <span class="sd">    ``ModelKey``; the remaining fields are descriptive and registry-filterable.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">vehicle_description</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">powertrain_type</span><span class="p">:</span> <span class="n">PowertrainTypeField</span>
@@ -575,12 +575,12 @@ document.write(`
     <span class="n">engine</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">trim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;make&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"make"</span><span class="p">,</span> <span class="s2">"model"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_lowercase</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;variant&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"variant"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_slug_safe_variant</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -588,10 +588,10 @@ document.write(`
         <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="n">v</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">isspace</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">"/"</span> <span class="ow">in</span> <span class="n">v</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">isspace</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">v</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;variant &#39;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&#39; must not contain &#39;/&#39; or whitespace; &quot;</span>
-                <span class="s2">&quot;use a short slug-safe label like &#39;steady&#39; or &#39;warmup&#39;&quot;</span>
+                <span class="sa">f</span><span class="s2">"variant '</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">' must not contain '/' or whitespace; "</span>
+                <span class="s2">"use a short slug-safe label like 'steady' or 'warmup'"</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">v</span>
 
@@ -616,11 +616,11 @@ document.write(`
 <div class="viewcode-block" id="Contract">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.core.model_config.Contract">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Contract</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A model&#39;s input/output contract — everything needed to interpret a</span>
+<span class="w">    </span><span class="sd">"""A model's input/output contract — everything needed to interpret a</span>
 <span class="sd">    prediction: the feature columns it consumes, the distance column, the energy</span>
 <span class="sd">    target(s) it emits, how the raw estimator output maps to energy</span>
 <span class="sd">    (``predict_method``), and the real-world correction applied afterward.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">feature_set</span><span class="p">:</span> <span class="n">FeatureSet</span>
     <span class="n">distance</span><span class="p">:</span> <span class="n">DataColumn</span>
@@ -633,20 +633,20 @@ document.write(`
     <span class="c1">#: from the powertrain type) and stored concretely here.</span>
     <span class="n">real_world_adjustment_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;feature_set&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"feature_set"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_coerce_feature_set</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"features"</span><span class="p">:</span> <span class="n">v</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">v</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"target"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_coerce_target</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">DataColumn</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">v</span><span class="p">]}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"targets"</span><span class="p">:</span> <span class="p">[</span><span class="n">v</span><span class="p">]}</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"targets"</span><span class="p">:</span> <span class="n">v</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">v</span>
 
     <span class="nd">@classmethod</span>

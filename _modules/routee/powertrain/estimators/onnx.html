@@ -371,16 +371,16 @@ document.write(`
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.utils.threading</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_restricted_threads</span>
 
-<span class="n">ONNX_INPUT_NAME</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span>
-<span class="n">ONNX_DTYPE</span> <span class="o">=</span> <span class="s2">&quot;float32&quot;</span>
+<span class="n">ONNX_INPUT_NAME</span> <span class="o">=</span> <span class="s2">"input"</span>
+<span class="n">ONNX_DTYPE</span> <span class="o">=</span> <span class="s2">"float32"</span>
 
-<span class="n">_META_LOOKBACK</span> <span class="o">=</span> <span class="s2">&quot;routee_lookback&quot;</span>
-<span class="n">_META_GROUPING</span> <span class="o">=</span> <span class="s2">&quot;routee_grouping_column&quot;</span>
-<span class="n">_META_PAD</span> <span class="o">=</span> <span class="s2">&quot;routee_pad_strategy&quot;</span>
-<span class="n">_META_INPUT_COLUMNS</span> <span class="o">=</span> <span class="s2">&quot;routee_input_columns&quot;</span>
-<span class="n">_META_OUTPUT_COLUMNS</span> <span class="o">=</span> <span class="s2">&quot;routee_output_columns&quot;</span>
-<span class="n">_META_PREDICT_METHOD</span> <span class="o">=</span> <span class="s2">&quot;routee_predict_method&quot;</span>
-<span class="n">_META_DISTANCE_COLUMN</span> <span class="o">=</span> <span class="s2">&quot;routee_distance_column&quot;</span>
+<span class="n">_META_LOOKBACK</span> <span class="o">=</span> <span class="s2">"routee_lookback"</span>
+<span class="n">_META_GROUPING</span> <span class="o">=</span> <span class="s2">"routee_grouping_column"</span>
+<span class="n">_META_PAD</span> <span class="o">=</span> <span class="s2">"routee_pad_strategy"</span>
+<span class="n">_META_INPUT_COLUMNS</span> <span class="o">=</span> <span class="s2">"routee_input_columns"</span>
+<span class="n">_META_OUTPUT_COLUMNS</span> <span class="o">=</span> <span class="s2">"routee_output_columns"</span>
+<span class="n">_META_PREDICT_METHOD</span> <span class="o">=</span> <span class="s2">"routee_predict_method"</span>
+<span class="n">_META_DISTANCE_COLUMN</span> <span class="o">=</span> <span class="s2">"routee_distance_column"</span>
 
 <span class="c1">#: Every metadata_props key this module manages, stripped before re-embedding so</span>
 <span class="c1">#: a re-save never leaves stale contract entries behind.</span>
@@ -396,10 +396,10 @@ document.write(`
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_read_input_spec</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">:</span> <span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InputSpec</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read an InputSpec from ONNX metadata_props, or return the default if absent.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Read an InputSpec from ONNX metadata_props, or return the default if absent."""</span>
     <span class="n">lookback</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">grouping</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">pad</span><span class="p">:</span> <span class="n">PadStrategy</span> <span class="o">=</span> <span class="s2">&quot;repeat_first&quot;</span>
+    <span class="n">pad</span><span class="p">:</span> <span class="n">PadStrategy</span> <span class="o">=</span> <span class="s2">"repeat_first"</span>
     <span class="n">input_columns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ColumnSpec</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">output_columns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ColumnSpec</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">predict_method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -410,8 +410,8 @@ document.write(`
         <span class="k">elif</span> <span class="n">mp</span><span class="o">.</span><span class="n">key</span> <span class="o">==</span> <span class="n">_META_GROUPING</span><span class="p">:</span>
             <span class="n">grouping</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">value</span> <span class="ow">or</span> <span class="kc">None</span>
         <span class="k">elif</span> <span class="n">mp</span><span class="o">.</span><span class="n">key</span> <span class="o">==</span> <span class="n">_META_PAD</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">mp</span><span class="o">.</span><span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;zero&quot;</span><span class="p">,</span> <span class="s2">&quot;repeat_first&quot;</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown pad strategy in ONNX metadata: </span><span class="si">{</span><span class="n">mp</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">mp</span><span class="o">.</span><span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"zero"</span><span class="p">,</span> <span class="s2">"repeat_first"</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown pad strategy in ONNX metadata: </span><span class="si">{</span><span class="n">mp</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">pad</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">PadStrategy</span><span class="p">,</span> <span class="n">mp</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">mp</span><span class="o">.</span><span class="n">key</span> <span class="o">==</span> <span class="n">_META_INPUT_COLUMNS</span><span class="p">:</span>
             <span class="n">input_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">ColumnSpec</span><span class="p">(</span><span class="o">**</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">mp</span><span class="o">.</span><span class="n">value</span><span class="p">)]</span>
@@ -435,14 +435,14 @@ document.write(`
 <span class="k">def</span><span class="w"> </span><span class="nf">_embed_input_spec</span><span class="p">(</span>
     <span class="n">onnx_model</span><span class="p">:</span> <span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">,</span> <span class="n">input_spec</span><span class="p">:</span> <span class="n">InputSpec</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a copy of ``onnx_model`` with ``input_spec`` embedded in metadata_props.</span>
+<span class="w">    </span><span class="sd">"""Return a copy of ``onnx_model`` with ``input_spec`` embedded in metadata_props.</span>
 
 <span class="sd">    The input/output contract (ordered columns, predict method, distance column)</span>
 <span class="sd">    is written whenever present — including the common ``lookback == 0`` tabular</span>
 <span class="sd">    case — so a consumer holding only the ``.onnx`` can reconstruct the exact</span>
 <span class="sd">    positional input order. The windowing keys are written only when</span>
 <span class="sd">    ``lookback &gt; 0``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">()</span>
     <span class="n">model</span><span class="o">.</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">)</span>
     <span class="n">keep</span> <span class="o">=</span> <span class="p">[</span><span class="n">mp</span> <span class="k">for</span> <span class="n">mp</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">metadata_props</span> <span class="k">if</span> <span class="n">mp</span><span class="o">.</span><span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_ROUTEE_META_KEYS</span><span class="p">]</span>
@@ -470,7 +470,7 @@ document.write(`
         <span class="n">_add</span><span class="p">(</span><span class="n">_META_DISTANCE_COLUMN</span><span class="p">,</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">distance_column</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">lookback</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">_add</span><span class="p">(</span><span class="n">_META_LOOKBACK</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_spec</span><span class="o">.</span><span class="n">lookback</span><span class="p">))</span>
-        <span class="n">_add</span><span class="p">(</span><span class="n">_META_GROUPING</span><span class="p">,</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">grouping_column</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">_add</span><span class="p">(</span><span class="n">_META_GROUPING</span><span class="p">,</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">grouping_column</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
         <span class="n">_add</span><span class="p">(</span><span class="n">_META_PAD</span><span class="p">,</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">pad_strategy</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">model</span>
 
@@ -480,16 +480,16 @@ document.write(`
     <span class="n">links_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">lookback</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">grouping_column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">pad_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;zero&quot;</span><span class="p">,</span> <span class="s2">&quot;repeat_first&quot;</span><span class="p">],</span>
+    <span class="n">pad_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"zero"</span><span class="p">,</span> <span class="s2">"repeat_first"</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Assemble a (N, lookback, F) tensor of per-row sliding windows within each group.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Assemble a (N, lookback, F) tensor of per-row sliding windows within each group."""</span>
     <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">feature_matrix</span><span class="o">.</span><span class="n">shape</span>
     <span class="n">windowed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">lookback</span><span class="p">,</span> <span class="n">n_features</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">ONNX_DTYPE</span><span class="p">)</span>
     <span class="n">groups</span> <span class="o">=</span> <span class="n">links_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">grouping_column</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">indices</span>
     <span class="k">for</span> <span class="n">idx_array</span> <span class="ow">in</span> <span class="n">groups</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
         <span class="n">idx_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">idx_array</span><span class="p">)</span>
         <span class="n">group_features</span> <span class="o">=</span> <span class="n">feature_matrix</span><span class="p">[</span><span class="n">idx_array</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">pad_strategy</span> <span class="o">==</span> <span class="s2">&quot;repeat_first&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pad_strategy</span> <span class="o">==</span> <span class="s2">"repeat_first"</span><span class="p">:</span>
             <span class="n">pad_row</span> <span class="o">=</span> <span class="n">group_features</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">pad_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_features</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">ONNX_DTYPE</span><span class="p">)</span>
@@ -505,18 +505,18 @@ document.write(`
 <div class="viewcode-block" id="ONNXEstimator">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.estimators.onnx.ONNXEstimator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ONNXEstimator</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Runs any ONNX model via ``onnxruntime``.</span>
+<span class="w">    </span><span class="sd">"""Runs any ONNX model via ``onnxruntime``.</span>
 
 <span class="sd">    When ``input_spec.lookback &gt; 0`` the estimator wraps feature rows into a</span>
 <span class="sd">    ``(N, lookback, F)`` windowed tensor grouped by ``input_spec.grouping_column``</span>
 <span class="sd">    (with padding at sequence starts per ``input_spec.pad_strategy``) before</span>
 <span class="sd">    inference. When ``lookback == 0`` the estimator feeds a plain ``(N, F)``</span>
 <span class="sd">    tabular tensor — the common case for tree ensembles converted via ``skl2onnx``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">onnx_model</span><span class="p">:</span> <span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span>
     <span class="n">session</span><span class="p">:</span> <span class="n">rt</span><span class="o">.</span><span class="n">InferenceSession</span>
-    <span class="n">file_extension</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.onnx&quot;</span>
+    <span class="n">file_extension</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">".onnx"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -531,7 +531,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">rt</span><span class="o">.</span><span class="n">InferenceSession</span><span class="p">(</span>
             <span class="n">onnx_model</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">(),</span>
             <span class="n">sess_options</span><span class="o">=</span><span class="n">sess_options</span><span class="p">,</span>
-            <span class="n">providers</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;CPUExecutionProvider&quot;</span><span class="p">],</span>
+            <span class="n">providers</span><span class="o">=</span><span class="p">[</span><span class="s2">"CPUExecutionProvider"</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_input_spec</span> <span class="o">=</span> <span class="n">input_spec</span>
 
@@ -563,7 +563,7 @@ document.write(`
 
         <span class="k">if</span> <span class="n">predict_method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">PredictMethod</span><span class="o">.</span><span class="n">RATE</span><span class="p">,</span> <span class="n">PredictMethod</span><span class="o">.</span><span class="n">RAW</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Predict method </span><span class="si">{</span><span class="n">predict_method</span><span class="si">}</span><span class="s2"> is not supported by ONNXEstimator&quot;</span>
+                <span class="sa">f</span><span class="s2">"Predict method </span><span class="si">{</span><span class="n">predict_method</span><span class="si">}</span><span class="s2"> is not supported by ONNXEstimator"</span>
             <span class="p">)</span>
 
         <span class="c1"># ``all_feature_names`` is the single source of truth for the positional</span>
@@ -577,7 +577,7 @@ document.write(`
         <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">lookback</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">grouping_column</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;ONNXEstimator with lookback &gt; 0 requires input_spec.grouping_column&quot;</span>
+                    <span class="s2">"ONNXEstimator with lookback &gt; 0 requires input_spec.grouping_column"</span>
                 <span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">_build_windows</span><span class="p">(</span>
                 <span class="n">feature_matrix</span><span class="p">,</span>

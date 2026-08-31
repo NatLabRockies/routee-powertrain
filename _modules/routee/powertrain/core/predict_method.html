@@ -361,18 +361,18 @@ document.write(`
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.core.model_config.PredictMethod">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PredictMethod</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="c1"># Predict the rate of energy consumption and then multiply it by the distance.</span>
-    <span class="n">RATE</span> <span class="o">=</span> <span class="s2">&quot;rate&quot;</span>
+    <span class="n">RATE</span> <span class="o">=</span> <span class="s2">"rate"</span>
     <span class="c1"># Predict the total energy consumption for the link (including distance as a feature).</span>
-    <span class="n">RAW</span> <span class="o">=</span> <span class="s2">&quot;raw&quot;</span>
+    <span class="n">RAW</span> <span class="o">=</span> <span class="s2">"raw"</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_string</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PredictMethod</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;rate&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"rate"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">PredictMethod</span><span class="o">.</span><span class="n">RATE</span>
-        <span class="k">elif</span> <span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"raw"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">PredictMethod</span><span class="o">.</span><span class="n">RAW</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown predict method: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">string</span><span class="p">))</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Unknown predict method: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">string</span><span class="p">))</span></div>
 
 </pre></div>
 

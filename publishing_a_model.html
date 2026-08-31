@@ -436,7 +436,7 @@ back through <code class="docutils literal notranslate"><span class="pre">pt.loa
 </pre></div>
 </div>
 <p>The bundled example at
-<code class="docutils literal notranslate"><span class="pre">routee/powertrain/resources/bundled_registry/v2/toyota/camry_ice/2016/rf_c3326385/v1/</span></code>
+<code class="docutils literal notranslate"><span class="pre">routee/powertrain/resources/bundled_registry/v2/toyota/rav4_xle_ice/2022/rf_fe510e40/v1/</span></code>
 is a concrete reference for what the on-disk layout looks like.</p>
 </section>
 <section id="the-derived-vehicle-slug">
@@ -490,8 +490,8 @@ compositions get different slugs automatically.</p></li>
 need to intervene is when <strong>two models share the same architecture <em>and</em> feature
 set</strong> but represent different regimes — e.g. a &quot;steady thermal state&quot; model and
 a &quot;warm-up&quot; model. Set <code class="docutils literal notranslate"><span class="pre">ModelConfig.variant</span></code> to tell them apart:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">ModelConfig</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;steady&quot;</span><span class="p">)</span>   <span class="c1"># -&gt; rf_steady_&lt;hash&gt;</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">ModelConfig</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;warmup&quot;</span><span class="p">)</span>   <span class="c1"># -&gt; rf_warmup_&lt;hash&gt;</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">ModelConfig</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">"steady"</span><span class="p">)</span>   <span class="c1"># -&gt; rf_steady_&lt;hash&gt;</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">ModelConfig</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">"warmup"</span><span class="p">)</span>   <span class="c1"># -&gt; rf_warmup_&lt;hash&gt;</span>
 </pre></div>
 </div>
 <p>The registry recomputes both derived slugs when loading and <strong>raises if either
@@ -512,25 +512,25 @@ sure those fields on your <code class="docutils literal notranslate"><span class
 <span class="p">)</span>
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">ModelConfig</span><span class="p">(</span>
-    <span class="n">vehicle_description</span><span class="o">=</span><span class="s2">&quot;2024 Test Sedan&quot;</span><span class="p">,</span>
+    <span class="n">vehicle_description</span><span class="o">=</span><span class="s2">"2024 Test Sedan"</span><span class="p">,</span>
     <span class="n">powertrain_type</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">PowertrainType</span><span class="o">.</span><span class="n">ICE</span><span class="p">,</span>
     <span class="n">feature_set</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;speed_mph&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;mph&quot;</span><span class="p">),</span>
-        <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;grade_dec&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;decimal&quot;</span><span class="p">),</span>
+        <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"speed_mph"</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">"mph"</span><span class="p">),</span>
+        <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"grade_dec"</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">"decimal"</span><span class="p">),</span>
     <span class="p">]),</span>
-    <span class="n">distance</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;miles&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;miles&quot;</span><span class="p">),</span>
+    <span class="n">distance</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"miles"</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">"miles"</span><span class="p">),</span>
     <span class="n">target</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">TargetSet</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;gallons_fastsim&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;gallons_gasoline&quot;</span><span class="p">),</span>
+        <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"gallons_fastsim"</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">"gallons_gasoline"</span><span class="p">),</span>
     <span class="p">]),</span>
-    <span class="n">make</span><span class="o">=</span><span class="s2">&quot;Test&quot;</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;Sedan&quot;</span><span class="p">,</span>
+    <span class="n">make</span><span class="o">=</span><span class="s2">"Test"</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">"Sedan"</span><span class="p">,</span>
     <span class="n">year</span><span class="o">=</span><span class="mi">2024</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">SklearnRandomForestTrainer</span><span class="p">()</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">training_df</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
 <span class="c1"># both slugs are derived; version defaults to the next unused version.</span>
-<span class="n">model_id</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">save_to_registry</span><span class="p">(</span><span class="n">registry_root</span><span class="o">=</span><span class="s2">&quot;./my_local_registry&quot;</span><span class="p">)</span>
+<span class="n">model_id</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">save_to_registry</span><span class="p">(</span><span class="n">registry_root</span><span class="o">=</span><span class="s2">"./my_local_registry"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span>      <span class="c1"># test/sedan_ice/2024/rf_aaa9554f/v1</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>     <span class="c1"># test/sedan_ice/2024/rf_aaa9554f  (version-less identity)</span>
 </pre></div>
@@ -550,7 +550,7 @@ wrote.</p>
 <p><strong>Option A — explicit <code class="docutils literal notranslate"><span class="pre">LocalRegistry</span></code>:</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.registry.local</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalRegistry</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">LocalRegistry</span><span class="p">(</span><span class="s2">&quot;./my_local_registry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">LocalRegistry</span><span class="p">(</span><span class="s2">"./my_local_registry"</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span>
 <span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">links_df</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -558,18 +558,18 @@ wrote.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">routee.powertrain</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pt</span>
 
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;ROUTEE_REGISTRY_BACKEND&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;ROUTEE_LOCAL_REGISTRY_ROOT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;./my_local_registry&quot;</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"ROUTEE_REGISTRY_BACKEND"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"local"</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"ROUTEE_LOCAL_REGISTRY_ROOT"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"./my_local_registry"</span>
 
 <span class="c1"># Omit the trailing v&lt;N&gt; to get the latest version. model.key.to_path() gives</span>
 <span class="c1"># exactly this version-less path.</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;test/sedan_ice/2024/rf_aaa9554f&quot;</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"test/sedan_ice/2024/rf_aaa9554f"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>You can also list and query what's in the registry the same way you would
 with the default HuggingFace registry:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pt</span><span class="o">.</span><span class="n">list_available_models</span><span class="p">()</span>
-<span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="n">powertrain_type</span><span class="o">=</span><span class="s2">&quot;ICE&quot;</span><span class="p">)</span>
+<span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">"test"</span><span class="p">,</span> <span class="n">powertrain_type</span><span class="o">=</span><span class="s2">"ICE"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -656,16 +656,16 @@ tagged union — set <code class="docutils literal notranslate"><span class="pre
     <span class="o">...</span><span class="p">,</span>
     <span class="n">training_source</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">FastSimSource</span><span class="p">(</span>
         <span class="c1"># NatLabRockies/fastsim-vehicles, plus a git tag pinning that repo</span>
-        <span class="n">fastsim_vehicle_id</span><span class="o">=</span><span class="s2">&quot;v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1&quot;</span><span class="p">,</span>
-        <span class="n">fastsim_vehicles_ref</span><span class="o">=</span><span class="s2">&quot;v1.2.0&quot;</span><span class="p">,</span>
-        <span class="n">fastsim_version</span><span class="o">=</span><span class="s2">&quot;3.1.0&quot;</span><span class="p">,</span>
+        <span class="n">fastsim_vehicle_id</span><span class="o">=</span><span class="s2">"v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1"</span><span class="p">,</span>
+        <span class="n">fastsim_vehicles_ref</span><span class="o">=</span><span class="s2">"v1.2.0"</span><span class="p">,</span>
+        <span class="n">fastsim_version</span><span class="o">=</span><span class="s2">"3.1.0"</span><span class="p">,</span>
         <span class="c1"># the pipeline, and the training run that produced this model</span>
-        <span class="n">pipeline_version</span><span class="o">=</span><span class="s2">&quot;0.4.1&quot;</span><span class="p">,</span>
-        <span class="n">pipeline_run_id</span><span class="o">=</span><span class="s2">&quot;gha-2026-07-14-8871&quot;</span><span class="p">,</span>
-        <span class="n">pipeline_repo_ref</span><span class="o">=</span><span class="s2">&quot;9f3c1ab&quot;</span><span class="p">,</span>
+        <span class="n">pipeline_version</span><span class="o">=</span><span class="s2">"0.4.1"</span><span class="p">,</span>
+        <span class="n">pipeline_run_id</span><span class="o">=</span><span class="s2">"gha-2026-07-14-8871"</span><span class="p">,</span>
+        <span class="n">pipeline_repo_ref</span><span class="o">=</span><span class="s2">"9f3c1ab"</span><span class="p">,</span>
         <span class="c1"># the prepare-training-data runs it was fit to, and their sources</span>
-        <span class="n">dataset_run_ids</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ptd-2026-07-14-001&quot;</span><span class="p">,</span> <span class="s2">&quot;ptd-2026-07-14-002&quot;</span><span class="p">],</span>
-        <span class="n">data_sources</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;wm1&quot;</span><span class="p">,</span> <span class="s2">&quot;wm2&quot;</span><span class="p">],</span>
+        <span class="n">dataset_run_ids</span><span class="o">=</span><span class="p">[</span><span class="s2">"ptd-2026-07-14-001"</span><span class="p">,</span> <span class="s2">"ptd-2026-07-14-002"</span><span class="p">],</span>
+        <span class="n">data_sources</span><span class="o">=</span><span class="p">[</span><span class="s2">"wm1"</span><span class="p">,</span> <span class="s2">"wm2"</span><span class="p">],</span>
     <span class="p">),</span>
 <span class="p">)</span>
 
@@ -673,12 +673,12 @@ tagged union — set <code class="docutils literal notranslate"><span class="pre
 <span class="n">config</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">ModelConfig</span><span class="p">(</span>
     <span class="o">...</span><span class="p">,</span>
     <span class="n">training_source</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">RealWorldSource</span><span class="p">(</span>
-        <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;fleet_dna&quot;</span><span class="p">,</span>
-        <span class="n">fleet</span><span class="o">=</span><span class="s2">&quot;delivery_vans&quot;</span><span class="p">,</span>
-        <span class="n">collection_start</span><span class="o">=</span><span class="s2">&quot;2023-01-01&quot;</span><span class="p">,</span>
-        <span class="n">collection_end</span><span class="o">=</span><span class="s2">&quot;2023-12-31&quot;</span><span class="p">,</span>
+        <span class="n">data_source</span><span class="o">=</span><span class="s2">"fleet_dna"</span><span class="p">,</span>
+        <span class="n">fleet</span><span class="o">=</span><span class="s2">"delivery_vans"</span><span class="p">,</span>
+        <span class="n">collection_start</span><span class="o">=</span><span class="s2">"2023-01-01"</span><span class="p">,</span>
+        <span class="n">collection_end</span><span class="o">=</span><span class="s2">"2023-12-31"</span><span class="p">,</span>
         <span class="n">n_vehicles</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
-        <span class="n">dataset_name</span><span class="o">=</span><span class="s2">&quot;fleet-dna-2023&quot;</span><span class="p">,</span>
+        <span class="n">dataset_name</span><span class="o">=</span><span class="s2">"fleet-dna-2023"</span><span class="p">,</span>
         <span class="n">dataset_hash</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">hash_dataframe</span><span class="p">(</span><span class="n">training_df</span><span class="p">),</span>
     <span class="p">),</span>
 <span class="p">)</span>

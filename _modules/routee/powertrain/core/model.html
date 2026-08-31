@@ -383,8 +383,8 @@ document.write(`
     <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.registry.model_id</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelKey</span>
 
 <span class="n">REGISTERED_ESTIMATORS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">Estimator</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;ONNXEstimator&quot;</span><span class="p">:</span> <span class="n">ONNXEstimator</span><span class="p">,</span>
-    <span class="s2">&quot;NGBoostEstimator&quot;</span><span class="p">:</span> <span class="n">NGBoostEstimator</span><span class="p">,</span>
+    <span class="s2">"ONNXEstimator"</span><span class="p">:</span> <span class="n">ONNXEstimator</span><span class="p">,</span>
+    <span class="s2">"NGBoostEstimator"</span><span class="p">:</span> <span class="n">NGBoostEstimator</span><span class="p">,</span>
 <span class="p">}</span>
 
 
@@ -392,31 +392,31 @@ document.write(`
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.core.model.Model">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    A RouteE-Powertrain vehicle model represents a single vehicle</span>
 <span class="sd">    (i.e. a 2016 Toyota Camry with a 1.5 L gasoline engine).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">estimator</span><span class="p">:</span> <span class="n">Estimator</span>
     <span class="n">metadata</span><span class="p">:</span> <span class="n">Metadata</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelKey</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;This model&#39;s intrinsic, version-less identity.</span>
+<span class="w">        </span><span class="sd">"""This model's intrinsic, version-less identity.</span>
 
 <span class="sd">        Derived from metadata (``make``/``model``/``year`` + the derived</span>
 <span class="sd">        ``config_slug``), so it is always available — even for a freshly-trained</span>
 <span class="sd">        model that has never been placed in a registry. The registry</span>
 <span class="sd">        ``version`` is *not* part of this; it is assigned only by registry</span>
 <span class="sd">        operations (``save_to_registry`` returns a full ``ModelId``).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.registry.model_id</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelKey</span>
 
         <span class="k">return</span> <span class="n">ModelKey</span><span class="o">.</span><span class="n">from_metadata</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">digest</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;This model&#39;s registry-independent instance identity.</span>
+<span class="w">        </span><span class="sd">"""This model's registry-independent instance identity.</span>
 
 <span class="sd">        The ``sha256:&lt;hex&gt;`` content digest minted at train time (see</span>
 <span class="sd">        ``routee.powertrain.core.digest``). Unlike ``key``, which groups all</span>
@@ -424,7 +424,7 @@ document.write(`
 <span class="sd">        artifact — two models trained the same day on different data get</span>
 <span class="sd">        distinct digests. ``None`` for legacy models saved before digests</span>
 <span class="sd">        existed.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">model_digest</span>
 
     <span class="nd">@property</span>
@@ -439,7 +439,7 @@ document.write(`
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.core.model.Model.from_file">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Load a vehicle model from a file or directory.</span>
 
 <span class="sd">        Supports directories (containing metadata.json + binary),</span>
@@ -449,14 +449,14 @@ document.write(`
 <span class="sd">            file: the path to the file or directory to load</span>
 
 <span class="sd">        Returns: a powertrain vehicle</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">load_model_from_path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Model.to_file">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.core.model.Model.to_file">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Save a vehicle model to a file or directory.</span>
 
 <span class="sd">        If *file* has no suffix, saves as a flat directory.</span>
@@ -465,12 +465,12 @@ document.write(`
 
 <span class="sd">        Args:</span>
 <span class="sd">            file: the path to save to</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.zip&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">".zip"</span><span class="p">:</span>
             <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">save_archive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.tar.gz&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.tar&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".tar.gz"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">".tar"</span><span class="p">:</span>
             <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">save_tar_archive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -488,7 +488,7 @@ document.write(`
         <span class="n">schema_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">SCHEMA_VERSION_STRING</span><span class="p">,</span>
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Save this model into a local registry directory tree.</span>
 
 <span class="sd">        Builds the canonical ``&lt;registry_root&gt;/&lt;schema_version&gt;/&lt;make&gt;/&lt;model&gt;/&lt;year&gt;/&lt;config_slug&gt;/v&lt;N&gt;/``</span>
@@ -498,7 +498,7 @@ document.write(`
 <span class="sd">        details.</span>
 
 <span class="sd">        Returns: the ``ModelId`` that was written.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">_save_to_registry</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">registry_root</span><span class="o">=</span><span class="n">registry_root</span><span class="p">,</span>
@@ -516,9 +516,9 @@ document.write(`
         <span class="n">feature_parameters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
         <span class="n">energy_target</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Convert the the model to a lookup table for the given feature parameters.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">to_lookup_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_parameters</span><span class="p">,</span> <span class="n">energy_target</span><span class="p">)</span></div>
 
 
@@ -529,9 +529,9 @@ document.write(`
         <span class="n">n_samples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
         <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">return_predictions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;Series&quot;</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        generates test links to independently test the model&#39;s features</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">"Series"</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        generates test links to independently test the model's features</span>
 <span class="sd">        and creates plots of those predictions</span>
 
 <span class="sd">        Args:</span>
@@ -540,20 +540,20 @@ document.write(`
 <span class="sd">            return_predictions: if true, returns the dictionary containing the prediction values</span>
 
 <span class="sd">        Returns: optionally returns a dictionary containing the predictions where the key is the feature tested</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">feature_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">feature_set</span>
         <span class="n">feature_ranges</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">feature_set</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">upper</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">f</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">lower</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Feature: </span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has constraints without a lower/upper bound. &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;You can add constraints when training a model or set custom constraints during visualization using &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;routee.powertrain.validation.feature_visualization.visualize_features&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Feature: </span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has constraints without a lower/upper bound. "</span>
+                    <span class="sa">f</span><span class="s2">"You can add constraints when training a model or set custom constraints during visualization using "</span>
+                    <span class="sa">f</span><span class="s2">"routee.powertrain.validation.feature_visualization.visualize_features"</span>
                 <span class="p">)</span>
             <span class="n">feature_ranges</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;upper&quot;</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
-                <span class="s2">&quot;lower&quot;</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
-                <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="n">n_samples</span><span class="p">,</span>
+                <span class="s2">"upper"</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
+                <span class="s2">"lower"</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+                <span class="s2">"n_samples"</span><span class="p">:</span> <span class="n">n_samples</span><span class="p">,</span>
             <span class="p">}</span>
 
         <span class="k">return</span> <span class="n">visualize_features</span><span class="p">(</span>
@@ -573,7 +573,7 @@ document.write(`
         <span class="n">n_samples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
         <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        generates a contour plot of the two test features: x_feature and y_feature.</span>
 
 <span class="sd">        Args:</span>
@@ -583,20 +583,20 @@ document.write(`
 <span class="sd">                and will be the y-axis feature</span>
 <span class="sd">            n_samples: the number of samples used to generate the plots</span>
 <span class="sd">            output_path: an optional path to save the plots as png files.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">feature_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">feature_set</span>
         <span class="n">feature_ranges</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">feature_set</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">upper</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">f</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">lower</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Feature: </span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has constraints without a lower/upper bound. &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;You can add constraints when training a model or set custom constraints during visualization using &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;routee.powertrain.validation.feature_visualization.contour_plot&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Feature: </span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has constraints without a lower/upper bound. "</span>
+                    <span class="sa">f</span><span class="s2">"You can add constraints when training a model or set custom constraints during visualization using "</span>
+                    <span class="sa">f</span><span class="s2">"routee.powertrain.validation.feature_visualization.contour_plot"</span>
                 <span class="p">)</span>
             <span class="n">feature_ranges</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;upper&quot;</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
-                <span class="s2">&quot;lower&quot;</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
-                <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="n">n_samples</span><span class="p">,</span>
+                <span class="s2">"upper"</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
+                <span class="s2">"lower"</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+                <span class="s2">"n_samples"</span><span class="p">:</span> <span class="n">n_samples</span><span class="p">,</span>
             <span class="p">}</span>
 
         <span class="k">return</span> <span class="n">contour_plot</span><span class="p">(</span>
@@ -614,17 +614,17 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">links_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Predict absolute energy consumption for each link</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            links_df: a dataframe containing the links to predict on. Must contain</span>
 <span class="sd">                every column in ``self.feature_set`` plus the distance column, and</span>
-<span class="sd">                (if the estimator&#39;s ``input_spec`` declares a grouping column) that</span>
+<span class="sd">                (if the estimator's ``input_spec`` declares a grouping column) that</span>
 <span class="sd">                grouping column.</span>
 
 <span class="sd">        Returns: a dataframe containing the predicted energy consumption for each link</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span>
 
         <span class="n">feature_set</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">feature_set</span>
@@ -633,16 +633,16 @@ document.write(`
         <span class="p">]</span>
         <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;links_df is missing the following required features: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Expected features: </span><span class="si">{</span><span class="n">feature_set</span><span class="o">.</span><span class="n">feature_name_list</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">"links_df is missing the following required features: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">. "</span>
+                <span class="sa">f</span><span class="s2">"Expected features: </span><span class="si">{</span><span class="n">feature_set</span><span class="o">.</span><span class="n">feature_name_list</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
 
         <span class="n">input_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">input_spec</span>
         <span class="k">if</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">grouping_column</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">grouping_column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">links_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Estimator requires a grouping column &#39;</span><span class="si">{</span><span class="n">input_spec</span><span class="o">.</span><span class="n">grouping_column</span><span class="si">}</span><span class="s2">&#39; &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;(lookback=</span><span class="si">{</span><span class="n">input_spec</span><span class="o">.</span><span class="n">lookback</span><span class="si">}</span><span class="s2">) but it was not found in links_df.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Estimator requires a grouping column '</span><span class="si">{</span><span class="n">input_spec</span><span class="o">.</span><span class="n">grouping_column</span><span class="si">}</span><span class="s2">' "</span>
+                    <span class="sa">f</span><span class="s2">"(lookback=</span><span class="si">{</span><span class="n">input_spec</span><span class="o">.</span><span class="n">lookback</span><span class="si">}</span><span class="s2">) but it was not found in links_df."</span>
                 <span class="p">)</span>
 
         <span class="n">pred_energy_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">links_df</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
@@ -656,116 +656,116 @@ document.write(`
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Shows a nice pretty printed summary of the model including:</span>
 <span class="sd">         - Model average fuel consumption</span>
 <span class="sd">         - Select set of errors</span>
 <span class="sd">         - Expected features and their units</span>
 <span class="sd">         - Powertrain specifications</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span>
         <span class="n">summary_lines</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
-        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Model Summary&quot;</span><span class="p">)</span>
-        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
-        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Vehicle description: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle_description</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Powertrain type: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">powertrain_type</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"="</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"Model Summary"</span><span class="p">)</span>
+        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"-"</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Vehicle description: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle_description</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Powertrain type: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">powertrain_type</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"="</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
 
         <span class="n">estimator_errors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">estimator_errors</span>
-        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Estimator Summary&quot;</span><span class="p">)</span>
-        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"Estimator Summary"</span><span class="p">)</span>
+        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"-"</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
         <span class="n">feature_set</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">feature_set</span>
         <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">feature_set</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
-            <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Feature: </span><span class="si">{</span><span class="n">feature</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">feature</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Feature: </span><span class="si">{</span><span class="n">feature</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">feature</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
         <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Distance: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="sa">f</span><span class="s2">"Distance: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)"</span>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
-            <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Target: </span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Target: </span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
             <span class="n">target_errors</span> <span class="o">=</span> <span class="n">estimator_errors</span><span class="o">.</span><span class="n">error_by_target</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">target_errors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find errors for target </span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not find errors for target </span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
             <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Raw Predicted Consumption: </span><span class="si">{</span><span class="n">target_errors</span><span class="o">.</span><span class="n">pred_dist_per_energy</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="sa">f</span><span class="s2">"Raw Predicted Consumption: </span><span class="si">{</span><span class="n">target_errors</span><span class="o">.</span><span class="n">pred_dist_per_energy</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)"</span>
             <span class="p">)</span>
             <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Real World Predicted Consumption: </span><span class="si">{</span><span class="n">target_errors</span><span class="o">.</span><span class="n">real_world_pred_dist_per_energy</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="sa">f</span><span class="s2">"Real World Predicted Consumption: </span><span class="si">{</span><span class="n">target_errors</span><span class="o">.</span><span class="n">real_world_pred_dist_per_energy</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)"</span>
             <span class="p">)</span>
-        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Predict Method: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">predict_method</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">summary_lines</span><span class="p">)</span>
+        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Predict Method: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">predict_method</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">summary_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"="</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">summary_lines</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_repr_html_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Returns an html table of the model summary for display in a notebook</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span>
 
         <span class="c1"># Start the HTML table</span>
-        <span class="n">html_lines</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&lt;table border=&quot;1&quot; style=&quot;border-collapse: collapse;&quot;&gt;&#39;</span><span class="p">]</span>
+        <span class="n">html_lines</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'&lt;table border="1" style="border-collapse: collapse;"&gt;'</span><span class="p">]</span>
 
         <span class="c1"># Title: Model Summary</span>
         <span class="n">html_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="s1">&#39;&lt;tr&gt;&lt;th colspan=&quot;2&quot; style=&quot;border-bottom: 2px solid black; text-align: center;&quot;&gt;Model Summary&lt;/th&gt;&lt;/tr&gt;&#39;</span>
+            <span class="s1">'&lt;tr&gt;&lt;th colspan="2" style="border-bottom: 2px solid black; text-align: center;"&gt;Model Summary&lt;/th&gt;&lt;/tr&gt;'</span>
         <span class="p">)</span>
         <span class="n">html_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;&lt;tr&gt;&lt;td&gt;Vehicle description&lt;/td&gt;&lt;td&gt;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle_description</span><span class="si">}</span><span class="s2">&lt;/td&gt;&lt;/tr&gt;&quot;</span>
+            <span class="sa">f</span><span class="s2">"&lt;tr&gt;&lt;td&gt;Vehicle description&lt;/td&gt;&lt;td&gt;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle_description</span><span class="si">}</span><span class="s2">&lt;/td&gt;&lt;/tr&gt;"</span>
         <span class="p">)</span>
         <span class="n">html_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;&lt;tr&gt;&lt;td&gt;Powertrain type&lt;/td&gt;&lt;td&gt;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">powertrain_type</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&lt;/td&gt;&lt;/tr&gt;&quot;</span>
+            <span class="sa">f</span><span class="s2">"&lt;tr&gt;&lt;td&gt;Powertrain type&lt;/td&gt;&lt;td&gt;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">powertrain_type</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&lt;/td&gt;&lt;/tr&gt;"</span>
         <span class="p">)</span>
 
         <span class="n">estimator_errors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">estimator_errors</span>
 
         <span class="c1"># Title: Estimator Summary</span>
         <span class="n">html_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="s1">&#39;&lt;tr&gt;&lt;th colspan=&quot;2&quot; style=&quot;border-bottom: 2px solid black; text-align: center;&quot;&gt;Estimator Summary&lt;/th&gt;&lt;/tr&gt;&#39;</span>
+            <span class="s1">'&lt;tr&gt;&lt;th colspan="2" style="border-bottom: 2px solid black; text-align: center;"&gt;Estimator Summary&lt;/th&gt;&lt;/tr&gt;'</span>
         <span class="p">)</span>
 
         <span class="n">feature_set</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">feature_set</span>
         <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">feature_set</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
             <span class="n">html_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;&lt;tr&gt;&lt;td&gt;Feature&lt;/td&gt;&lt;td&gt;</span><span class="si">{</span><span class="n">feature</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">feature</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&lt;/td&gt;&lt;/tr&gt;&quot;</span>
+                <span class="sa">f</span><span class="s2">"&lt;tr&gt;&lt;td&gt;Feature&lt;/td&gt;&lt;td&gt;</span><span class="si">{</span><span class="n">feature</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">feature</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&lt;/td&gt;&lt;/tr&gt;"</span>
             <span class="p">)</span>
 
         <span class="n">html_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="s2">&quot;&lt;tr&gt;&lt;td&gt;Distance&lt;/td&gt;&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;&lt;td&gt;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&lt;/td&gt;&lt;/tr&gt;&quot;</span>
+            <span class="s2">"&lt;tr&gt;&lt;td&gt;Distance&lt;/td&gt;"</span>
+            <span class="sa">f</span><span class="s2">"&lt;td&gt;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&lt;/td&gt;&lt;/tr&gt;"</span>
         <span class="p">)</span>
 
         <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
             <span class="n">html_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;&lt;tr&gt;&lt;td&gt;Target&lt;/td&gt;&lt;td&gt;</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&lt;/td&gt;&lt;/tr&gt;&quot;</span>
+                <span class="sa">f</span><span class="s2">"&lt;tr&gt;&lt;td&gt;Target&lt;/td&gt;&lt;td&gt;</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&lt;/td&gt;&lt;/tr&gt;"</span>
             <span class="p">)</span>
 
             <span class="n">target_errors</span> <span class="o">=</span> <span class="n">estimator_errors</span><span class="o">.</span><span class="n">error_by_target</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">target_errors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find errors for target </span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not find errors for target </span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
             <span class="n">html_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="s2">&quot;&lt;tr&gt;&lt;td&gt;Predicted Consumption&lt;/td&gt;&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;&lt;td&gt;</span><span class="si">{</span><span class="n">target_errors</span><span class="o">.</span><span class="n">pred_dist_per_energy</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&lt;/td&gt;&lt;/tr&gt;&quot;</span>
+                <span class="s2">"&lt;tr&gt;&lt;td&gt;Predicted Consumption&lt;/td&gt;"</span>
+                <span class="sa">f</span><span class="s2">"&lt;td&gt;</span><span class="si">{</span><span class="n">target_errors</span><span class="o">.</span><span class="n">pred_dist_per_energy</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&lt;/td&gt;&lt;/tr&gt;"</span>
             <span class="p">)</span>
 
             <span class="n">html_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="s2">&quot;&lt;tr&gt;&lt;td&gt;Real World Predicted Consumption&lt;/td&gt;&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;&lt;td&gt;</span><span class="si">{</span><span class="n">target_errors</span><span class="o">.</span><span class="n">real_world_pred_dist_per_energy</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&lt;/td&gt;&lt;/tr&gt;&quot;</span>
+                <span class="s2">"&lt;tr&gt;&lt;td&gt;Real World Predicted Consumption&lt;/td&gt;"</span>
+                <span class="sa">f</span><span class="s2">"&lt;td&gt;</span><span class="si">{</span><span class="n">target_errors</span><span class="o">.</span><span class="n">real_world_pred_dist_per_energy</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s2">)&lt;/td&gt;&lt;/tr&gt;"</span>
             <span class="p">)</span>
         <span class="n">html_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;&lt;tr&gt;&lt;td&gt;Predict Method&lt;/td&gt;&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;&lt;td&gt;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">predict_method</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">&lt;/td&gt;&lt;/tr&gt;&quot;</span>
+            <span class="sa">f</span><span class="s2">"&lt;tr&gt;&lt;td&gt;Predict Method&lt;/td&gt;"</span>
+            <span class="sa">f</span><span class="s2">"&lt;td&gt;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">predict_method</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">&lt;/td&gt;&lt;/tr&gt;"</span>
         <span class="p">)</span>
 
         <span class="c1"># End the HTML table</span>
-        <span class="n">html_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&lt;/table&gt;&quot;</span><span class="p">)</span>
+        <span class="n">html_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"&lt;/table&gt;"</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">html_lines</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">html_lines</span><span class="p">)</span></div>
 
 </pre></div>
 

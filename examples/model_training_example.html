@@ -430,7 +430,7 @@ You can access this dataset yourself <a class="reference external" href="https:/
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;../../tests/routee-powertrain-test-data/sample_train_data.csv&quot;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">"../../tests/routee-powertrain-test-data/sample_train_data.csv"</span><span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -519,8 +519,8 @@ We define a single <code class="docutils literal notranslate"><span class="pre">
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">feature_set</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;speed_mph&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;mph&quot;</span><span class="p">),</span>
-    <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;grade_dec&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;decimal&quot;</span><span class="p">),</span>
+    <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"speed_mph"</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">"mph"</span><span class="p">),</span>
+    <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"grade_dec"</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">"decimal"</span><span class="p">),</span>
 <span class="p">]</span>
 <span class="n">features</span> <span class="o">=</span> <span class="n">feature_set</span>
 </pre></div>
@@ -530,7 +530,7 @@ We define a single <code class="docutils literal notranslate"><span class="pre">
 <p>Note that we didn't include the distance column in the feature set. RouteE Powertrain always requires distance information, so we provide a separate designation for it in the training configuration. Let's define our distance column:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">distance</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;miles&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;miles&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">distance</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"miles"</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">"miles"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -539,8 +539,8 @@ We define a single <code class="docutils literal notranslate"><span class="pre">
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">energy_target</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">DataColumn</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;gallons_fastsim&quot;</span><span class="p">,</span>
-    <span class="n">units</span><span class="o">=</span><span class="s2">&quot;gallons_gasoline&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"gallons_fastsim"</span><span class="p">,</span>
+    <span class="n">units</span><span class="o">=</span><span class="s2">"gallons_gasoline"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -556,7 +556,7 @@ This can be more robust for situations where the energy rate on a link might var
 In our case we'll use &quot;rate&quot; since our training data is very sparse.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">predict_method</span> <span class="o">=</span> <span class="s2">&quot;rate&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">predict_method</span> <span class="o">=</span> <span class="s2">"rate"</span>
 </pre></div>
 </div>
 </div>
@@ -567,15 +567,15 @@ In our case we'll use &quot;rate&quot; since our training data is very sparse.</
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">training_source</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">FastSimSource</span><span class="p">(</span>
     <span class="c1"># the vehicle in https://github.com/NatLabRockies/fastsim-vehicles</span>
-    <span class="n">fastsim_vehicle_id</span><span class="o">=</span><span class="s2">&quot;v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1&quot;</span><span class="p">,</span>
+    <span class="n">fastsim_vehicle_id</span><span class="o">=</span><span class="s2">"v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1"</span><span class="p">,</span>
     <span class="c1"># a git tag or commit sha pinning that repo</span>
-    <span class="n">fastsim_vehicles_ref</span><span class="o">=</span><span class="s2">&quot;v1.2.0&quot;</span><span class="p">,</span>
-    <span class="n">fastsim_version</span><span class="o">=</span><span class="s2">&quot;3.1.0&quot;</span><span class="p">,</span>
+    <span class="n">fastsim_vehicles_ref</span><span class="o">=</span><span class="s2">"v1.2.0"</span><span class="p">,</span>
+    <span class="n">fastsim_version</span><span class="o">=</span><span class="s2">"3.1.0"</span><span class="p">,</span>
     <span class="c1"># the pipeline, and the id of the training run that produced this model</span>
-    <span class="n">pipeline_version</span><span class="o">=</span><span class="s2">&quot;0.4.1&quot;</span><span class="p">,</span>
-    <span class="n">pipeline_run_id</span><span class="o">=</span><span class="s2">&quot;local-run&quot;</span><span class="p">,</span>
-    <span class="n">dataset_run_ids</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ptd-2026-07-14-001&quot;</span><span class="p">,</span> <span class="s2">&quot;ptd-2026-07-14-002&quot;</span><span class="p">],</span>
-    <span class="n">data_sources</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;wm1&quot;</span><span class="p">],</span>
+    <span class="n">pipeline_version</span><span class="o">=</span><span class="s2">"0.4.1"</span><span class="p">,</span>
+    <span class="n">pipeline_run_id</span><span class="o">=</span><span class="s2">"local-run"</span><span class="p">,</span>
+    <span class="n">dataset_run_ids</span><span class="o">=</span><span class="p">[</span><span class="s2">"ptd-2026-07-14-001"</span><span class="p">,</span> <span class="s2">"ptd-2026-07-14-002"</span><span class="p">],</span>
+    <span class="n">data_sources</span><span class="o">=</span><span class="p">[</span><span class="s2">"wm1"</span><span class="p">],</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -586,13 +586,13 @@ In our case we'll use &quot;rate&quot; since our training data is very sparse.</
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">ModelConfig</span><span class="p">(</span>
-    <span class="n">vehicle_description</span><span class="o">=</span><span class="s2">&quot;Test Vehicle&quot;</span><span class="p">,</span>
+    <span class="n">vehicle_description</span><span class="o">=</span><span class="s2">"Test Vehicle"</span><span class="p">,</span>
     <span class="n">powertrain_type</span><span class="o">=</span><span class="n">pt</span><span class="o">.</span><span class="n">PowertrainType</span><span class="o">.</span><span class="n">ICE</span><span class="p">,</span>
     <span class="n">feature_set</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
     <span class="n">distance</span><span class="o">=</span><span class="n">distance</span><span class="p">,</span>
     <span class="n">target</span><span class="o">=</span><span class="n">energy_target</span><span class="p">,</span>
-    <span class="n">make</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;vehicle&quot;</span><span class="p">,</span>
+    <span class="n">make</span><span class="o">=</span><span class="s2">"test"</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">"vehicle"</span><span class="p">,</span>
     <span class="n">year</span><span class="o">=</span><span class="mi">2024</span><span class="p">,</span>
     <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
     <span class="n">predict_method</span><span class="o">=</span><span class="n">predict_method</span><span class="p">,</span>
@@ -639,15 +639,15 @@ In our case we'll use &quot;rate&quot; since our training data is very sparse.</
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Provenance(source=FastSimSource(method=&lt;TrainingMethod.FASTSIM_SIMULATION: &#39;fastsim_simulation&#39;&gt;, fastsim_vehicle_id=&#39;v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1&#39;, fastsim_vehicles_ref=&#39;v1.2.0&#39;, fastsim_version=&#39;3.1.0&#39;, pipeline_version=&#39;0.4.1&#39;, pipeline_run_id=&#39;local-run&#39;, pipeline_repo_ref=None, dataset_run_ids=[&#39;ptd-2026-07-14-001&#39;, &#39;ptd-2026-07-14-002&#39;], data_sources=[&#39;wm1&#39;], notes=None), training=TrainingConfig(test_size=0.2, validation_size=None, random_seed=42, trip_column=&#39;trip_id&#39;, trained_date=&#39;2026-08-14&#39;))
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Provenance(source=FastSimSource(method=&lt;TrainingMethod.FASTSIM_SIMULATION: 'fastsim_simulation'&gt;, fastsim_vehicle_id='v1/fastsim-3/conv/toyota/camry-4cyl-2wd/2016/base/r1', fastsim_vehicles_ref='v1.2.0', fastsim_version='3.1.0', pipeline_version='0.4.1', pipeline_run_id='local-run', pipeline_repo_ref=None, dataset_run_ids=['ptd-2026-07-14-001', 'ptd-2026-07-14-002'], data_sources=['wm1'], notes=None), training=TrainingConfig(test_size=0.2, validation_size=None, random_seed=42, trip_column='trip_id', trained_date='2026-08-31'))
 </pre></div>
 </div>
 </div>
 </div>
 <p>Now, we can write the model to a <code class="docutils literal notranslate"><span class="pre">.zip</span></code> archive, <code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> archive, or a flat directory (auto-detected from the path's suffix):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">test_vehicle</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="s2">&quot;Test_Vehicle.zip&quot;</span><span class="p">)</span>        <span class="c1"># ZIP archive</span>
-<span class="n">test_vehicle</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="s2">&quot;Test_Vehicle.tar.gz&quot;</span><span class="p">)</span>     <span class="c1"># tar archive</span>
-<span class="n">test_vehicle</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="s2">&quot;Test_Vehicle/&quot;</span><span class="p">)</span>           <span class="c1"># flat directory</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">test_vehicle</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="s2">"Test_Vehicle.zip"</span><span class="p">)</span>        <span class="c1"># ZIP archive</span>
+<span class="n">test_vehicle</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="s2">"Test_Vehicle.tar.gz"</span><span class="p">)</span>     <span class="c1"># tar archive</span>
+<span class="n">test_vehicle</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="s2">"Test_Vehicle/"</span><span class="p">)</span>           <span class="c1"># flat directory</span>
 </pre></div>
 </div>
 <p>The saved artifact contains a <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code> and a binary estimator file (e.g. <code class="docutils literal notranslate"><span class="pre">model.onnx</span></code>). Reload it with <code class="docutils literal notranslate"><span class="pre">pt.load_model(&quot;Test_Vehicle.zip&quot;)</span></code>.</p>

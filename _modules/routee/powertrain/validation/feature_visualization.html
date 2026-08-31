@@ -370,37 +370,37 @@ document.write(`
 <div class="viewcode-block" id="visualize_features">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.validation.feature_visualization.visualize_features">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">visualize_features</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">:</span> <span class="s2">&quot;Model&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="s2">"Model"</span><span class="p">,</span>
     <span class="n">feature_ranges</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span>
     <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">return_predictions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;Series&quot;</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    takes a model and generates test links to independently test the model&#39;s features</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">"Series"</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    takes a model and generates test links to independently test the model's features</span>
 <span class="sd">    and creates plots of those predictions</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        model: the model that will be used to generate the plots</span>
 <span class="sd">        feature_ranges: a nested dictionary where each key should be a feature name and</span>
-<span class="sd">            each value should be another dictionary containing &quot;lower&quot;, &quot;upper&quot;, and &quot;n_sample&quot; keys/values.</span>
+<span class="sd">            each value should be another dictionary containing "lower", "upper", and "n_sample" keys/values.</span>
 <span class="sd">            These correspond to the lower/upper boundaries and n samples used to generate the plot.</span>
 <span class="sd">            n_samples must be an integer and lower/upper are floats.</span>
 <span class="sd">        output_path: an optional path to save the plots as png files.</span>
 <span class="sd">        return_predictions: if true, returns the dictionary containing the prediction values</span>
 
 <span class="sd">    Returns: optionally returns a dictionary containing the predictions where the key is the feature tested</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
-            <span class="s2">&quot;matplotlib is required to use the visualize_features function&quot;</span>
+            <span class="s2">"matplotlib is required to use the visualize_features function"</span>
         <span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="s2">&quot;visualize_features currently only supports &quot;</span>
-            <span class="s2">&quot;models with a single energy target&quot;</span>
+            <span class="s2">"visualize_features currently only supports "</span>
+            <span class="s2">"models with a single energy target"</span>
         <span class="p">)</span>
 
     <span class="c1"># grab the necessary metadata from the model</span>
@@ -423,7 +423,7 @@ document.write(`
     <span class="p">):</span>
         <span class="n">missing_features</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">feature_units_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">feature_ranges</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;feature range is missing </span><span class="si">{</span><span class="n">missing_features</span><span class="si">}</span><span class="s2"> for model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"feature range is missing </span><span class="si">{</span><span class="n">missing_features</span><span class="si">}</span><span class="s2"> for model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
 
     <span class="c1"># dict for holding the prediction series</span>
@@ -439,9 +439,9 @@ document.write(`
         <span class="n">sample_points</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">feature_name</span> <span class="ow">in</span> <span class="n">feature_units_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
-                <span class="n">feature_ranges</span><span class="p">[</span><span class="n">feature_name</span><span class="p">][</span><span class="s2">&quot;lower&quot;</span><span class="p">],</span>
-                <span class="n">feature_ranges</span><span class="p">[</span><span class="n">feature_name</span><span class="p">][</span><span class="s2">&quot;upper&quot;</span><span class="p">],</span>
-                <span class="n">feature_ranges</span><span class="p">[</span><span class="n">feature_name</span><span class="p">][</span><span class="s2">&quot;n_samples&quot;</span><span class="p">],</span>
+                <span class="n">feature_ranges</span><span class="p">[</span><span class="n">feature_name</span><span class="p">][</span><span class="s2">"lower"</span><span class="p">],</span>
+                <span class="n">feature_ranges</span><span class="p">[</span><span class="n">feature_name</span><span class="p">][</span><span class="s2">"upper"</span><span class="p">],</span>
+                <span class="n">feature_ranges</span><span class="p">[</span><span class="n">feature_name</span><span class="p">][</span><span class="s2">"n_samples"</span><span class="p">],</span>
             <span class="p">)</span>
             <span class="n">sample_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
 
@@ -459,42 +459,42 @@ document.write(`
         <span class="k">try</span><span class="p">:</span>
             <span class="n">energy_pred_df</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">links_df</span><span class="p">)</span>
             <span class="n">energy_pred</span> <span class="o">=</span> <span class="n">energy_pred_df</span><span class="p">[</span><span class="n">energy_name</span><span class="p">]</span>
-            <span class="n">links_df</span><span class="p">[</span><span class="s2">&quot;energy_pred&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy_pred</span>
+            <span class="n">links_df</span><span class="p">[</span><span class="s2">"energy_pred"</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy_pred</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;unable to predict </span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2"> with model &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> due to ERROR:&quot;</span>
+                <span class="sa">f</span><span class="s2">"unable to predict </span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2"> with model "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> due to ERROR:"</span>
             <span class="p">)</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2"> plot for model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> skipped..&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2"> plot for model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> skipped.."</span><span class="p">)</span>
             <span class="k">continue</span>
 
         <span class="c1"># plot the prediction and save the figure</span>
         <span class="n">prediction</span> <span class="o">=</span> <span class="n">links_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">current_feature</span><span class="p">)</span><span class="o">.</span><span class="n">energy_pred</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
         <span class="n">prediction</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">current_units</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">energy_units</span><span class="si">}</span><span class="s2">/100</span><span class="si">{</span><span class="n">distance_units</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">current_units</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">energy_units</span><span class="si">}</span><span class="s2">/100</span><span class="si">{</span><span class="n">distance_units</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="c1"># if an output filepath is specified, save th results instead of displaying them</span>
         <span class="k">if</span> <span class="n">output_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                     <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
-                <span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
-                    <span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">),</span>
-                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;png&quot;</span><span class="p">,</span>
+                    <span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2">.png"</span><span class="p">),</span>
+                    <span class="nb">format</span><span class="o">=</span><span class="s2">"png"</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                 <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;unable to save plot for </span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2"> with &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> due to &quot;</span>
-                    <span class="s2">&quot;ERROR:&quot;</span>
+                    <span class="sa">f</span><span class="s2">"unable to save plot for </span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2"> with "</span>
+                    <span class="sa">f</span><span class="s2">"model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> due to "</span>
+                    <span class="s2">"ERROR:"</span>
                 <span class="p">)</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2"> plot for model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> skipped..&quot;</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">current_feature</span><span class="si">}</span><span class="s2"> plot for model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> skipped.."</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
@@ -511,13 +511,13 @@ document.write(`
 <div class="viewcode-block" id="contour_plot">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.validation.feature_visualization.contour_plot">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">contour_plot</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">:</span> <span class="s2">&quot;Model&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="s2">"Model"</span><span class="p">,</span>
     <span class="n">x_feature</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">y_feature</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">feature_ranges</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">],</span>
     <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    takes a model and generates a contour plot of the two test features:</span>
 <span class="sd">    x_feature and y_feature.</span>
 
@@ -528,21 +528,21 @@ document.write(`
 <span class="sd">        y_feature: one of the features used to generate the energy matrix</span>
 <span class="sd">            and will be the y-axis feature</span>
 <span class="sd">        feature_ranges: a nested dictionary where each key should be a feature name and</span>
-<span class="sd">            each value should be another dictionary containing &quot;lower&quot;, &quot;upper&quot;, and &quot;n_sample&quot; keys/values.</span>
+<span class="sd">            each value should be another dictionary containing "lower", "upper", and "n_sample" keys/values.</span>
 <span class="sd">            These correspond to the lower/upper boundaries and n samples used to generate the plot.</span>
 <span class="sd">            n_samples must be an integer and lower/upper are floats.</span>
 <span class="sd">        output_path: an optional path to save the plot as a png file.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
-            <span class="s2">&quot;matplotlib is required to use the visualize_features function&quot;</span>
+            <span class="s2">"matplotlib is required to use the visualize_features function"</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="s2">&quot;visualize_features currently only supports &quot;</span>
-            <span class="s2">&quot;models with a single energy target&quot;</span>
+            <span class="s2">"visualize_features currently only supports "</span>
+            <span class="s2">"models with a single energy target"</span>
         <span class="p">)</span>
 
     <span class="n">feature_set</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">feature_set</span>
@@ -563,7 +563,7 @@ document.write(`
     <span class="p">):</span>
         <span class="n">missing_features</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">feature_units_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">feature_ranges</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;feature range is missing </span><span class="si">{</span><span class="n">missing_features</span><span class="si">}</span><span class="s2"> for model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"feature range is missing </span><span class="si">{</span><span class="n">missing_features</span><span class="si">}</span><span class="s2"> for model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
 
     <span class="c1"># check that both of the test features are supported by the model</span>
@@ -572,14 +572,14 @@ document.write(`
     <span class="p">):</span>
         <span class="n">missing_features</span> <span class="o">=</span> <span class="p">{</span><span class="n">x_feature</span><span class="p">,</span> <span class="n">y_feature</span><span class="p">}</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">feature_units_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> does not support the feature(s): </span><span class="si">{</span><span class="n">missing_features</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> does not support the feature(s): </span><span class="si">{</span><span class="n">missing_features</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
 
     <span class="n">points</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
-            <span class="n">f</span><span class="p">[</span><span class="s2">&quot;lower&quot;</span><span class="p">],</span>
-            <span class="n">f</span><span class="p">[</span><span class="s2">&quot;upper&quot;</span><span class="p">],</span>
-            <span class="n">f</span><span class="p">[</span><span class="s2">&quot;n_samples&quot;</span><span class="p">],</span>
+            <span class="n">f</span><span class="p">[</span><span class="s2">"lower"</span><span class="p">],</span>
+            <span class="n">f</span><span class="p">[</span><span class="s2">"upper"</span><span class="p">],</span>
+            <span class="n">f</span><span class="p">[</span><span class="s2">"n_samples"</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">feature_ranges</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
     <span class="p">}</span>
@@ -594,7 +594,7 @@ document.write(`
 
     <span class="n">result</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
     <span class="n">energy</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">energy_name</span><span class="p">]</span>
-    <span class="n">df</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
+    <span class="n">df</span><span class="p">[</span><span class="s2">"energy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
 
     <span class="n">energy_matrix</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">y_feature</span><span class="p">,</span> <span class="n">x_feature</span><span class="p">])</span><span class="o">.</span><span class="n">energy</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
 
@@ -603,25 +603,25 @@ document.write(`
     <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
     <span class="n">g</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">energy_matrix</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x_feature</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">feature_units_dict</span><span class="p">[</span><span class="n">x_feature</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">y_feature</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">feature_units_dict</span><span class="p">[</span><span class="n">y_feature</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;energy consumption rate vs </span><span class="si">{</span><span class="n">x_feature</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">y_feature</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">x_feature</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">feature_units_dict</span><span class="p">[</span><span class="n">x_feature</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">y_feature</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">feature_units_dict</span><span class="p">[</span><span class="n">y_feature</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"energy consumption rate vs </span><span class="si">{</span><span class="n">x_feature</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">y_feature</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="c1"># if an output filepath is specified, save th results instead of displaying them</span>
     <span class="k">if</span> <span class="n">output_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
-            <span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
                 <span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">_[</span><span class="si">{</span><span class="n">x_feature</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">y_feature</span><span class="si">}</span><span class="s2">].png&quot;</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">_[</span><span class="si">{</span><span class="n">x_feature</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">y_feature</span><span class="si">}</span><span class="s2">].png"</span>
                 <span class="p">),</span>
-                <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;png&quot;</span><span class="p">,</span>
+                <span class="nb">format</span><span class="o">=</span><span class="s2">"png"</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unable to save contour plot for </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> due to ERROR:&quot;</span><span class="p">)</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unable to save contour plot for </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> due to ERROR:"</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 

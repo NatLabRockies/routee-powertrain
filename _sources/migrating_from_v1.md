@@ -51,8 +51,8 @@ v2 resolves models through a [registry](publishing_a_model.md) using a structure
 
 ```python
 # v2
-model = pt.load_model("toyota/camry_ice/2016/rf_c3326385")       # latest version
-model = pt.load_model("toyota/camry_ice/2016/rf_c3326385/v1")    # pinned version
+model = pt.load_model("toyota/camry_ice/2016/rf_base_fe510e40")       # latest version
+model = pt.load_model("toyota/camry_ice/2016/rf_base_fe510e40/v1")    # pinned version
 ```
 
 Rather than translating names by hand, search the registry:
@@ -72,14 +72,20 @@ v1 packed **every** feature set into a single file and
 picked an estimator at predict time based on which columns you passed. v2 publishes **one model per
 feature set**, so a v1 model typically maps to three v2 models:
 
-| v1 feature set                           | v2 `config_slug` |
-| ---------------------------------------- | ---------------- |
-| `speed_mph`                              | `rf_db8522fb`    |
-| `speed_mph & grade_percent`              | `rf_c3326385`    |
-| `speed_mph & grade_percent & turn_angle` | `rf_b80965c8`    |
+| v1 feature set                           | closest v2 `config_slug` | v2 features                                         |
+| ---------------------------------------- | ------------------------ | --------------------------------------------------- |
+| `speed_mph`                              | `rf_base_67ae9982`       | speed, distance                                     |
+| `speed_mph & grade_percent`              | `rf_base_fe510e40`       | speed, grade, distance                              |
+| `speed_mph & grade_percent & turn_angle` | `rf_base_d8b7ef3c`       | speed, grade, distance, link time/sinuosity/bearing |
 
-Pick the one whose features match the columns you actually have. `rf_c3326385` (speed and grade) is
-the closest match to what v1 usually selected.
+Pick the one whose features match the columns you actually have. `rf_base_fe510e40` (speed and
+grade) is the closest match to what v1 usually selected. Note that every current config takes
+distance as a feature, and names grade `grade_pct` rather than `grade_percent`.
+
+The slug is a hash of the feature set, so it changes when the feature set does. Slugs seen in
+older documentation (`rf_c3326385`, `rf_db8522fb`, `rf_b80965c8`) are what
+[`convert-v1`](#4-convert-your-own-v1-model-files) mints for a converted v1 feature set; they are
+not the slugs the current published library uses.
 
 Other slug patterns you may see:
 

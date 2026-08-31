@@ -368,7 +368,7 @@ document.write(`
 <div class="viewcode-block" id="NGBoostTrainer">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.trainers.ngboost_trainer.NGBoostTrainer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">NGBoostTrainer</span><span class="p">(</span><span class="n">Trainer</span><span class="p">):</span>
-    <span class="n">architecture_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ngboost&quot;</span>
+    <span class="n">architecture_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ngboost"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -396,9 +396,9 @@ document.write(`
         <span class="n">validation_features</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">validation_target</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Estimator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Uses a ngboost model to predict the energy rate values</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">ng</span> <span class="o">=</span> <span class="n">NGBRegressor</span><span class="p">(</span>
             <span class="n">n_estimators</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_estimators</span><span class="p">,</span>
             <span class="n">Dist</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span>

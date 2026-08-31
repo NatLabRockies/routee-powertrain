@@ -437,18 +437,18 @@ For example, when a vehicle starts a trip in cold weather and has been sitting o
 </ul>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tesla</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;tesla/model_3_bev/2022/rf_c3326385/v1&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tesla</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"tesla/model_3_bev/2022/rf_base_fe510e40/v1"</span><span class="p">)</span>
 <span class="n">tesla_with_temp_steady</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span>
-    <span class="s2">&quot;tesla/model_3_bev/2022/rf_steady_thermal_ab1db342/v1&quot;</span>
+    <span class="s2">"tesla/model_3_bev/2022/rf_steady_thermal_ab1db342/v1"</span>
 <span class="p">)</span>
 <span class="n">tesla_with_temp_transient</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span>
-    <span class="s2">&quot;tesla/model_3_bev/2022/rf_transient_thermal_ab1db342/v1&quot;</span>
+    <span class="s2">"tesla/model_3_bev/2022/rf_transient_thermal_ab1db342/v1"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
 </pre></div>
 </div>
@@ -458,11 +458,11 @@ For example, when a vehicle starts a trip in cold weather and has been sitting o
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sample_route</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_sample_route</span><span class="p">()</span>
-<span class="n">sample_route</span><span class="p">[</span><span class="s2">&quot;time_minutes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">sample_route</span><span class="p">[</span><span class="s2">&quot;distance&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">sample_route</span><span class="p">[</span><span class="s2">&quot;speed_mph&quot;</span><span class="p">]</span>
+<span class="n">sample_route</span><span class="p">[</span><span class="s2">"time_minutes"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">sample_route</span><span class="p">[</span><span class="s2">"distance"</span><span class="p">]</span> <span class="o">/</span> <span class="n">sample_route</span><span class="p">[</span><span class="s2">"speed_mph"</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">*</span> <span class="mi">60</span>
-<span class="n">sample_route</span><span class="p">[</span><span class="s2">&quot;cummulative_time_minutes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample_route</span><span class="p">[</span><span class="s2">&quot;time_minutes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
-<span class="n">sample_route</span><span class="p">[</span><span class="s2">&quot;cummulative_distance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample_route</span><span class="p">[</span><span class="s2">&quot;distance&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+<span class="n">sample_route</span><span class="p">[</span><span class="s2">"cummulative_time_minutes"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample_route</span><span class="p">[</span><span class="s2">"time_minutes"</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+<span class="n">sample_route</span><span class="p">[</span><span class="s2">"cummulative_distance"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample_route</span><span class="p">[</span><span class="s2">"distance"</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -471,10 +471,10 @@ For example, when a vehicle starts a trip in cold weather and has been sitting o
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sample_route_72F</span> <span class="o">=</span> <span class="n">sample_route</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="n">sample_route_72F</span><span class="p">[</span><span class="s2">&quot;ambient_temp_f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">72</span>
+<span class="n">sample_route_72F</span><span class="p">[</span><span class="s2">"ambient_temp_f"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">72</span>
 
 <span class="n">sample_route_32F</span> <span class="o">=</span> <span class="n">sample_route</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="n">sample_route_32F</span><span class="p">[</span><span class="s2">&quot;ambient_temp_f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">sample_route_32F</span><span class="p">[</span><span class="s2">"ambient_temp_f"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">32</span>
 </pre></div>
 </div>
 </div>
@@ -483,10 +483,10 @@ For example, when a vehicle starts a trip in cold weather and has been sitting o
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sample_route_32F_transient</span> <span class="o">=</span> <span class="n">sample_route_32F</span><span class="p">[</span>
-    <span class="n">sample_route_32F</span><span class="p">[</span><span class="s2">&quot;cummulative_time_minutes&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">5</span>
+    <span class="n">sample_route_32F</span><span class="p">[</span><span class="s2">"cummulative_time_minutes"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">5</span>
 <span class="p">]</span>
 <span class="n">sample_route_32F_steady</span> <span class="o">=</span> <span class="n">sample_route_32F</span><span class="p">[</span>
-    <span class="n">sample_route_32F</span><span class="p">[</span><span class="s2">&quot;cummulative_time_minutes&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">5</span>
+    <span class="n">sample_route_32F</span><span class="p">[</span><span class="s2">"cummulative_time_minutes"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">5</span>
 <span class="p">]</span>
 </pre></div>
 </div>
@@ -495,7 +495,12 @@ For example, when a vehicle starts a trip in cold weather and has been sitting o
 <p>Predict energy consumption using the different models and ambient temperatures. Each model uses its own configured feature set, so we just need to make sure the input DataFrame contains the columns the model expects.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">energy</span> <span class="o">=</span> <span class="n">tesla</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sample_route</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The base configs label grade and distance differently from the thermal</span>
+<span class="c1"># configs, and emit "electric_kwh" rather than "kwh".</span>
+<span class="n">sample_route_base</span> <span class="o">=</span> <span class="n">sample_route</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"grade_percent"</span><span class="p">:</span> <span class="s2">"grade_pct"</span><span class="p">,</span> <span class="s2">"distance"</span><span class="p">:</span> <span class="s2">"distance_mi"</span><span class="p">}</span>
+<span class="p">)</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">tesla</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sample_route_base</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"electric_kwh"</span><span class="p">:</span> <span class="s2">"kwh"</span><span class="p">})</span>
 <span class="n">energy_with_temp_72F</span> <span class="o">=</span> <span class="n">tesla_with_temp_steady</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sample_route_72F</span><span class="p">)</span>
 <span class="n">energy_with_temp_32F_transient</span> <span class="o">=</span> <span class="n">tesla_with_temp_transient</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
     <span class="n">sample_route_32F_transient</span>
@@ -511,35 +516,35 @@ For example, when a vehicle starts a trip in cold weather and has been sitting o
 <p>Now, we can compare the energy consumption results.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">energy</span><span class="p">[</span><span class="s2">&quot;cummulative_energy_kwh&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span><span class="p">[</span><span class="s2">&quot;kwh&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
-<span class="n">energy_with_temp_72F</span><span class="p">[</span><span class="s2">&quot;cummulative_energy_kwh&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy_with_temp_72F</span><span class="p">[</span><span class="s2">&quot;kwh&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
-<span class="n">energy_with_temp_32F</span><span class="p">[</span><span class="s2">&quot;cummulative_energy_kwh&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy_with_temp_32F</span><span class="p">[</span><span class="s2">&quot;kwh&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">energy</span><span class="p">[</span><span class="s2">"cummulative_energy_kwh"</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span><span class="p">[</span><span class="s2">"kwh"</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+<span class="n">energy_with_temp_72F</span><span class="p">[</span><span class="s2">"cummulative_energy_kwh"</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy_with_temp_72F</span><span class="p">[</span><span class="s2">"kwh"</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+<span class="n">energy_with_temp_32F</span><span class="p">[</span><span class="s2">"cummulative_energy_kwh"</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy_with_temp_32F</span><span class="p">[</span><span class="s2">"kwh"</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">sample_route</span><span class="p">[</span><span class="s2">&quot;cummulative_distance&quot;</span><span class="p">],</span>
-    <span class="n">energy</span><span class="p">[</span><span class="s2">&quot;cummulative_energy_kwh&quot;</span><span class="p">],</span>
-    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Tesla without Temperature&quot;</span><span class="p">,</span>
+    <span class="n">sample_route</span><span class="p">[</span><span class="s2">"cummulative_distance"</span><span class="p">],</span>
+    <span class="n">energy</span><span class="p">[</span><span class="s2">"cummulative_energy_kwh"</span><span class="p">],</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">"Tesla without Temperature"</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">sample_route</span><span class="p">[</span><span class="s2">&quot;cummulative_distance&quot;</span><span class="p">],</span>
-    <span class="n">energy_with_temp_72F</span><span class="p">[</span><span class="s2">&quot;cummulative_energy_kwh&quot;</span><span class="p">],</span>
-    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Tesla with Temperature 72F&quot;</span><span class="p">,</span>
+    <span class="n">sample_route</span><span class="p">[</span><span class="s2">"cummulative_distance"</span><span class="p">],</span>
+    <span class="n">energy_with_temp_72F</span><span class="p">[</span><span class="s2">"cummulative_energy_kwh"</span><span class="p">],</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">"Tesla with Temperature 72F"</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">sample_route</span><span class="p">[</span><span class="s2">&quot;cummulative_distance&quot;</span><span class="p">],</span>
-    <span class="n">energy_with_temp_32F</span><span class="p">[</span><span class="s2">&quot;cummulative_energy_kwh&quot;</span><span class="p">],</span>
-    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Tesla with Temperature 32F&quot;</span><span class="p">,</span>
+    <span class="n">sample_route</span><span class="p">[</span><span class="s2">"cummulative_distance"</span><span class="p">],</span>
+    <span class="n">energy_with_temp_32F</span><span class="p">[</span><span class="s2">"cummulative_energy_kwh"</span><span class="p">],</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">"Tesla with Temperature 32F"</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Cumulative Distance (miles)&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Cumulative Energy (kWh)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">"Cumulative Distance (miles)"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">"Cumulative Energy (kWh)"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.legend.Legend at 0x7f251079cb80&gt;
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.legend.Legend at 0x7f44d7c3f3a0&gt;
 </pre></div>
 </div>
-<img alt="../_images/122dea0f3d233d88ac6754c111f6f10d0f977d8dfd0c65268bf35ca7142426ae.png" src="../_images/122dea0f3d233d88ac6754c111f6f10d0f977d8dfd0c65268bf35ca7142426ae.png" />
+<img alt="../_images/6607e231b5fd4c298530a7b1f157e4794a3ce2b5329ced5bc20f17ec997262ef.png" src="../_images/6607e231b5fd4c298530a7b1f157e4794a3ce2b5329ced5bc20f17ec997262ef.png" />
 </div>
 </div>
 <p>Notice how the energy consumption for the 32°F route is higher than the other two scenarios, reflecting the increased energy demand in colder temperatures.</p>
@@ -553,17 +558,17 @@ We'll load the Nissan Leaf and Chevrolet Bolt models and compare their energy co
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nissan_leaf_steady</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span>
-    <span class="s2">&quot;nissan/leaf_30_kwh_bev/2016/rf_steady_thermal_ab1db342/v1&quot;</span>
+    <span class="s2">"nissan/leaf_30_kwh_bev/2016/rf_steady_thermal_ab1db342/v1"</span>
 <span class="p">)</span>
 <span class="n">nissan_leaf_transient</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span>
-    <span class="s2">&quot;nissan/leaf_30_kwh_bev/2016/rf_transient_thermal_ab1db342/v1&quot;</span>
+    <span class="s2">"nissan/leaf_30_kwh_bev/2016/rf_transient_thermal_ab1db342/v1"</span>
 <span class="p">)</span>
 
 <span class="n">chevy_bolt_steady</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span>
-    <span class="s2">&quot;chevrolet/bolt_bev/2020/rf_steady_thermal_ab1db342/v1&quot;</span>
+    <span class="s2">"chevrolet/bolt_bev/2020/rf_steady_thermal_ab1db342/v1"</span>
 <span class="p">)</span>
 <span class="n">chevy_bolt_transient</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span>
-    <span class="s2">&quot;chevrolet/bolt_bev/2020/rf_transient_thermal_ab1db342/v1&quot;</span>
+    <span class="s2">"chevrolet/bolt_bev/2020/rf_transient_thermal_ab1db342/v1"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -578,20 +583,20 @@ We'll use steady-state models for this comparison.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Predict energy for all vehicles at different temperatures</span>
 <span class="n">temperatures</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">72</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">110</span><span class="p">]</span>
 <span class="n">vehicles_data</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;Tesla Model 3 RWD&quot;</span><span class="p">:</span> <span class="n">tesla_with_temp_steady</span><span class="p">,</span>
-    <span class="s2">&quot;Nissan Leaf 30 kWh&quot;</span><span class="p">:</span> <span class="n">nissan_leaf_steady</span><span class="p">,</span>
-    <span class="s2">&quot;Chevrolet Bolt EV&quot;</span><span class="p">:</span> <span class="n">chevy_bolt_steady</span><span class="p">,</span>
+    <span class="s2">"Tesla Model 3 RWD"</span><span class="p">:</span> <span class="n">tesla_with_temp_steady</span><span class="p">,</span>
+    <span class="s2">"Nissan Leaf 30 kWh"</span><span class="p">:</span> <span class="n">nissan_leaf_steady</span><span class="p">,</span>
+    <span class="s2">"Chevrolet Bolt EV"</span><span class="p">:</span> <span class="n">chevy_bolt_steady</span><span class="p">,</span>
 <span class="p">}</span>
 
 <span class="n">total_energy_by_temp</span> <span class="o">=</span> <span class="p">{</span><span class="n">vehicle</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">vehicle</span> <span class="ow">in</span> <span class="n">vehicles_data</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
 
 <span class="k">for</span> <span class="n">temp</span> <span class="ow">in</span> <span class="n">temperatures</span><span class="p">:</span>
     <span class="n">route_temp</span> <span class="o">=</span> <span class="n">sample_route</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">route_temp</span><span class="p">[</span><span class="s2">&quot;ambient_temp_f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span>
+    <span class="n">route_temp</span><span class="p">[</span><span class="s2">"ambient_temp_f"</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span>
 
     <span class="k">for</span> <span class="n">vehicle_name</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">vehicles_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">energy_pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">route_temp</span><span class="p">)</span>
-        <span class="n">total_energy_by_temp</span><span class="p">[</span><span class="n">vehicle_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">energy_pred</span><span class="p">[</span><span class="s2">&quot;kwh&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="n">total_energy_by_temp</span><span class="p">[</span><span class="n">vehicle_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">energy_pred</span><span class="p">[</span><span class="s2">"kwh"</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
 
 <span class="c1"># Create temperature sensitivity comparison plot</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
@@ -599,15 +604,15 @@ We'll use steady-state models for this comparison.</p>
     <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
         <span class="n">temperatures</span><span class="p">,</span>
         <span class="n">energies</span><span class="p">,</span>
-        <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+        <span class="n">marker</span><span class="o">=</span><span class="s2">"o"</span><span class="p">,</span>
         <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">markersize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="n">vehicle_name</span><span class="p">,</span>
     <span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Ambient Temperature (°F)&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Total Energy Consumption (kWh)&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Temperature Sensitivity Comparison Across Vehicles&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">"Ambient Temperature (°F)"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">"Total Energy Consumption (kWh)"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">"Temperature Sensitivity Comparison Across Vehicles"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
 </pre></div>

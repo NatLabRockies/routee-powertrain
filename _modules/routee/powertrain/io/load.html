@@ -373,9 +373,9 @@ document.write(`
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.io.load.list_available_models">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">list_available_models</span><span class="p">(</span>
     <span class="n">registry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ModelRegistry</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">version_strategy</span><span class="p">:</span> <span class="n">VersionStrategy</span> <span class="o">=</span> <span class="s2">&quot;latest&quot;</span><span class="p">,</span>
+    <span class="n">version_strategy</span><span class="p">:</span> <span class="n">VersionStrategy</span> <span class="o">=</span> <span class="s2">"latest"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ModelId</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Returns a list of model identifiers available in the registry.</span>
 
 <span class="sd">    This is a lightweight operation that returns only the model paths</span>
@@ -385,12 +385,12 @@ document.write(`
 
 <span class="sd">    Args:</span>
 <span class="sd">        registry: a ModelRegistry instance; defaults to get_default_registry()</span>
-<span class="sd">        version_strategy: ``&quot;latest&quot;`` (default) returns only the highest</span>
-<span class="sd">            version per (make, model, year, config_slug) group; ``&quot;all&quot;``</span>
+<span class="sd">        version_strategy: ``"latest"`` (default) returns only the highest</span>
+<span class="sd">            version per (make, model, year, config_slug) group; ``"all"``</span>
 <span class="sd">            returns every versioned identifier.</span>
 
 <span class="sd">    Returns: list of ModelId matching the strategy</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">registry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.registry.default</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_registry</span>
 
@@ -415,13 +415,13 @@ document.write(`
     <span class="n">trim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">model_digest</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">version_strategy</span><span class="p">:</span> <span class="n">VersionStrategy</span> <span class="o">=</span> <span class="s2">&quot;latest&quot;</span><span class="p">,</span>
+    <span class="n">version_strategy</span><span class="p">:</span> <span class="n">VersionStrategy</span> <span class="o">=</span> <span class="s2">"latest"</span><span class="p">,</span>
     <span class="n">custom_filters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">ModelInfo</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">registry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ModelRegistry</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">fuzzy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">fuzzy_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">80</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ModelInfo</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Query available pretrained models from the registry with optional filters.</span>
 
 <span class="sd">    Returns full metadata and error metrics for each matching model.</span>
@@ -430,26 +430,26 @@ document.write(`
 <span class="sd">    Args:</span>
 <span class="sd">        make: filter by vehicle make</span>
 <span class="sd">        model: filter by vehicle model — matches the bare metadata model name</span>
-<span class="sd">            (e.g. &quot;camry&quot;) or the derived vehicle_slug (e.g. &quot;camry_ice&quot;)</span>
+<span class="sd">            (e.g. "camry") or the derived vehicle_slug (e.g. "camry_ice")</span>
 <span class="sd">        year: filter by model year</span>
-<span class="sd">        config_slug: filter by config slug (e.g. &quot;rf_default&quot;, &quot;cnn_5link&quot;)</span>
+<span class="sd">        config_slug: filter by config slug (e.g. "rf_default", "cnn_5link")</span>
 <span class="sd">        feature_names: filter to models whose feature set contains every listed</span>
 <span class="sd">            feature column (subset match, exact names)</span>
-<span class="sd">        powertrain_type: filter by powertrain type (e.g. &quot;ICE&quot;, &quot;BEV&quot;, &quot;HEV&quot;)</span>
-<span class="sd">        fuel_type: filter by fuel type (e.g. &quot;GASOLINE&quot;, &quot;DIESEL&quot;, &quot;ELECTRICITY&quot;)</span>
-<span class="sd">        drivetrain: filter by drivetrain (e.g. &quot;FWD&quot;, &quot;RWD&quot;, &quot;AWD&quot;)</span>
-<span class="sd">        engine: filter by engine specification (e.g. &quot;4cyl&quot;, &quot;2.0tdi&quot;)</span>
-<span class="sd">        trim: filter by trim level (e.g. &quot;sport&quot;, &quot;active&quot;)</span>
+<span class="sd">        powertrain_type: filter by powertrain type (e.g. "ICE", "BEV", "HEV")</span>
+<span class="sd">        fuel_type: filter by fuel type (e.g. "GASOLINE", "DIESEL", "ELECTRICITY")</span>
+<span class="sd">        drivetrain: filter by drivetrain (e.g. "FWD", "RWD", "AWD")</span>
+<span class="sd">        engine: filter by engine specification (e.g. "4cyl", "2.0tdi")</span>
+<span class="sd">        trim: filter by trim level (e.g. "sport", "active")</span>
 <span class="sd">        version: pin results to an exact version (e.g. 2). When set,</span>
 <span class="sd">            ``version_strategy`` is ignored.</span>
 <span class="sd">        model_digest: pin results to an exact instance identity — the</span>
-<span class="sd">            ``model_digest`` from a model&#39;s ``metadata.json`` (with or without</span>
+<span class="sd">            ``model_digest`` from a model's ``metadata.json`` (with or without</span>
 <span class="sd">            the ``sha256:`` prefix; always matched exactly). Use this to</span>
 <span class="sd">            resolve a model file in hand back to its registry entry. When set,</span>
 <span class="sd">            ``version_strategy`` is ignored.</span>
 <span class="sd">        version_strategy: how to collapse multiple versions of the same</span>
-<span class="sd">            model. ``&quot;latest&quot;`` (default) keeps only the highest version</span>
-<span class="sd">            per (make, model, year, config_slug) group; ``&quot;all&quot;`` returns</span>
+<span class="sd">            model. ``"latest"`` (default) keeps only the highest version</span>
+<span class="sd">            per (make, model, year, config_slug) group; ``"all"`` returns</span>
 <span class="sd">            every version. Ignored when ``version`` is specified.</span>
 <span class="sd">        custom_filters: optional list of callables that accept a ModelInfo</span>
 <span class="sd">            and return True to keep the model or False to exclude it.</span>
@@ -459,7 +459,7 @@ document.write(`
 <span class="sd">        fuzzy_threshold: minimum score (0–100) for a fuzzy match (default 80)</span>
 
 <span class="sd">    Returns: list of ModelInfo with full metadata and error metrics</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">registry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.registry.default</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_registry</span>
 
@@ -487,37 +487,37 @@ document.write(`
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_legacy_model_name_message</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the guidance shown when a caller passes a v1 flat model name.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">):</span>
-        <span class="c1"># A .json that got this far doesn&#39;t exist on disk, but the caller</span>
+<span class="w">    </span><span class="sd">"""Build the guidance shown when a caller passes a v1 flat model name."""</span>
+    <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".json"</span><span class="p">):</span>
+        <span class="c1"># A .json that got this far doesn't exist on disk, but the caller</span>
         <span class="c1"># clearly meant a file — explain the format change, not the id grammar.</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.io.archive</span><span class="w"> </span><span class="kn">import</span> <span class="n">_unsupported_format_message</span>
 
         <span class="k">return</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_unsupported_format_message</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">name</span><span class="p">))</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">(No file exists at </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.)&quot;</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_unsupported_format_message</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">name</span><span class="p">))</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">(No file exists at </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.)"</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; is not a valid model id. It looks like a routee-powertrain v1 &quot;</span>
-        <span class="s2">&quot;model name; v1 names were replaced in v2 by structured ids of the form &quot;</span>
-        <span class="s2">&quot;&#39;&lt;make&gt;/&lt;vehicle_slug&gt;/&lt;year&gt;/&lt;config_slug&gt;&#39;.</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;To find the v2 equivalent, search the registry:</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s1">&#39;    pt.query_available_models(make=&quot;toyota&quot;, model=&quot;camry&quot;, year=2016)</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;Note that one v1 model usually maps to several v2 models — v1 packed &quot;</span>
-        <span class="s2">&quot;every feature set into one file, while v2 publishes one model per &quot;</span>
-        <span class="s2">&quot;feature set — so pick the one whose features match your data.</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;If this is your own v1 .json model file, convert it first:</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;    routee-powertrain convert-v1 MyModel.json out/ &quot;</span>
-        <span class="s2">&quot;--make toyota --model camry --year 2016</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;See </span><span class="si">{</span><span class="n">MIGRATION_GUIDE_URL</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' is not a valid model id. It looks like a routee-powertrain v1 "</span>
+        <span class="s2">"model name; v1 names were replaced in v2 by structured ids of the form "</span>
+        <span class="s2">"'&lt;make&gt;/&lt;vehicle_slug&gt;/&lt;year&gt;/&lt;config_slug&gt;'.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"To find the v2 equivalent, search the registry:</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s1">'    pt.query_available_models(make="toyota", model="camry", year=2016)</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"Note that one v1 model usually maps to several v2 models — v1 packed "</span>
+        <span class="s2">"every feature set into one file, while v2 publishes one model per "</span>
+        <span class="s2">"feature set — so pick the one whose features match your data.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"If this is your own v1 .json model file, convert it first:</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"    routee-powertrain convert-v1 MyModel.json out/ "</span>
+        <span class="s2">"--make toyota --model camry --year 2016</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="sa">f</span><span class="s2">"See </span><span class="si">{</span><span class="n">MIGRATION_GUIDE_URL</span><span class="si">}</span><span class="s2">"</span>
     <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_load_target</span><span class="p">(</span><span class="n">name_or_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">registry</span><span class="p">:</span> <span class="n">ModelRegistry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelId</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve a string model identifier to a concrete ModelId.</span>
+<span class="w">    </span><span class="sd">"""Resolve a string model identifier to a concrete ModelId.</span>
 
 <span class="sd">    Accepts two forms:</span>
 
@@ -527,8 +527,8 @@ document.write(`
 
 <span class="sd">    Raises ``ValueError`` with an actionable message on unknown shapes,</span>
 <span class="sd">    zero matches, or ambiguous matches.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">name_or_path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="p">]</span>
+<span class="sd">    """</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">name_or_path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ModelId</span><span class="o">.</span><span class="n">from_path</span><span class="p">(</span><span class="n">name_or_path</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
@@ -541,30 +541,30 @@ document.write(`
             <span class="n">year</span><span class="o">=</span><span class="n">year_filter</span><span class="p">,</span>
             <span class="n">config_slug</span><span class="o">=</span><span class="n">config_slug</span><span class="p">,</span>
             <span class="n">fuzzy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">version_strategy</span><span class="o">=</span><span class="s2">&quot;latest&quot;</span><span class="p">,</span>
+            <span class="n">version_strategy</span><span class="o">=</span><span class="s2">"latest"</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="c1"># If the path carries a year range, query() can&#39;t filter on it</span>
+        <span class="c1"># If the path carries a year range, query() can't filter on it</span>
         <span class="c1"># via year_contains (which only accepts int), so drop any hits</span>
-        <span class="c1"># whose stored year doesn&#39;t exactly match the requested shape.</span>
+        <span class="c1"># whose stored year doesn't exactly match the requested shape.</span>
         <span class="n">hits</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hits</span> <span class="k">if</span> <span class="n">h</span><span class="o">.</span><span class="n">model_id</span><span class="o">.</span><span class="n">year</span> <span class="o">==</span> <span class="n">parsed_year</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">hits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">model_id</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">hits</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No model found for &#39;</span><span class="si">{</span><span class="n">name_or_path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No model found for '</span><span class="si">{</span><span class="n">name_or_path</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Ambiguous partial id &#39;</span><span class="si">{</span><span class="n">name_or_path</span><span class="si">}</span><span class="s2">&#39; — matched </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span><span class="si">}</span><span class="s2"> models: &quot;</span>
-            <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">model_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hits</span><span class="p">)</span>
+            <span class="sa">f</span><span class="s2">"Ambiguous partial id '</span><span class="si">{</span><span class="n">name_or_path</span><span class="si">}</span><span class="s2">' — matched </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span><span class="si">}</span><span class="s2"> models: "</span>
+            <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">model_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hits</span><span class="p">)</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="c1"># Every valid v2 id has at least three separators, so a slash-free</span>
         <span class="c1"># string is almost certainly a flat v1 model name (e.g.</span>
-        <span class="c1"># &quot;2016_TOYOTA_Camry_4cyl_2WD&quot;). Say so instead of describing a grammar</span>
-        <span class="c1"># the caller wasn&#39;t trying to use.</span>
+        <span class="c1"># "2016_TOYOTA_Camry_4cyl_2WD"). Say so instead of describing a grammar</span>
+        <span class="c1"># the caller wasn't trying to use.</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">_legacy_model_name_message</span><span class="p">(</span><span class="n">name_or_path</span><span class="p">))</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Could not parse &#39;</span><span class="si">{</span><span class="n">name_or_path</span><span class="si">}</span><span class="s2">&#39;. Expected either &quot;</span>
-        <span class="s2">&quot;&#39;&lt;make&gt;/&lt;vehicle_slug&gt;/&lt;year&gt;/&lt;config_slug&gt;/v&lt;N&gt;&#39; (explicit version) &quot;</span>
-        <span class="s2">&quot;or &#39;&lt;make&gt;/&lt;vehicle_slug&gt;/&lt;year&gt;/&lt;config_slug&gt;&#39; (latest).&quot;</span>
+        <span class="sa">f</span><span class="s2">"Could not parse '</span><span class="si">{</span><span class="n">name_or_path</span><span class="si">}</span><span class="s2">'. Expected either "</span>
+        <span class="s2">"'&lt;make&gt;/&lt;vehicle_slug&gt;/&lt;year&gt;/&lt;config_slug&gt;/v&lt;N&gt;' (explicit version) "</span>
+        <span class="s2">"or '&lt;make&gt;/&lt;vehicle_slug&gt;/&lt;year&gt;/&lt;config_slug&gt;' (latest)."</span>
     <span class="p">)</span>
 
 
@@ -574,7 +574,7 @@ document.write(`
     <span class="n">name_or_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">ModelId</span><span class="p">],</span>
     <span class="n">registry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ModelRegistry</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Load a pretrained model.</span>
 
 <span class="sd">    Supports two loading modes:</span>
@@ -597,30 +597,30 @@ document.write(`
 <span class="sd">    &gt;&gt;&gt; import routee.powertrain as pt</span>
 <span class="sd">    &gt;&gt;&gt;</span>
 <span class="sd">    &gt;&gt;&gt; # load from a directory</span>
-<span class="sd">    &gt;&gt;&gt; model = pt.load_model(&quot;path/to/my_model/&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; model = pt.load_model("path/to/my_model/")</span>
 <span class="sd">    &gt;&gt;&gt;</span>
 <span class="sd">    &gt;&gt;&gt; # load from a zip</span>
-<span class="sd">    &gt;&gt;&gt; model = pt.load_model(&quot;MyModel.zip&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; model = pt.load_model("MyModel.zip")</span>
 <span class="sd">    &gt;&gt;&gt;</span>
 <span class="sd">    &gt;&gt;&gt; # load via registry</span>
 <span class="sd">    &gt;&gt;&gt; from routee.powertrain.registry import ModelId</span>
-<span class="sd">    &gt;&gt;&gt; mid = ModelId(&quot;toyota&quot;, &quot;camry&quot;, 2016, &quot;rf_default&quot;, 1)</span>
+<span class="sd">    &gt;&gt;&gt; mid = ModelId("toyota", "camry", 2016, "rf_default", 1)</span>
 <span class="sd">    &gt;&gt;&gt; model = pt.load_model(mid)</span>
 <span class="sd">    &gt;&gt;&gt;</span>
 <span class="sd">    &gt;&gt;&gt; # explicit version</span>
-<span class="sd">    &gt;&gt;&gt; model = pt.load_model(&quot;toyota/camry/2016/rf_default/v1&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; model = pt.load_model("toyota/camry/2016/rf_default/v1")</span>
 <span class="sd">    &gt;&gt;&gt;</span>
 <span class="sd">    &gt;&gt;&gt; # latest version (no version segment)</span>
-<span class="sd">    &gt;&gt;&gt; model = pt.load_model(&quot;toyota/camry/2016/rf_default&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; model = pt.load_model("toyota/camry/2016/rf_default")</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># First assume the model is local</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name_or_path</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">name_or_path</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">Model</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 
-    <span class="c1"># If not found locally, try loading from registry if it&#39;s a ModelId or a valid ModelId string</span>
+    <span class="c1"># If not found locally, try loading from registry if it's a ModelId or a valid ModelId string</span>
     <span class="k">if</span> <span class="n">registry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.registry.default</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_registry</span>
 
@@ -634,8 +634,8 @@ document.write(`
         <span class="k">return</span> <span class="n">registry</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">mid</span><span class="p">)</span>
 
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Could not load model: </span><span class="si">{</span><span class="n">name_or_path</span><span class="si">}</span><span class="s2">. &quot;</span>
-        <span class="s2">&quot;Provide a valid local file/directory or a valid ModelId/string with a registry.&quot;</span>
+        <span class="sa">f</span><span class="s2">"Could not load model: </span><span class="si">{</span><span class="n">name_or_path</span><span class="si">}</span><span class="s2">. "</span>
+        <span class="s2">"Provide a valid local file/directory or a valid ModelId/string with a registry."</span>
     <span class="p">)</span></div>
 
 
@@ -643,25 +643,25 @@ document.write(`
 <div class="viewcode-block" id="load_sample_route">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.io.load.load_sample_route">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">load_sample_route</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    A helper function to load sample routes</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        name: The name of the route. Defaults to &quot;sample_route&quot;.</span>
+<span class="sd">        name: The name of the route. Defaults to "sample_route".</span>
 
 <span class="sd">    Returns: a pandas DataFrame representing the route</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">routes</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;sample_route&quot;</span><span class="p">:</span> <span class="n">sample_route_dir</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;sample_route.csv&quot;</span><span class="p">,</span>
+        <span class="s2">"sample_route"</span><span class="p">:</span> <span class="n">sample_route_dir</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"sample_route.csv"</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;sample_route&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">"sample_route"</span>
 
     <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">routes</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;cannot find route with name: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">; try one of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">routes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"cannot find route with name: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">; try one of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">routes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
 
     <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">routes</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>

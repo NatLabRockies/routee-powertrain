@@ -371,16 +371,16 @@ document.write(`
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="n">DEFAULT_LOOKBACK</span> <span class="o">=</span> <span class="mi">5</span>
-<span class="n">DEFAULT_GROUPING_COLUMN</span> <span class="o">=</span> <span class="s2">&quot;route_id&quot;</span>
+<span class="n">DEFAULT_GROUPING_COLUMN</span> <span class="o">=</span> <span class="s2">"route_id"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_auto_n_conv_layers</span><span class="p">(</span><span class="n">lookback</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pick the most VALID-padded conv layers that fit a given lookback.</span>
+<span class="w">    </span><span class="sd">"""Pick the most VALID-padded conv layers that fit a given lookback.</span>
 
 <span class="sd">    Each kernel-K VALID conv shrinks the sequence by K-1. We stack until the</span>
 <span class="sd">    next layer would not have enough input. This makes the receptive field at</span>
 <span class="sd">    the head match (or as close as possible to) the lookback window.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">n</span> <span class="o">=</span> <span class="n">lookback</span>
     <span class="n">layers</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">while</span> <span class="n">n</span> <span class="o">-</span> <span class="n">kernel_size</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
@@ -392,15 +392,15 @@ document.write(`
 <div class="viewcode-block" id="CNNTrainer">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.trainers.cnn.CNNTrainer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CNNTrainer</span><span class="p">(</span><span class="n">Trainer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Train a 1D CNN over link sequences with a fixed lookback window.</span>
+<span class="w">    </span><span class="sd">"""Train a 1D CNN over link sequences with a fixed lookback window.</span>
 
 <span class="sd">    The training input dataframe must contain the grouping column</span>
-<span class="sd">    (default ``route_id``) so training windows don&#39;t cross route boundaries.</span>
+<span class="sd">    (default ``route_id``) so training windows don't cross route boundaries.</span>
 <span class="sd">    The trained model is exported to ONNX for runtime use, keeping</span>
 <span class="sd">    ``torch`` out of the runtime dependency set.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">architecture_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cnn&quot;</span>
+    <span class="n">architecture_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"cnn"</span>
     <span class="n">default_test_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>
     <span class="n">default_validation_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>
 
@@ -416,7 +416,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">lookback</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_LOOKBACK</span><span class="p">,</span>
         <span class="n">grouping_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_GROUPING_COLUMN</span><span class="p">,</span>
-        <span class="n">pad_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;zero&quot;</span><span class="p">,</span> <span class="s2">&quot;repeat_first&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;zero&quot;</span><span class="p">,</span>
+        <span class="n">pad_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"zero"</span><span class="p">,</span> <span class="s2">"repeat_first"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"zero"</span><span class="p">,</span>
         <span class="n">hidden_channels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span>
         <span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
         <span class="n">n_conv_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -471,23 +471,23 @@ document.write(`
             <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
         <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
-                <span class="s2">&quot;CNNTrainer requires torch. Install via pip install routee.powertrain[pytorch]&quot;</span>
+                <span class="s2">"CNNTrainer requires torch. Install via pip install routee.powertrain[pytorch]"</span>
             <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">grouping_column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">features</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;CNNTrainer requires a &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">grouping_column</span><span class="si">}</span><span class="s2">&#39; column in the &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;training features so windows can be built per route.&quot;</span>
+                <span class="sa">f</span><span class="s2">"CNNTrainer requires a '</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">grouping_column</span><span class="si">}</span><span class="s2">' column in the "</span>
+                <span class="sa">f</span><span class="s2">"training features so windows can be built per route."</span>
             <span class="p">)</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">_pick_device</span><span class="p">(</span><span class="n">override</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;torch.device&quot;</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_pick_device</span><span class="p">(</span><span class="n">override</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"torch.device"</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">override</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">override</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-                <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-                <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;mps&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"mps"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cpu"</span><span class="p">)</span>
 
         <span class="n">device</span> <span class="o">=</span> <span class="n">_pick_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
@@ -516,7 +516,7 @@ document.write(`
             <span class="k">for</span> <span class="n">idx_array</span> <span class="ow">in</span> <span class="n">groups</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="n">idx_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">idx_array</span><span class="p">)</span>
                 <span class="n">group_features</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="n">idx_array</span><span class="p">]</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_strategy</span> <span class="o">==</span> <span class="s2">&quot;repeat_first&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_strategy</span> <span class="o">==</span> <span class="s2">"repeat_first"</span><span class="p">:</span>
                     <span class="n">pad_row</span> <span class="o">=</span> <span class="n">group_features</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">pad_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_features</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
@@ -537,8 +537,8 @@ document.write(`
         <span class="k">if</span> <span class="n">validation_features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">validation_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">grouping_column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">validation_features</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;CNNTrainer requires a &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">grouping_column</span><span class="si">}</span><span class="s2">&#39; column in the &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;validation features so windows can be built per route.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"CNNTrainer requires a '</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">grouping_column</span><span class="si">}</span><span class="s2">' column in the "</span>
+                    <span class="sa">f</span><span class="s2">"validation features so windows can be built per route."</span>
                 <span class="p">)</span>
             <span class="n">validation_matrix</span> <span class="o">=</span> <span class="n">validation_features</span><span class="p">[</span><span class="n">feature_cols</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span>
                 <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
@@ -552,9 +552,9 @@ document.write(`
             <span class="n">y_val_cpu</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">y_val_matrix</span><span class="p">)</span>
 
         <span class="n">n_train</span> <span class="o">=</span> <span class="n">X_cpu</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;CNN training rows: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">n_train</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"CNN training rows: </span><span class="si">%d</span><span class="s2">"</span><span class="p">,</span> <span class="n">n_train</span><span class="p">)</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">_train_on</span><span class="p">(</span><span class="n">dev</span><span class="p">:</span> <span class="s2">&quot;torch.device&quot;</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_train_on</span><span class="p">(</span><span class="n">dev</span><span class="p">:</span> <span class="s2">"torch.device"</span><span class="p">):</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
             <span class="c1"># Move the full training tensors to the target device once.</span>
             <span class="n">X_dev</span> <span class="o">=</span> <span class="n">X_cpu</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
@@ -603,7 +603,7 @@ document.write(`
             <span class="n">loss_fn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">()</span>
             <span class="n">m</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
             <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="s2">&quot;CNN training: device=</span><span class="si">%s</span><span class="s2"> epochs=</span><span class="si">%d</span><span class="s2"> batches/epoch=</span><span class="si">%d</span><span class="s2"> hidden=</span><span class="si">%d</span><span class="s2"> conv_layers=</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s2">"CNN training: device=</span><span class="si">%s</span><span class="s2"> epochs=</span><span class="si">%d</span><span class="s2"> batches/epoch=</span><span class="si">%d</span><span class="s2"> hidden=</span><span class="si">%d</span><span class="s2"> conv_layers=</span><span class="si">%d</span><span class="s2">"</span><span class="p">,</span>
                 <span class="n">dev</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span>
                 <span class="n">steps_per_epoch</span><span class="p">,</span>
@@ -611,7 +611,7 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">n_conv_layers</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
-            <span class="n">best_val_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+            <span class="n">best_val_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">)</span>
             <span class="n">best_state</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">patience_counter</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">stopped_early</span> <span class="o">=</span> <span class="kc">False</span>
@@ -637,7 +637,7 @@ document.write(`
                     <span class="n">loss_accum</span> <span class="o">+=</span> <span class="n">loss</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
                     <span class="n">n_batches</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="n">avg_loss</span> <span class="o">=</span> <span class="p">(</span><span class="n">loss_accum</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_batches</span><span class="p">))</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-                <span class="n">val_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">)</span>
+                <span class="n">val_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">X_val_dev</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">y_val_dev</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">m</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
                     <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
@@ -654,19 +654,19 @@ document.write(`
                             <span class="n">patience_counter</span> <span class="o">+=</span> <span class="mi">1</span>
                         <span class="k">if</span> <span class="n">patience_counter</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">early_stopping_patience</span><span class="p">:</span>
                             <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                                <span class="s2">&quot;  Early stopping at epoch </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2"> (no improvement for </span><span class="si">%d</span><span class="s2"> epochs)&quot;</span><span class="p">,</span>
+                                <span class="s2">"  Early stopping at epoch </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2"> (no improvement for </span><span class="si">%d</span><span class="s2"> epochs)"</span><span class="p">,</span>
                                 <span class="n">epoch_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">early_stopping_patience</span><span class="p">,</span>
                             <span class="p">)</span>
                             <span class="n">stopped_early</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                    <span class="s2">&quot;  epoch </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">  loss=</span><span class="si">%.6f</span><span class="s2">  val_loss=</span><span class="si">%.6f</span><span class="s2">  lr=</span><span class="si">%.2e</span><span class="s2">  elapsed=</span><span class="si">%.1f</span><span class="s2">s&quot;</span><span class="p">,</span>
+                    <span class="s2">"  epoch </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">  loss=</span><span class="si">%.6f</span><span class="s2">  val_loss=</span><span class="si">%.6f</span><span class="s2">  lr=</span><span class="si">%.2e</span><span class="s2">  elapsed=</span><span class="si">%.1f</span><span class="s2">s"</span><span class="p">,</span>
                     <span class="n">epoch_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span>
                     <span class="n">avg_loss</span><span class="p">,</span>
                     <span class="n">val_loss</span><span class="p">,</span>
-                    <span class="n">optimizer</span><span class="o">.</span><span class="n">param_groups</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;lr&quot;</span><span class="p">],</span>
+                    <span class="n">optimizer</span><span class="o">.</span><span class="n">param_groups</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"lr"</span><span class="p">],</span>
                     <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">epoch_start</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="n">stopped_early</span><span class="p">:</span>
@@ -683,29 +683,29 @@ document.write(`
                     <span class="k">return</span> <span class="kc">True</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;cpu&quot;</span> <span class="ow">and</span> <span class="n">_has_nonfinite_params</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">"cpu"</span> <span class="ow">and</span> <span class="n">_has_nonfinite_params</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;CNN training on device=</span><span class="si">{</span><span class="n">device</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2"> produced non-finite &quot;</span>
-                <span class="s2">&quot;parameters; retraining on CPU.&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"CNN training on device=</span><span class="si">{</span><span class="n">device</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2"> produced non-finite "</span>
+                <span class="s2">"parameters; retraining on CPU."</span><span class="p">,</span>
                 <span class="ne">RuntimeWarning</span><span class="p">,</span>
                 <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cpu"</span><span class="p">)</span>
             <span class="n">model</span> <span class="o">=</span> <span class="n">_train_on</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
         <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">"cpu"</span><span class="p">)</span>
 
         <span class="n">dummy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookback</span><span class="p">,</span> <span class="n">n_features</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="n">batch_dim</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;batch&quot;</span><span class="p">)</span>
+        <span class="n">batch_dim</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">Dim</span><span class="p">(</span><span class="s2">"batch"</span><span class="p">)</span>
         <span class="n">onnx_program</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
             <span class="n">model</span><span class="p">,</span>
             <span class="p">(</span><span class="n">dummy</span><span class="p">,),</span>
             <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="n">ONNX_INPUT_NAME</span><span class="p">],</span>
-            <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">],</span>
-            <span class="n">dynamic_shapes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">batch_dim</span><span class="p">}},</span>
+            <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"output"</span><span class="p">],</span>
+            <span class="n">dynamic_shapes</span><span class="o">=</span><span class="p">{</span><span class="s2">"x"</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">batch_dim</span><span class="p">}},</span>
             <span class="n">opset_version</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
             <span class="n">dynamo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
@@ -726,7 +726,7 @@ document.write(`
         <span class="n">onnx_sess</span> <span class="o">=</span> <span class="n">rt</span><span class="o">.</span><span class="n">InferenceSession</span><span class="p">(</span>
             <span class="n">onnx_proto</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">(),</span>
             <span class="n">sess_options</span><span class="o">=</span><span class="n">sess_options</span><span class="p">,</span>
-            <span class="n">providers</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;CPUExecutionProvider&quot;</span><span class="p">],</span>
+            <span class="n">providers</span><span class="o">=</span><span class="p">[</span><span class="s2">"CPUExecutionProvider"</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="n">onnx_out</span> <span class="o">=</span> <span class="n">onnx_sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">{</span><span class="n">ONNX_INPUT_NAME</span><span class="p">:</span> <span class="n">sanity_x</span><span class="p">})[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">export_drift_rtol</span> <span class="o">=</span> <span class="mf">1e-3</span>
@@ -742,9 +742,9 @@ document.write(`
             <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">torch_out</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">onnx_out</span><span class="p">))</span>
             <span class="n">max_rel</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">abs_diff</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">export_drift_atol</span><span class="p">)))</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;ONNX export drift exceeded tolerance: &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;max|Δ|=</span><span class="si">{</span><span class="n">max_abs</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">, max relative drift=</span><span class="si">{</span><span class="n">max_rel</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;rtol=</span><span class="si">{</span><span class="n">export_drift_rtol</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, atol=</span><span class="si">{</span><span class="n">export_drift_atol</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">"ONNX export drift exceeded tolerance: "</span>
+                <span class="sa">f</span><span class="s2">"max|Δ|=</span><span class="si">{</span><span class="n">max_abs</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">, max relative drift=</span><span class="si">{</span><span class="n">max_rel</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">, "</span>
+                <span class="sa">f</span><span class="s2">"rtol=</span><span class="si">{</span><span class="n">export_drift_rtol</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, atol=</span><span class="si">{</span><span class="n">export_drift_atol</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">ONNXEstimator</span><span class="p">(</span>
@@ -768,12 +768,12 @@ document.write(`
     <span class="n">feat_mean</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">feat_std</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A 1D CNN that maps (N, T, F) → (N, n_targets) for sequence length T.</span>
+<span class="w">    </span><span class="sd">"""A 1D CNN that maps (N, T, F) → (N, n_targets) for sequence length T.</span>
 
 <span class="sd">    Stack of ``n_conv_layers`` VALID-padded kernel-K Conv1D → ReLU layers, an</span>
 <span class="sd">    adaptive average pool over any remaining sequence positions, and a single</span>
 <span class="sd">    linear head ``hidden → n_targets``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 
@@ -786,8 +786,8 @@ document.write(`
 
         <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;feat_mean&quot;</span><span class="p">,</span> <span class="n">mean_tensor</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;feat_std&quot;</span><span class="p">,</span> <span class="n">std_tensor</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">"feat_mean"</span><span class="p">,</span> <span class="n">mean_tensor</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">"feat_std"</span><span class="p">,</span> <span class="n">std_tensor</span><span class="p">)</span>
             <span class="n">layers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">in_ch</span> <span class="o">=</span> <span class="n">n_features</span>
             <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_conv_layers</span><span class="p">):</span>

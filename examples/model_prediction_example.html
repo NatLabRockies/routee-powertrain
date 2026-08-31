@@ -422,7 +422,7 @@ document.write(`
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;ROUTEE_REGISTRY_BACKEND&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"ROUTEE_REGISTRY_BACKEND"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"local"</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">routee.powertrain</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pt</span>
 
@@ -430,9 +430,9 @@ document.write(`
 <span class="n">pt</span><span class="o">.</span><span class="n">list_available_models</span><span class="p">()</span>
 
 <span class="c1"># Use query_available_models for richer metadata with optional filters</span>
-<span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;toyota&quot;</span><span class="p">)</span>
+<span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">"toyota"</span><span class="p">)</span>
 
-<span class="n">camry</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;toyota/camry_ice/2016/rf_c3326385/v1&quot;</span><span class="p">)</span>
+<span class="n">rav4</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"toyota/rav4_xle_ice/2022/rf_fe510e40/v1"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -442,12 +442,12 @@ Each model contains a single estimator trained on a specific feature set.
 The model summary shows the features, distance column, energy target, and predicted fuel economy.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">camry</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rav4</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_html"><table border="1" style="border-collapse: collapse;"><tr><th colspan="2" style="border-bottom: 2px solid black; text-align: center;">Model Summary</th></tr><tr><td>Vehicle description</td><td>2016_TOYOTA_Camry_4cyl_2WD trained July 2024</td></tr><tr><td>Powertrain type</td><td>ICE</td></tr><tr><th colspan="2" style="border-bottom: 2px solid black; text-align: center;">Estimator Summary</th></tr><tr><td>Feature</td><td>speed_mph (mph)</td></tr><tr><td>Feature</td><td>grade_percent (percent)</td></tr><tr><td>Distance</td><td>distance (miles)</td></tr><tr><td>Target</td><td>gge (gallons gasoline)</td></tr><tr><td>Predicted Consumption</td><td>30.289 (miles/gallons gasoline)</td></tr><tr><td>Real World Predicted Consumption</td><td>25.977 (miles/gallons gasoline)</td></tr><tr><td>Predict Method</td><td>RATE</td></tr></table></div></div>
+<div class="output text_html"><table border="1" style="border-collapse: collapse;"><tr><th colspan="2" style="border-bottom: 2px solid black; text-align: center;">Model Summary</th></tr><tr><td>Vehicle description</td><td>2022_Toyota_RAV4_XLE | fastsim 3.1.0 | routee-powertrain 2.0.1</td></tr><tr><td>Powertrain type</td><td>ICE</td></tr><tr><th colspan="2" style="border-bottom: 2px solid black; text-align: center;">Estimator Summary</th></tr><tr><td>Feature</td><td>speed_mph (mph)</td></tr><tr><td>Feature</td><td>grade_pct (percent)</td></tr><tr><td>Feature</td><td>distance_mi (miles)</td></tr><tr><td>Distance</td><td>distance_mi (miles)</td></tr><tr><td>Target</td><td>fuel_gge (gallons gasoline)</td></tr><tr><td>Predicted Consumption</td><td>30.498 (miles/gallons gasoline)</td></tr><tr><td>Real World Predicted Consumption</td><td>26.156 (miles/gallons gasoline)</td></tr><tr><td>Predict Method</td><td>RATE</td></tr></table></div></div>
 </div>
 <p>Now, let's predict energy consumption over a sample route.
 RouteE Powertrain expects the inputs to be a pandas dataframe in which each row represents a road network link.
@@ -555,10 +555,13 @@ There is a sample route included with the package that we'll use for demonstrati
 <p>125 rows × 3 columns</p>
 </div></div></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">predict</span></code> always uses the feature set the model was trained on. The sample route has <code class="docutils literal notranslate"><span class="pre">speed_mph</span></code>, <code class="docutils literal notranslate"><span class="pre">grade_percent</span></code>, and <code class="docutils literal notranslate"><span class="pre">distance</span></code> columns which match the Camry model's expected inputs.</p>
+<p><code class="docutils literal notranslate"><span class="pre">predict</span></code> always uses the feature set the model was trained on. The sample route is labeled with the older column names (<code class="docutils literal notranslate"><span class="pre">grade_percent</span></code>, <code class="docutils literal notranslate"><span class="pre">distance</span></code>), which the temperature models still use; the base configs name the same quantities <code class="docutils literal notranslate"><span class="pre">grade_pct</span></code> and <code class="docutils literal notranslate"><span class="pre">distance_mi</span></code>, so the route is relabeled to match the model consuming it.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">camry</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sample_route</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">route</span> <span class="o">=</span> <span class="n">sample_route</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"grade_percent"</span><span class="p">:</span> <span class="s2">"grade_pct"</span><span class="p">,</span> <span class="s2">"distance"</span><span class="p">:</span> <span class="s2">"distance_mi"</span><span class="p">}</span>
+<span class="p">)</span>
+<span class="n">rav4</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">route</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -581,29 +584,29 @@ There is a sample route included with the package that we'll use for demonstrati
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>gge</th>
+      <th>fuel_gge</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>0.001028</td>
+      <td>0.001178</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>0.000252</td>
+      <td>0.000243</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>0.000174</td>
+      <td>0.000188</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>0.000995</td>
+      <td>0.000899</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>0.001056</td>
+      <td>0.001150</td>
     </tr>
     <tr>
       <th>...</th>
@@ -611,23 +614,23 @@ There is a sample route included with the package that we'll use for demonstrati
     </tr>
     <tr>
       <th>120</th>
-      <td>0.000411</td>
+      <td>0.000381</td>
     </tr>
     <tr>
       <th>121</th>
-      <td>0.000769</td>
+      <td>0.000882</td>
     </tr>
     <tr>
       <th>122</th>
-      <td>0.000731</td>
+      <td>0.000855</td>
     </tr>
     <tr>
       <th>123</th>
-      <td>0.000719</td>
+      <td>0.000840</td>
     </tr>
     <tr>
       <th>124</th>
-      <td>0.000886</td>
+      <td>0.001074</td>
     </tr>
   </tbody>
 </table>
@@ -635,8 +638,8 @@ There is a sample route included with the package that we'll use for demonstrati
 </div></div></div>
 </div>
 <p>If your input DataFrame only has a subset of the features a model needs, pick a model whose feature set matches what you have. The <code class="docutils literal notranslate"><span class="pre">feature_names</span></code> filter on <code class="docutils literal notranslate"><span class="pre">query_available_models</span></code> makes this easy:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Find Toyota Camry models trained on speed alone</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;toyota&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;camry&quot;</span><span class="p">,</span> <span class="n">feature_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;speed_mph&quot;</span><span class="p">])</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Find Toyota RAV4 models trained on speed alone</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">"toyota"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"rav4"</span><span class="p">,</span> <span class="n">feature_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"speed_mph"</span><span class="p">])</span>
 </pre></div>
 </div>
 </section>
@@ -648,22 +651,25 @@ In order to use this we first have to define what ranges the features should be 
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">feature_ranges</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;speed_mph&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;lower&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;upper&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
-    <span class="s2">&quot;grade_percent&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;lower&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">20.0</span><span class="p">,</span> <span class="s2">&quot;upper&quot;</span><span class="p">:</span> <span class="mf">20.0</span><span class="p">,</span> <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+    <span class="s2">"speed_mph"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"lower"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"upper"</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+    <span class="s2">"grade_pct"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"lower"</span><span class="p">:</span> <span class="o">-</span><span class="mf">20.0</span><span class="p">,</span> <span class="s2">"upper"</span><span class="p">:</span> <span class="mf">20.0</span><span class="p">,</span> <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+    <span class="c1"># Every feature the model takes needs a range, distance included.</span>
+    <span class="s2">"distance_mi"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"lower"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s2">"upper"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
 <span class="p">}</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">visualize_features</span><span class="p">(</span><span class="n">camry</span><span class="p">,</span> <span class="n">feature_ranges</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">visualize_features</span><span class="p">(</span><span class="n">rav4</span><span class="p">,</span> <span class="n">feature_ranges</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2026-08-14 17:17:50,410 [INFO] - Failed to extract font properties from /usr/share/fonts/truetype/noto/NotoColorEmoji.ttf: Can not load face (unknown file format; error code 0x2)
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2026-08-31 20:57:27,729 [INFO] - Failed to extract font properties from /usr/share/fonts/truetype/noto/NotoColorEmoji.ttf: Can not load face (unknown file format; error code 0x2)
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2026-08-14 17:17:50,471 [INFO] - generated new fontManager
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2026-08-31 20:57:27,737 [INFO] - generated new fontManager
 </pre></div>
 </div>
-<img alt="../_images/10e4ffac7389d3dcc3ca4c177815012875cdff70a8a65491b3d5621e2b3055e0.png" src="../_images/10e4ffac7389d3dcc3ca4c177815012875cdff70a8a65491b3d5621e2b3055e0.png" />
-<img alt="../_images/663d5a1a281c8c71e8f4ba39f86fa9ced76b05ceeddcc61ac90b436a27b1edec.png" src="../_images/663d5a1a281c8c71e8f4ba39f86fa9ced76b05ceeddcc61ac90b436a27b1edec.png" />
+<img alt="../_images/3b1887a160564061e3773311ceef6ac08cd43a14c96bf855cfa7533d4378fa43.png" src="../_images/3b1887a160564061e3773311ceef6ac08cd43a14c96bf855cfa7533d4378fa43.png" />
+<img alt="../_images/7b3f4b6f1a8ea1c8ce6121528acd42e4723d1a92e72485527dbdeb6eb8da7b76.png" src="../_images/7b3f4b6f1a8ea1c8ce6121528acd42e4723d1a92e72485527dbdeb6eb8da7b76.png" />
+<img alt="../_images/77ce20383aa4f211fe95f259418a8dec144e44699bc2be0b0bbe22795b95ade1.png" src="../_images/77ce20383aa4f211fe95f259418a8dec144e44699bc2be0b0bbe22795b95ade1.png" />
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Figure size 640x480 with 0 Axes&gt;
 </pre></div>
 </div>
@@ -673,16 +679,16 @@ In order to use this we first have to define what ranges the features should be 
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pt</span><span class="o">.</span><span class="n">contour_plot</span><span class="p">(</span>
-    <span class="n">camry</span><span class="p">,</span>
-    <span class="n">x_feature</span><span class="o">=</span><span class="s2">&quot;speed_mph&quot;</span><span class="p">,</span>
-    <span class="n">y_feature</span><span class="o">=</span><span class="s2">&quot;grade_percent&quot;</span><span class="p">,</span>
+    <span class="n">rav4</span><span class="p">,</span>
+    <span class="n">x_feature</span><span class="o">=</span><span class="s2">"speed_mph"</span><span class="p">,</span>
+    <span class="n">y_feature</span><span class="o">=</span><span class="s2">"grade_pct"</span><span class="p">,</span>
     <span class="n">feature_ranges</span><span class="o">=</span><span class="n">feature_ranges</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/1ca52874662113d782ac2f85ce0c3d29d5a722907f669dd49349e67063aebeac.png" src="../_images/1ca52874662113d782ac2f85ce0c3d29d5a722907f669dd49349e67063aebeac.png" />
+<img alt="../_images/68455910ea051527087e615fbc17480db1754c48c1736b501ed5446ee5749f19.png" src="../_images/68455910ea051527087e615fbc17480db1754c48c1736b501ed5446ee5749f19.png" />
 </div>
 </div>
 </section>

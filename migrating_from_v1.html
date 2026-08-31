@@ -461,18 +461,18 @@ pip<span class="w"> </span>install<span class="w"> </span>routee.powertrain
 <h2>3. Replace model names with model ids<a class="headerlink" href="#replace-model-names-with-model-ids" title="Link to this heading">#</a></h2>
 <p>v1 loaded models by flat name from a hardcoded catalog:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># v1</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;2016_TOYOTA_Camry_4cyl_2WD&quot;</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>v2 resolves models through a <a class="reference internal" href="publishing_a_model.html"><span class="std std-doc">registry</span></a> using a structured id,
 <code class="docutils literal notranslate"><span class="pre">&lt;make&gt;/&lt;vehicle_slug&gt;/&lt;year&gt;/&lt;config_slug&gt;</span></code>, with an optional trailing <code class="docutils literal notranslate"><span class="pre">v&lt;N&gt;</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># v2</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;toyota/camry_ice/2016/rf_c3326385&quot;</span><span class="p">)</span>       <span class="c1"># latest version</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;toyota/camry_ice/2016/rf_c3326385/v1&quot;</span><span class="p">)</span>    <span class="c1"># pinned version</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"toyota/camry_ice/2016/rf_base_fe510e40"</span><span class="p">)</span>       <span class="c1"># latest version</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"toyota/camry_ice/2016/rf_base_fe510e40/v1"</span><span class="p">)</span>    <span class="c1"># pinned version</span>
 </pre></div>
 </div>
 <p>Rather than translating names by hand, search the registry:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;toyota&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;camry&quot;</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2016</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">"toyota"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"camry"</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2016</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">feature_names</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -487,24 +487,33 @@ feature set</strong>, so a v1 model typically maps to three v2 models:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>v1 feature set</p></th>
-<th class="head"><p>v2 <code class="docutils literal notranslate"><span class="pre">config_slug</span></code></p></th>
+<th class="head"><p>closest v2 <code class="docutils literal notranslate"><span class="pre">config_slug</span></code></p></th>
+<th class="head"><p>v2 features</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">speed_mph</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">rf_db8522fb</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rf_base_67ae9982</span></code></p></td>
+<td><p>speed, distance</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">speed_mph</span> <span class="pre">&amp;</span> <span class="pre">grade_percent</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">rf_c3326385</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rf_base_fe510e40</span></code></p></td>
+<td><p>speed, grade, distance</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">speed_mph</span> <span class="pre">&amp;</span> <span class="pre">grade_percent</span> <span class="pre">&amp;</span> <span class="pre">turn_angle</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">rf_b80965c8</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rf_base_d8b7ef3c</span></code></p></td>
+<td><p>speed, grade, distance, link time/sinuosity/bearing</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Pick the one whose features match the columns you actually have. <code class="docutils literal notranslate"><span class="pre">rf_c3326385</span></code> (speed and grade) is
-the closest match to what v1 usually selected.</p>
+<p>Pick the one whose features match the columns you actually have. <code class="docutils literal notranslate"><span class="pre">rf_base_fe510e40</span></code> (speed and
+grade) is the closest match to what v1 usually selected. Note that every current config takes
+distance as a feature, and names grade <code class="docutils literal notranslate"><span class="pre">grade_pct</span></code> rather than <code class="docutils literal notranslate"><span class="pre">grade_percent</span></code>.</p>
+<p>The slug is a hash of the feature set, so it changes when the feature set does. Slugs seen in
+older documentation (<code class="docutils literal notranslate"><span class="pre">rf_c3326385</span></code>, <code class="docutils literal notranslate"><span class="pre">rf_db8522fb</span></code>, <code class="docutils literal notranslate"><span class="pre">rf_b80965c8</span></code>) are what
+<a class="reference internal" href="#4-convert-your-own-v1-model-files"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">convert-v1</span></code></span></a> mints for a converted v1 feature set; they are
+not the slugs the current published library uses.</p>
 <p>Other slug patterns you may see:</p>
 <ul class="simple">
 <li><p>PHEV models carry the mode: <code class="docutils literal notranslate"><span class="pre">rf_charge_depleting_*</span></code>, <code class="docutils literal notranslate"><span class="pre">rf_charge_sustaining_*</span></code></p></li>
@@ -531,7 +540,7 @@ instead of <code class="docutils literal notranslate"><span class="pre">local</s
 </div>
 <p>or from Python:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">paths</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">convert_legacy_model</span><span class="p">(</span>
-    <span class="s2">&quot;MyModel.json&quot;</span><span class="p">,</span> <span class="s2">&quot;out/&quot;</span><span class="p">,</span> <span class="n">make</span><span class="o">=</span><span class="s2">&quot;toyota&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;camry&quot;</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2016</span>
+    <span class="s2">"MyModel.json"</span><span class="p">,</span> <span class="s2">"out/"</span><span class="p">,</span> <span class="n">make</span><span class="o">=</span><span class="s2">"toyota"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"camry"</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2016</span>
 <span class="p">)</span>
 <span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span>
 </pre></div>
@@ -587,7 +596,7 @@ removed in v2. Retrain those with <code class="docutils literal notranslate"><sp
 </table>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">predict()</span></code> lost its optional arguments:</p>
-<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">-model.predict(links_df, feature_columns=[...], distance_column=&quot;miles&quot;,</span>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">-model.predict(links_df, feature_columns=[...], distance_column="miles",</span>
 <span class="gd">-              apply_real_world_adjustment=True)</span>
 <span class="gi">+model.predict(links_df)</span>
 </pre></div>
@@ -602,12 +611,12 @@ adjustment is always applied, using <code class="docutils literal notranslate"><
 <code class="docutils literal notranslate"><span class="pre">&#64;dataclass</span></code> to <strong>pydantic</strong>, so hand-written <code class="docutils literal notranslate"><span class="pre">from_dict()</span></code> / <code class="docutils literal notranslate"><span class="pre">to_dict()</span></code> / <code class="docutils literal notranslate"><span class="pre">to_json()</span></code> methods are
 gone — use <code class="docutils literal notranslate"><span class="pre">model_validate()</span></code> and <code class="docutils literal notranslate"><span class="pre">model_dump()</span></code>.</p>
 <div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="w"> </span>config = pt.ModelConfig(
-<span class="w"> </span>    vehicle_description=&quot;2016 Toyota Camry&quot;,
+<span class="w"> </span>    vehicle_description="2016 Toyota Camry",
 <span class="w"> </span>    powertrain_type=pt.PowertrainType.ICE,
 <span class="gd">-    feature_sets=[pt.FeatureSet([...])],</span>
 <span class="gi">+    feature_set=pt.FeatureSet([...]),</span>
-<span class="gi">+    make=&quot;toyota&quot;,</span>
-<span class="gi">+    model=&quot;camry&quot;,</span>
+<span class="gi">+    make="toyota",</span>
+<span class="gi">+    model="camry",</span>
 <span class="gi">+    year=2016,</span>
 <span class="w"> </span>    distance=...,
 <span class="w"> </span>    target=...,

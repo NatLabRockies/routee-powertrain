@@ -434,14 +434,14 @@ Lookup tables are useful for fast energy consumption predictions across a predef
 We'll use models with different feature sets to show the flexibility of the approach.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">toyota_camry</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;toyota/camry_ice/2016/rf_db8522fb/v1&quot;</span><span class="p">)</span>
-<span class="n">tesla_model3</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;tesla/model_3_bev/2022/rf_c3326385/v1&quot;</span><span class="p">)</span>
-<span class="n">tesla_with_temp</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;tesla/model_3_bev/2022/rf_steady_thermal_ab1db342/v1&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">toyota_camry</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"toyota/camry_ice/2016/rf_base_67ae9982/v1"</span><span class="p">)</span>
+<span class="n">tesla_model3</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"tesla/model_3_bev/2022/rf_base_fe510e40/v1"</span><span class="p">)</span>
+<span class="n">tesla_with_temp</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"tesla/model_3_bev/2022/rf_steady_thermal_ab1db342/v1"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
 </pre></div>
 </div>
@@ -450,29 +450,29 @@ We'll use models with different feature sets to show the flexibility of the appr
 <p>Let's examine the available features and targets for each model.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Toyota Camry features:&quot;</span><span class="p">,</span> <span class="n">toyota_camry</span><span class="o">.</span><span class="n">feature_names</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Toyota Camry targets:&quot;</span><span class="p">,</span> <span class="n">toyota_camry</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">target_name_list</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Toyota Camry features:"</span><span class="p">,</span> <span class="n">toyota_camry</span><span class="o">.</span><span class="n">feature_names</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Toyota Camry targets:"</span><span class="p">,</span> <span class="n">toyota_camry</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">target_name_list</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tesla Model 3 features:&quot;</span><span class="p">,</span> <span class="n">tesla_model3</span><span class="o">.</span><span class="n">feature_names</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tesla Model 3 targets:&quot;</span><span class="p">,</span> <span class="n">tesla_model3</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">target_name_list</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Tesla Model 3 features:"</span><span class="p">,</span> <span class="n">tesla_model3</span><span class="o">.</span><span class="n">feature_names</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Tesla Model 3 targets:"</span><span class="p">,</span> <span class="n">tesla_model3</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">target_name_list</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tesla with Temperature features:&quot;</span><span class="p">,</span> <span class="n">tesla_with_temp</span><span class="o">.</span><span class="n">feature_names</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Tesla with Temperature features:"</span><span class="p">,</span> <span class="n">tesla_with_temp</span><span class="o">.</span><span class="n">feature_names</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span>
-    <span class="s2">&quot;Tesla with Temperature targets:&quot;</span><span class="p">,</span>
+    <span class="s2">"Tesla with Temperature targets:"</span><span class="p">,</span>
     <span class="n">tesla_with_temp</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">target_name_list</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Toyota Camry features: [&#39;speed_mph&#39;]
-Toyota Camry targets: [&#39;gge&#39;]
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Toyota Camry features: ['speed_mph', 'distance_mi']
+Toyota Camry targets: ['fuel_gge']
 
-Tesla Model 3 features: [&#39;speed_mph&#39;, &#39;grade_percent&#39;]
-Tesla Model 3 targets: [&#39;kwh&#39;]
+Tesla Model 3 features: ['speed_mph', 'grade_pct', 'distance_mi']
+Tesla Model 3 targets: ['electric_kwh']
 
-Tesla with Temperature features: [&#39;speed_mph&#39;, &#39;grade_percent&#39;, &#39;ambient_temp_f&#39;]
-Tesla with Temperature targets: [&#39;kwh&#39;]
+Tesla with Temperature features: ['speed_mph', 'grade_percent', 'ambient_temp_f']
+Tesla with Temperature targets: ['kwh']
 </pre></div>
 </div>
 </div>
@@ -487,32 +487,40 @@ This creates a 1D lookup table showing how energy consumption varies with vehicl
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define feature parameters for speed-only lookup</span>
 <span class="n">speed_only_params</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">{</span>
-        <span class="s2">&quot;feature_name&quot;</span><span class="p">:</span> <span class="s2">&quot;speed_mph&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mf">80.0</span><span class="p">,</span>
-        <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>  <span class="c1"># Every 5 mph from 5 to 80</span>
-    <span class="p">}</span>
+        <span class="s2">"feature_name"</span><span class="p">:</span> <span class="s2">"speed_mph"</span><span class="p">,</span>
+        <span class="s2">"lower_bound"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span>
+        <span class="s2">"upper_bound"</span><span class="p">:</span> <span class="mf">80.0</span><span class="p">,</span>
+        <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>  <span class="c1"># Every 5 mph from 5 to 80</span>
+    <span class="p">},</span>
+    <span class="c1"># Every feature the model takes needs a range. Holding distance at a single</span>
+    <span class="c1"># sample keeps this a one-dimensional sweep over speed.</span>
+    <span class="p">{</span>
+        <span class="s2">"feature_name"</span><span class="p">:</span> <span class="s2">"distance_mi"</span><span class="p">,</span>
+        <span class="s2">"lower_bound"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="s2">"upper_bound"</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span>
+        <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">},</span>
 <span class="p">]</span>
 
 <span class="c1"># Generate lookup table for Toyota Camry</span>
 <span class="n">camry_speed_lookup</span> <span class="o">=</span> <span class="n">toyota_camry</span><span class="o">.</span><span class="n">to_lookup_table</span><span class="p">(</span>
     <span class="n">feature_parameters</span><span class="o">=</span><span class="n">speed_only_params</span><span class="p">,</span>
-    <span class="n">energy_target</span><span class="o">=</span><span class="s2">&quot;gge&quot;</span><span class="p">,</span>  <span class="c1"># Gallons of gasoline equivalent</span>
+    <span class="n">energy_target</span><span class="o">=</span><span class="s2">"fuel_gge"</span><span class="p">,</span>  <span class="c1"># Gallons of gasoline equivalent</span>
 <span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Single feature lookup table (first 5 rows):&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Single feature lookup table (first 5 rows):"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">camry_speed_lookup</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Single feature lookup table (first 5 rows):
-   speed_mph  gge_per_distance
-0        5.0          0.079209
-1       10.0          0.050484
-2       15.0          0.045138
-3       20.0          0.045888
-4       25.0          0.042178
+   speed_mph  distance_mi  fuel_gge_per_distance_mi
+0        5.0            1                  0.067427
+1       10.0            1                  0.046740
+2       15.0            1                  0.039036
+3       20.0            1                  0.033705
+4       25.0            1                  0.030481
 </pre></div>
 </div>
 </div>
@@ -527,45 +535,51 @@ This shows how energy consumption varies with both vehicle speed and road grade.
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define feature parameters for speed and grade</span>
 <span class="n">speed_grade_params</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">{</span>
-        <span class="s2">&quot;feature_name&quot;</span><span class="p">:</span> <span class="s2">&quot;speed_mph&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mf">25.0</span><span class="p">,</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mf">65.0</span><span class="p">,</span>
-        <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>  <span class="c1"># Every 5 mph from 25 to 65</span>
+        <span class="s2">"feature_name"</span><span class="p">:</span> <span class="s2">"speed_mph"</span><span class="p">,</span>
+        <span class="s2">"lower_bound"</span><span class="p">:</span> <span class="mf">25.0</span><span class="p">,</span>
+        <span class="s2">"upper_bound"</span><span class="p">:</span> <span class="mf">65.0</span><span class="p">,</span>
+        <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>  <span class="c1"># Every 5 mph from 25 to 65</span>
     <span class="p">},</span>
     <span class="p">{</span>
-        <span class="s2">&quot;feature_name&quot;</span><span class="p">:</span> <span class="s2">&quot;grade_percent&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">6.0</span><span class="p">,</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mf">6.0</span><span class="p">,</span>
-        <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>  <span class="c1"># Every 2% grade from -6% to +6%</span>
+        <span class="s2">"feature_name"</span><span class="p">:</span> <span class="s2">"grade_pct"</span><span class="p">,</span>
+        <span class="s2">"lower_bound"</span><span class="p">:</span> <span class="o">-</span><span class="mf">6.0</span><span class="p">,</span>
+        <span class="s2">"upper_bound"</span><span class="p">:</span> <span class="mf">6.0</span><span class="p">,</span>
+        <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>  <span class="c1"># Every 2% grade from -6% to +6%</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">"feature_name"</span><span class="p">:</span> <span class="s2">"distance_mi"</span><span class="p">,</span>
+        <span class="s2">"lower_bound"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="s2">"upper_bound"</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span>
+        <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">]</span>
 
 <span class="c1"># Generate lookup table for Tesla Model 3</span>
 <span class="n">tesla_speed_grade_lookup</span> <span class="o">=</span> <span class="n">tesla_model3</span><span class="o">.</span><span class="n">to_lookup_table</span><span class="p">(</span>
     <span class="n">feature_parameters</span><span class="o">=</span><span class="n">speed_grade_params</span><span class="p">,</span>
-    <span class="n">energy_target</span><span class="o">=</span><span class="s2">&quot;kwh&quot;</span><span class="p">,</span>
+    <span class="n">energy_target</span><span class="o">=</span><span class="s2">"electric_kwh"</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Two feature lookup table shape: </span><span class="si">{</span><span class="n">tesla_speed_grade_lookup</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sample rows:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Two feature lookup table shape: </span><span class="si">{</span><span class="n">tesla_speed_grade_lookup</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Sample rows:"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">tesla_speed_grade_lookup</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Two feature lookup table shape: (63, 3)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Two feature lookup table shape: (63, 4)
 Sample rows:
-   speed_mph  grade_percent  kwh_per_distance
-0       25.0           -6.0         -0.211147
-1       30.0           -6.0         -0.211147
-2       35.0           -6.0         -0.211147
-3       40.0           -6.0         -0.208576
-4       45.0           -6.0         -0.201589
-5       50.0           -6.0         -0.201589
-6       55.0           -6.0         -0.201589
-7       60.0           -6.0         -0.201589
-8       65.0           -6.0         -0.201589
-9       25.0           -4.0         -0.087312
+   speed_mph  grade_pct  distance_mi  electric_kwh_per_distance_mi
+0       25.0       -6.0            1                     -0.185075
+1       30.0       -6.0            1                     -0.185075
+2       35.0       -6.0            1                     -0.185075
+3       40.0       -6.0            1                     -0.185075
+4       45.0       -6.0            1                     -0.185075
+5       50.0       -6.0            1                     -0.185075
+6       55.0       -6.0            1                     -0.185075
+7       60.0       -6.0            1                     -0.185075
+8       65.0       -6.0            1                     -0.185075
+9       25.0       -4.0            1                     -0.056483
 </pre></div>
 </div>
 </div>
@@ -580,33 +594,33 @@ This is particularly useful for electric vehicles where temperature significantl
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define feature parameters including temperature</span>
 <span class="n">temp_params</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">{</span>
-        <span class="s2">&quot;feature_name&quot;</span><span class="p">:</span> <span class="s2">&quot;speed_mph&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mf">35.0</span><span class="p">,</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mf">55.0</span><span class="p">,</span>
-        <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>  <span class="c1"># 35, 45, 55 mph</span>
+        <span class="s2">"feature_name"</span><span class="p">:</span> <span class="s2">"speed_mph"</span><span class="p">,</span>
+        <span class="s2">"lower_bound"</span><span class="p">:</span> <span class="mf">35.0</span><span class="p">,</span>
+        <span class="s2">"upper_bound"</span><span class="p">:</span> <span class="mf">55.0</span><span class="p">,</span>
+        <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>  <span class="c1"># 35, 45, 55 mph</span>
     <span class="p">},</span>
     <span class="p">{</span>
-        <span class="s2">&quot;feature_name&quot;</span><span class="p">:</span> <span class="s2">&quot;grade_percent&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span>
-        <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>  <span class="c1"># -2%, 0%, 2%, 4%</span>
+        <span class="s2">"feature_name"</span><span class="p">:</span> <span class="s2">"grade_percent"</span><span class="p">,</span>
+        <span class="s2">"lower_bound"</span><span class="p">:</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span>
+        <span class="s2">"upper_bound"</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span>
+        <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>  <span class="c1"># -2%, 0%, 2%, 4%</span>
     <span class="p">},</span>
     <span class="p">{</span>
-        <span class="s2">&quot;feature_name&quot;</span><span class="p">:</span> <span class="s2">&quot;ambient_temp_f&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mf">20.0</span><span class="p">,</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mf">80.0</span><span class="p">,</span>
-        <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>  <span class="c1"># 20°F, 40°F, 60°F, 80°F</span>
+        <span class="s2">"feature_name"</span><span class="p">:</span> <span class="s2">"ambient_temp_f"</span><span class="p">,</span>
+        <span class="s2">"lower_bound"</span><span class="p">:</span> <span class="mf">20.0</span><span class="p">,</span>
+        <span class="s2">"upper_bound"</span><span class="p">:</span> <span class="mf">80.0</span><span class="p">,</span>
+        <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>  <span class="c1"># 20°F, 40°F, 60°F, 80°F</span>
     <span class="p">},</span>
 <span class="p">]</span>
 
 <span class="c1"># Generate lookup table with temperature</span>
 <span class="n">tesla_temp_lookup</span> <span class="o">=</span> <span class="n">tesla_with_temp</span><span class="o">.</span><span class="n">to_lookup_table</span><span class="p">(</span>
     <span class="n">feature_parameters</span><span class="o">=</span><span class="n">temp_params</span><span class="p">,</span>
-    <span class="n">energy_target</span><span class="o">=</span><span class="s2">&quot;kwh&quot;</span><span class="p">,</span>
+    <span class="n">energy_target</span><span class="o">=</span><span class="s2">"kwh"</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Three feature lookup table shape: </span><span class="si">{</span><span class="n">tesla_temp_lookup</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sample rows showing temperature effects:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Three feature lookup table shape: </span><span class="si">{</span><span class="n">tesla_temp_lookup</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Sample rows showing temperature effects:"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">tesla_temp_lookup</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">12</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -642,12 +656,12 @@ Here's how you might use a lookup table for route prediction:</p>
 <span class="k">def</span><span class="w"> </span><span class="nf">interpolate_energy_from_lookup</span><span class="p">(</span><span class="n">lookup_table</span><span class="p">,</span> <span class="n">speed</span><span class="p">,</span> <span class="n">grade</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">grade</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">temp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># 1D interpolation for speed only</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">speed</span><span class="p">,</span> <span class="n">lookup_table</span><span class="p">[</span><span class="s2">&quot;speed_mph&quot;</span><span class="p">],</span> <span class="n">lookup_table</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">speed</span><span class="p">,</span> <span class="n">lookup_table</span><span class="p">[</span><span class="s2">"speed_mph"</span><span class="p">],</span> <span class="n">lookup_table</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># For multi-dimensional interpolation, you&#39;d typically use scipy.interpolate</span>
+        <span class="c1"># For multi-dimensional interpolation, you'd typically use scipy.interpolate</span>
         <span class="c1"># This is a simplified example</span>
         <span class="n">closest_row</span> <span class="o">=</span> <span class="n">lookup_table</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span>
-            <span class="p">(</span><span class="n">lookup_table</span><span class="p">[</span><span class="s2">&quot;speed_mph&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">speed</span><span class="p">)</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[:</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">(</span><span class="n">lookup_table</span><span class="p">[</span><span class="s2">"speed_mph"</span><span class="p">]</span> <span class="o">-</span> <span class="n">speed</span><span class="p">)</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[:</span><span class="mi">1</span><span class="p">]</span>
         <span class="p">]</span>
         <span class="k">return</span> <span class="n">closest_row</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
@@ -656,13 +670,13 @@ Here's how you might use a lookup table for route prediction:</p>
 <span class="n">example_speed</span> <span class="o">=</span> <span class="mf">42.5</span>
 <span class="n">predicted_energy</span> <span class="o">=</span> <span class="n">interpolate_energy_from_lookup</span><span class="p">(</span><span class="n">camry_speed_lookup</span><span class="p">,</span> <span class="n">example_speed</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">&quot;Interpolated energy consumption at </span><span class="si">{</span><span class="n">example_speed</span><span class="si">}</span><span class="s2"> mph: </span><span class="si">{</span><span class="n">predicted_energy</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> gge/mile&quot;</span>
+    <span class="sa">f</span><span class="s2">"Interpolated energy consumption at </span><span class="si">{</span><span class="n">example_speed</span><span class="si">}</span><span class="s2"> mph: </span><span class="si">{</span><span class="n">predicted_energy</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> gge/mile"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Interpolated energy consumption at 42.5 mph: 0.0264 gge/mile
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Interpolated energy consumption at 42.5 mph: 0.0257 gge/mile
 </pre></div>
 </div>
 </div>

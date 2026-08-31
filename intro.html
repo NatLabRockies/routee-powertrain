@@ -428,16 +428,16 @@ document.write(`
 <span class="nb">print</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">list_available_models</span><span class="p">())</span>
 
 <span class="c1"># [</span>
-<span class="c1">#   toyota/camry_ice/2016/rf_c3326385/v1,</span>
-<span class="c1">#   chevrolet/bolt_bev/2017/rf_c3326385/v1,</span>
+<span class="c1">#   toyota/camry_ice/2016/rf_base_fe510e40/v1,</span>
+<span class="c1">#   chevrolet/bolt_bev/2017/rf_base_fe510e40/v1,</span>
 <span class="c1">#   ...</span>
 <span class="c1"># ]</span>
 
 <span class="c1"># You can also query available models with filters for more detail</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;toyota&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;camry&quot;</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">query_available_models</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">"toyota"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"camry"</span><span class="p">)</span>
 
 <span class="c1"># Load a pre-trained model using its registry path</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;toyota/camry_ice/2016/rf_c3326385/v1&quot;</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">"toyota/camry_ice/2016/rf_base_fe510e40/v1"</span><span class="p">)</span>
 
 <span class="c1"># Inspect the model to see what it expects for input</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
@@ -445,26 +445,27 @@ document.write(`
 <span class="c1"># ========================================</span>
 <span class="c1"># Model Summary</span>
 <span class="c1"># --------------------</span>
-<span class="c1"># Vehicle description: 2016_TOYOTA_Camry_4cyl_2WD trained July 2024</span>
+<span class="c1"># Vehicle description: 2016_Toyota_Camry_4cyl_2WD | fastsim 3.1.0 | routee-powertrain 2.0.1</span>
 <span class="c1"># Powertrain type: ICE</span>
 <span class="c1"># ========================================</span>
 <span class="c1"># Estimator Summary</span>
 <span class="c1"># --------------------</span>
 <span class="c1"># Feature: speed_mph (mph)</span>
-<span class="c1"># Feature: grade_percent (percent)</span>
-<span class="c1"># Distance: distance (miles)</span>
-<span class="c1"># Target: gge (gallons gasoline)</span>
-<span class="c1"># Raw Predicted Consumption: 30.289 (miles/gallons gasoline)</span>
-<span class="c1"># Real World Predicted Consumption: 25.977 (miles/gallons gasoline)</span>
+<span class="c1"># Feature: grade_pct (percent)</span>
+<span class="c1"># Feature: distance_mi (miles)</span>
+<span class="c1"># Distance: distance_mi (miles)</span>
+<span class="c1"># Target: fuel_gge (gallons gasoline)</span>
+<span class="c1"># Raw Predicted Consumption: 31.012 (miles/gallons gasoline)</span>
+<span class="c1"># Real World Predicted Consumption: 26.597 (miles/gallons gasoline)</span>
 <span class="c1"># Predict Method: RATE</span>
 <span class="c1"># ========================================</span>
 
 <span class="c1"># Predict energy consumption for a set of road links</span>
 <span class="n">links_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
     <span class="p">{</span>
-        <span class="s2">&quot;distance&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="c1"># miles</span>
-        <span class="s2">&quot;speed_mph&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">50</span><span class="p">],</span> <span class="c1"># mph</span>
-        <span class="s2">&quot;grade_percent&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">],</span> <span class="c1"># percent</span>
+        <span class="s2">"distance_mi"</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="c1"># miles</span>
+        <span class="s2">"speed_mph"</span><span class="p">:</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">50</span><span class="p">],</span> <span class="c1"># mph</span>
+        <span class="s2">"grade_pct"</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">],</span> <span class="c1"># percent</span>
     <span class="p">}</span>
 <span class="p">)</span>
 

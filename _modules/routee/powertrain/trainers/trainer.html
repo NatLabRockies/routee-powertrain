@@ -369,7 +369,7 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.trainers.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">test_train_validation_split</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.validation.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_errors</span>
 
-<span class="n">ENERGY_RATE_NAME</span> <span class="o">=</span> <span class="s2">&quot;energy_rate&quot;</span>
+<span class="n">ENERGY_RATE_NAME</span> <span class="o">=</span> <span class="s2">"energy_rate"</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -378,8 +378,8 @@ document.write(`
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.trainers.trainer.Trainer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Trainer</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="c1">#: Coarse architecture family, used in Metadata for registry-level filtering.</span>
-    <span class="c1">#: Subclasses override (e.g. ``&quot;random_forest&quot;``, ``&quot;cnn&quot;``, ``&quot;ngboost&quot;``).</span>
-    <span class="n">architecture_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+    <span class="c1">#: Subclasses override (e.g. ``"random_forest"``, ``"cnn"``, ``"ngboost"``).</span>
+    <span class="n">architecture_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"unknown"</span>
 
     <span class="c1">#: Default split sizes used when ModelConfig leaves them unspecified.</span>
     <span class="n">default_test_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span>
@@ -387,35 +387,35 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">required_extra_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Columns the trainer needs beyond the declared feature set.</span>
+<span class="w">        </span><span class="sd">"""Columns the trainer needs beyond the declared feature set.</span>
 
 <span class="sd">        Example: a CNN trainer with lookback needs a grouping column</span>
-<span class="sd">        (e.g. ``route_id``) so windows don&#39;t cross route boundaries.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        (e.g. ``route_id``) so windows don't cross route boundaries.</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="p">[]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">split_grouping_column</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;If set, the train/test split keeps all rows of a given group together.</span>
+<span class="w">        </span><span class="sd">"""If set, the train/test split keeps all rows of a given group together.</span>
 
 <span class="sd">        Sequence-aware trainers (e.g. the 1D CNN) must set this so that a</span>
-<span class="sd">        route&#39;s links stay contiguous within train or test — otherwise the</span>
+<span class="sd">        route's links stay contiguous within train or test — otherwise the</span>
 <span class="sd">        per-group lookback windows built at both train and predict time stitch</span>
 <span class="sd">        together non-consecutive rows and the temporal signal is lost.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="Trainer.train">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.trainers.trainer.Trainer.train">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ModelConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        A wrapper for inner train that does some pre and post processing.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">distance_name</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">name</span>
 
         <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">predict_method</span> <span class="o">==</span> <span class="n">PredictMethod</span><span class="o">.</span><span class="n">RATE</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">energy_target</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
-                <span class="n">energy_rate_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">energy_target</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_rate&quot;</span>
+                <span class="n">energy_rate_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">energy_target</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_rate"</span>
                 <span class="n">data</span><span class="p">[</span><span class="n">energy_rate_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">energy_target</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">/</span> <span class="n">data</span><span class="p">[</span><span class="n">distance_name</span><span class="p">]</span>
 
         <span class="n">effective_test_size</span> <span class="o">=</span> <span class="p">(</span>
@@ -439,7 +439,7 @@ document.write(`
         <span class="n">feature_columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">all_feature_names</span><span class="p">)</span>
         <span class="n">all_features</span> <span class="o">=</span> <span class="n">train</span><span class="p">[</span><span class="n">feature_columns</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">all_features</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Features contain null values&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Features contain null values"</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">predict_method</span> <span class="o">==</span> <span class="n">PredictMethod</span><span class="o">.</span><span class="n">RATE</span><span class="p">:</span>
             <span class="n">target</span> <span class="o">=</span> <span class="n">train</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">target_rate_name_list</span><span class="p">]</span>
@@ -448,8 +448,8 @@ document.write(`
 
         <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Energy target contains null values. The predict method is &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; set to </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">predict_method</span><span class="si">}</span><span class="s2"> and the target is </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="s2">"Energy target contains null values. The predict method is "</span>
+                <span class="sa">f</span><span class="s2">" set to </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">predict_method</span><span class="si">}</span><span class="s2"> and the target is </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
 
         <span class="c1"># train the estimator for the feature set</span>
@@ -460,7 +460,7 @@ document.write(`
         <span class="k">for</span> <span class="n">extra</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">required_extra_columns</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">extra</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">train</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Trainer requires column &#39;</span><span class="si">{</span><span class="n">extra</span><span class="si">}</span><span class="s2">&#39; which is not in the input data&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Trainer requires column '</span><span class="si">{</span><span class="n">extra</span><span class="si">}</span><span class="s2">' which is not in the input data"</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="n">extra</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">name_list</span><span class="p">:</span>
                 <span class="n">name_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span>
@@ -494,9 +494,9 @@ document.write(`
             <span class="n">config</span><span class="p">,</span>
             <span class="n">errors</span><span class="o">=</span><span class="n">model_errors</span><span class="p">,</span>
             <span class="n">estimator_type</span><span class="o">=</span><span class="n">estimator</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
-            <span class="n">model_file</span><span class="o">=</span><span class="s2">&quot;model&quot;</span> <span class="o">+</span> <span class="n">estimator</span><span class="o">.</span><span class="n">file_extension</span><span class="p">,</span>
+            <span class="n">model_file</span><span class="o">=</span><span class="s2">"model"</span> <span class="o">+</span> <span class="n">estimator</span><span class="o">.</span><span class="n">file_extension</span><span class="p">,</span>
             <span class="n">architecture_tag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">architecture_tag</span><span class="p">,</span>
-            <span class="n">input_spec</span><span class="o">=</span><span class="n">estimator</span><span class="o">.</span><span class="n">input_spec</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">),</span>
+            <span class="n">input_spec</span><span class="o">=</span><span class="n">estimator</span><span class="o">.</span><span class="n">input_spec</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
             <span class="n">trained_date</span><span class="o">=</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
         <span class="p">)</span>
 
@@ -520,9 +520,9 @@ document.write(`
         <span class="n">validation_features</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">validation_target</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Estimator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Builds an estimator from the given data.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">pass</span></div>
 </div>
 

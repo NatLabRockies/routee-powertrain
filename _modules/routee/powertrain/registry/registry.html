@@ -364,18 +364,18 @@ document.write(`
 
 <span class="c1">#: Filename of the catalog the remote backends read to answer queries without</span>
 <span class="c1">#: walking the whole store.</span>
-<span class="n">INDEX_FILENAME</span> <span class="o">=</span> <span class="s2">&quot;index.json&quot;</span>
+<span class="n">INDEX_FILENAME</span> <span class="o">=</span> <span class="s2">"index.json"</span>
 
 
 <div class="viewcode-block" id="IndexMissingError">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.registry.IndexMissingError">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">IndexMissingError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when ``index.json`` is missing or unreadable at the schema root.&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Raised when ``index.json`` is missing or unreadable at the schema root."""</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_model_id</span><span class="p">(</span><span class="n">model_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ModelId</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ModelId</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Coerce a string or ModelId into a ModelId.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Coerce a string or ModelId into a ModelId."""</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ModelId</span><span class="o">.</span><span class="n">from_path</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">model_id</span>
@@ -384,13 +384,13 @@ document.write(`
 <div class="viewcode-block" id="ModelRegistry">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.registry.ModelRegistry">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ModelRegistry</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Abstract interface for a model registry backend.</span>
 
 <span class="sd">    Implementations provide model discovery (query) and retrieval (load).</span>
-<span class="sd">    The registry is read-only from the package&#39;s perspective; publishing</span>
+<span class="sd">    The registry is read-only from the package's perspective; publishing</span>
 <span class="sd">    models is handled out-of-band by CI/scripts.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="ModelRegistry.query">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.registry.ModelRegistry.query">[docs]</a>
@@ -409,12 +409,12 @@ document.write(`
         <span class="n">trim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_digest</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">version_strategy</span><span class="p">:</span> <span class="n">VersionStrategy</span> <span class="o">=</span> <span class="s2">&quot;latest&quot;</span><span class="p">,</span>
+        <span class="n">version_strategy</span><span class="p">:</span> <span class="n">VersionStrategy</span> <span class="o">=</span> <span class="s2">"latest"</span><span class="p">,</span>
         <span class="n">custom_filters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">ModelInfo</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">fuzzy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">fuzzy_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">80</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ModelInfo</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        List models matching the given filters.</span>
 
 <span class="sd">        All parameters are optional; passing none returns all models.</span>
@@ -423,17 +423,17 @@ document.write(`
 <span class="sd">        Args:</span>
 <span class="sd">            make: filter by vehicle make</span>
 <span class="sd">            model: filter by vehicle model — matches the bare metadata model</span>
-<span class="sd">                name (e.g. ``&quot;camry&quot;``) or the derived ``vehicle_slug`` path</span>
-<span class="sd">                segment (e.g. ``&quot;camry_ice&quot;``)</span>
+<span class="sd">                name (e.g. ``"camry"``) or the derived ``vehicle_slug`` path</span>
+<span class="sd">                segment (e.g. ``"camry_ice"``)</span>
 <span class="sd">            year: filter by model year</span>
-<span class="sd">            config_slug: filter by config slug (e.g. &quot;rf_default&quot;, &quot;cnn_5link&quot;)</span>
+<span class="sd">            config_slug: filter by config slug (e.g. "rf_default", "cnn_5link")</span>
 <span class="sd">            feature_names: filter to models whose feature set contains every</span>
 <span class="sd">                listed feature column (subset match, exact names)</span>
-<span class="sd">            powertrain_type: filter by powertrain type (e.g. &quot;ICE&quot;, &quot;BEV&quot;, &quot;HEV&quot;)</span>
-<span class="sd">            fuel_type: filter by fuel type (e.g. &quot;GASOLINE&quot;, &quot;DIESEL&quot;, &quot;ELECTRICITY&quot;)</span>
-<span class="sd">            drivetrain: filter by drivetrain (e.g. &quot;FWD&quot;, &quot;RWD&quot;, &quot;AWD&quot;)</span>
-<span class="sd">            engine: filter by engine specification (e.g. &quot;4cyl&quot;, &quot;2.0tdi&quot;)</span>
-<span class="sd">            trim: filter by trim level (e.g. &quot;sport&quot;, &quot;active&quot;)</span>
+<span class="sd">            powertrain_type: filter by powertrain type (e.g. "ICE", "BEV", "HEV")</span>
+<span class="sd">            fuel_type: filter by fuel type (e.g. "GASOLINE", "DIESEL", "ELECTRICITY")</span>
+<span class="sd">            drivetrain: filter by drivetrain (e.g. "FWD", "RWD", "AWD")</span>
+<span class="sd">            engine: filter by engine specification (e.g. "4cyl", "2.0tdi")</span>
+<span class="sd">            trim: filter by trim level (e.g. "sport", "active")</span>
 <span class="sd">            version: pin results to an exact version (e.g. 2). When set,</span>
 <span class="sd">                ``version_strategy`` is ignored.</span>
 <span class="sd">            model_digest: pin results to an exact instance identity — the</span>
@@ -443,8 +443,8 @@ document.write(`
 <span class="sd">                metadata file in hand back to its registry entry. When set,</span>
 <span class="sd">                ``version_strategy`` is ignored.</span>
 <span class="sd">            version_strategy: how to collapse multiple versions of the same</span>
-<span class="sd">                model. ``&quot;latest&quot;`` (default) keeps only the highest version</span>
-<span class="sd">                per (make, vehicle_slug, year, config_slug) group; ``&quot;all&quot;``</span>
+<span class="sd">                model. ``"latest"`` (default) keeps only the highest version</span>
+<span class="sd">                per (make, vehicle_slug, year, config_slug) group; ``"all"``</span>
 <span class="sd">                returns every version. Ignored when ``version`` is specified.</span>
 <span class="sd">            custom_filters: optional list of callables that accept a ModelInfo</span>
 <span class="sd">                and return True to keep the model or False to exclude it</span>
@@ -452,13 +452,13 @@ document.write(`
 <span class="sd">                fields (default True)</span>
 <span class="sd">            fuzzy_threshold: minimum score (0–100) for a fuzzy match</span>
 <span class="sd">                to be accepted (default 80)</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
+<span class="sd">        """</span></div>
 
 
 <div class="viewcode-block" id="ModelRegistry.find_by_digest">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.registry.ModelRegistry.find_by_digest">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">find_by_digest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">digest</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ModelInfo</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Find the registry entries holding a model with the given instance</span>
 <span class="sd">        identity.</span>
 
@@ -473,7 +473,7 @@ document.write(`
 
 <span class="sd">        Returns: matching ModelInfo entries (empty if the model was never</span>
 <span class="sd">            published to this registry)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">model_digest</span><span class="o">=</span><span class="n">digest</span><span class="p">,</span> <span class="n">fuzzy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
@@ -481,7 +481,7 @@ document.write(`
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.registry.ModelRegistry.load">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ModelId</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Model</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Download and deserialize a specific model.</span>
 
 <span class="sd">        Args:</span>
@@ -490,7 +490,7 @@ document.write(`
 <span class="sd">                be parsed via ``ModelId.from_path()``.</span>
 
 <span class="sd">        Returns: a fully deserialized Model instance</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
+<span class="sd">        """</span></div>
 
 
 <div class="viewcode-block" id="ModelRegistry.list_models">
@@ -498,28 +498,28 @@ document.write(`
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">list_models</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">version_strategy</span><span class="p">:</span> <span class="n">VersionStrategy</span> <span class="o">=</span> <span class="s2">&quot;latest&quot;</span><span class="p">,</span>
+        <span class="n">version_strategy</span><span class="p">:</span> <span class="n">VersionStrategy</span> <span class="o">=</span> <span class="s2">"latest"</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ModelId</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        List model identifiers in the registry.</span>
 
 <span class="sd">        This is a lightweight operation that returns only the model</span>
 <span class="sd">        paths/identifiers without fetching any metadata or binaries.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            version_strategy: ``&quot;latest&quot;`` (default) returns only the highest</span>
-<span class="sd">                version per (make, model, year, config_slug) group; ``&quot;all&quot;``</span>
+<span class="sd">            version_strategy: ``"latest"`` (default) returns only the highest</span>
+<span class="sd">                version per (make, model, year, config_slug) group; ``"all"``</span>
 <span class="sd">                returns every versioned identifier.</span>
 
 <span class="sd">        Returns: list of ModelId matching the strategy</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
+<span class="sd">        """</span></div>
 
 
 <div class="viewcode-block" id="ModelRegistry.get_metadata">
 <a class="viewcode-back" href="../../../../api_docs.html#routee.powertrain.registry.registry.ModelRegistry.get_metadata">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ModelId</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Fetch only the metadata for a model (without downloading the binary).</span>
 
 <span class="sd">        Args:</span>
@@ -528,7 +528,7 @@ document.write(`
 <span class="sd">                be parsed via ``ModelId.from_path()``.</span>
 
 <span class="sd">        Returns: the parsed metadata dictionary from the archive</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
+<span class="sd">        """</span></div>
 </div>
 
 </pre></div>
