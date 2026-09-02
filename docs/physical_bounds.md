@@ -2,7 +2,7 @@
 
 The models in the RouteE Powertrain library are statistical fits, not physical
 simulations. They are good at what they were fit to and can be wrong
-outside it. This page attempts to make clear where the boundaries are 
+outside it. This page attempts to make clear where the boundaries are
 and how to exercise caution when using the models.
 
 ## Know what these models can and cannot do
@@ -16,7 +16,7 @@ extrapolation and can be incorrect.
 are noisier, and they are not guaranteed to obey physics. On a single link a
 model may charge less for a climb than the height gained, return more energy on
 a descent than the hill contains, or price a hill and its return leg below flat
-ground. 
+ground.
 
 **CNN models read the previous four links of a trip.** Give them whole trips in
 driving order. A lone link, or a trip with links shuffled or missing, is not the
@@ -43,7 +43,7 @@ ceiling `validate-physics` reports as `absolute_ceiling`.
 
 - It does not fix the learned function. A climb can still cost less than its
   potential energy, a hill can still be cheaper than flat ground, and a
-  BEV model can still return more on a descent than the hill held. 
+  BEV model can still return more on a descent than the hill held.
 - It needs a vehicle mass (`vehicle.mass_lbs` in the metadata, or a mass
   feature), a speed feature, a distance in miles and a target in a recognised
   energy unit. When any is missing the prediction passes through unchanged.
@@ -76,4 +76,3 @@ floor, ceiling = pt.physical_bounds(links_df, model.metadata.config)["electric_k
 
 The floor is the validation floor described above; the guardrail applies only
 the ceiling, and zero for fuel.
-
