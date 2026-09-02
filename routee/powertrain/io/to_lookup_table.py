@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import numpy as np
 
+from routee.powertrain.validation.physics import apply_guardrail
+
 if TYPE_CHECKING:
     from routee.powertrain.core.model import Model
 
@@ -94,6 +96,10 @@ def to_lookup_table(
     pred_df[model.metadata.config.distance.name] = 1
 
     predictions = estimator.predict(pred_df, model.metadata.config)
+    if model.metadata.config.output_guardrail == "envelope":
+        # The table is what a router reads, so it carries the same bound as
+        # ``Model.predict``. At one unit of distance the band is exact.
+        predictions = apply_guardrail(predictions, pred_df, model.metadata.config)
 
     lookup = pred_df[feature_names_list].copy()
 

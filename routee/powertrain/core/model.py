@@ -23,6 +23,7 @@ from routee.powertrain.validation.feature_visualization import (
     contour_plot,
     visualize_features,
 )
+from routee.powertrain.validation.physics import apply_guardrail
 
 if TYPE_CHECKING:
     from pandas import Series
@@ -248,6 +249,13 @@ class Model:
                 grouping column.
 
         Returns: a dataframe containing the predicted energy consumption for each link
+
+        The estimator's raw output is first clipped to each link's physical
+        energy ceiling (and to zero for a fuel target) when
+        ``config.output_guardrail`` is ``"envelope"`` — see
+        ``validation.physics.apply_guardrail`` — then multiplied by the
+        real-world adjustment factor. ``self.estimator.predict(links_df,
+        self.metadata.config)`` returns the raw output with neither applied.
         """
         config = self.metadata.config
 
@@ -270,6 +278,9 @@ class Model:
                 )
 
         pred_energy_df = self.estimator.predict(links_df, config)
+
+        if config.output_guardrail == "envelope":
+            pred_energy_df = apply_guardrail(pred_energy_df, links_df, config)
 
         for energy in config.target.targets:
             pred_energy_df[energy.name] = (

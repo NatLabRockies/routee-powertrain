@@ -14,6 +14,7 @@ parts:
     chapters:
       - file: api_docs
       - file: estimator_input_contract
+      - file: physical_bounds
       - file: model_registry
 
   - caption: Examples

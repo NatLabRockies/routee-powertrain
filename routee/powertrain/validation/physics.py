@@ -23,7 +23,7 @@ output guardrail, because the point is to measure the function that was learned.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, List, NamedTuple, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -120,6 +120,7 @@ SPEED_UNITS_KPH = {"kph", "km/h", "kmh", "kilometers per hour"}
 GRADE_UNITS_PERCENT = {"percent", "%", "pct"}
 GRADE_UNITS_DECIMAL = {"decimal", "fraction", "ratio", "unitless", "dimensionless"}
 MASS_UNITS = {"pounds", "lbs", "lb", "pound"}
+DISTANCE_UNITS_MILES = {"miles", "mile", "mi"}
 
 #: Plausible flat-ground economy envelopes by powertrain type. Deliberately wide
 #: — a model outside these is obviously wrong, not marginally wrong. Electric
@@ -145,6 +146,18 @@ TRIP_LEN = 12
 SHALLOW_GRADE_PCT = 3.0
 
 TOL = 1e-12
+
+
+def is_combustion_target(units: str, powertrain_type: PowertrainType) -> bool:
+    """Whether a target counts burned fuel, which never comes back.
+
+    Decided by the normalized units, except for an electric vehicle: a BEV
+    whose target is in gasoline-gallon equivalents is still storing
+    electricity, and its regeneration is real.
+    """
+    if powertrain_type in (PowertrainType.BEV, PowertrainType.PHEV_EV_MODE):
+        return False
+    return units in COMBUSTION_UNITS
 
 
 def normalize_units(units: Optional[str]) -> str:
@@ -334,7 +347,13 @@ class PhysicsReport(BaseModel):
 
 
 class _Roles:
-    """Which feature plays which physical role in a model's input frame."""
+    """Which feature plays which physical role in a model's input frame.
+
+    ``speed_scale`` multiplies a model value to give mph; ``grade_scale``
+    multiplies a percent grade to give the model's value. ``_build_frame``
+    applies both in the direction that builds a model frame, and
+    ``physical_bounds`` in the direction that reads one.
+    """
 
     def __init__(self) -> None:
         self.speed: Optional[DataColumn] = None
@@ -378,7 +397,7 @@ def _resolve_roles(
             roles.speed, roles.speed_scale = column, 1.0
             continue
         if roles.speed is None and units in SPEED_UNITS_KPH:
-            roles.speed, roles.speed_scale = column, 1.0 / KPH_TO_MPH
+            roles.speed, roles.speed_scale = column, KPH_TO_MPH
             continue
         if roles.grade is None and units in GRADE_UNITS_PERCENT:
             roles.grade, roles.grade_scale = column, 1.0
@@ -571,6 +590,79 @@ def _resolve_mass(
 # -- check construction -----------------------------------------------------
 
 
+class _Envelope(NamedTuple):
+    """The energy terms bounding one link, in the target's own units."""
+
+    #: Signed: positive on a climb, negative on a descent.
+    potential: np.ndarray
+    kinetic: np.ndarray
+    resistance: np.ndarray
+    accessory: np.ndarray
+    eta_drive: float
+    eta_regen: float
+
+    @property
+    def ceiling(self) -> np.ndarray:
+        """The most a link could demand: lift, one full acceleration and road
+        load through the driveline, plus accessories."""
+        return (
+            np.maximum(self.potential, 0.0) + self.kinetic + self.resistance
+        ) / self.eta_drive + self.accessory
+
+    @property
+    def floor(self) -> np.ndarray:
+        """The most a link could return: the drop and one full stop, at
+        regeneration efficiency. Exactly zero for a combustion target."""
+        return -self.eta_regen * (np.maximum(-self.potential, 0.0) + self.kinetic)
+
+
+def _envelope(
+    speed_mph: np.ndarray,
+    grade_pct: np.ndarray,
+    distance_mi: np.ndarray,
+    mass_kg: "float | np.ndarray",
+    joules_per_unit: float,
+    is_combustion: bool,
+    assumptions: PhysicsAssumptions,
+) -> _Envelope:
+    """The physical envelope of each link, from physical quantities.
+
+    ``mass_kg`` may be a scalar or one value per link. Every term is generous
+    by construction of ``assumptions``, so the band is a bound on any plausible
+    vehicle rather than an estimate for this one.
+    """
+    eta_drive = (
+        assumptions.eta_tank_to_wheel if is_combustion else assumptions.eta_drive
+    )
+    # Regeneration is a battery behavior; a combustion driveline stores nothing
+    # back, so its only saving on a descent is fuel it does not burn.
+    eta_regen = 0.0 if is_combustion else assumptions.eta_regen
+    accessory_w = (
+        assumptions.accessory_watts_combustion
+        if is_combustion
+        else assumptions.accessory_watts_electric
+    )
+
+    rise_m = distance_mi * MI_TO_M * grade_pct / 100.0
+    potential = mass_kg * G * rise_m / joules_per_unit
+    velocity = speed_mph * MPH_TO_MS
+    kinetic = 0.5 * mass_kg * velocity**2 / joules_per_unit
+    resistance = (
+        (
+            assumptions.crr * mass_kg * G
+            + 0.5 * assumptions.air_density * assumptions.cda_m2 * velocity**2
+        )
+        * (distance_mi * MI_TO_M)
+        / joules_per_unit
+    )
+    # Accessories are billed per unit time, so a slow link costs more of them.
+    seconds = np.divide(
+        distance_mi * MI_TO_M, velocity, out=np.zeros_like(velocity), where=velocity > 0
+    )
+    accessory = accessory_w * seconds / joules_per_unit
+    return _Envelope(potential, kinetic, resistance, accessory, eta_drive, eta_regen)
+
+
 def _na(name: str, reason: str) -> PhysicsCheck:
     return PhysicsCheck(name=name, status="not_applicable", reason=reason)
 
@@ -677,7 +769,7 @@ def check_physics(
     target = config.target.targets[0]
     target_units = normalize_units(target.units)
     joules_per_unit = ENERGY_CONTENT_J.get(target_units)
-    is_combustion = target_units in COMBUSTION_UNITS
+    is_combustion = is_combustion_target(target_units, config.powertrain_type)
     adjustment = config.real_world_adjustment_factor
 
     if len(config.target.targets) > 1:
@@ -837,35 +929,8 @@ def check_physics(
         return report
 
     assert mass_kg is not None and joules_per_unit is not None
-    eta_drive = (
-        assumptions.eta_tank_to_wheel if is_combustion else assumptions.eta_drive
-    )
-    # Regeneration is a battery behavior; a combustion driveline stores nothing
-    # back, so its only saving on a descent is fuel it does not burn.
-    eta_regen = 0.0 if is_combustion else assumptions.eta_regen
-    accessory_w = (
-        assumptions.accessory_watts_combustion
-        if is_combustion
-        else assumptions.accessory_watts_electric
-    )
-
-    rise_m = di * MI_TO_M * gm / 100.0
-    potential = mass_kg * G * rise_m / joules_per_unit
-    velocity = sp * MPH_TO_MS
-    kinetic = 0.5 * mass_kg * velocity**2 / joules_per_unit
-    resistance = (
-        (
-            assumptions.crr * mass_kg * G
-            + 0.5 * assumptions.air_density * assumptions.cda_m2 * velocity**2
-        )
-        * (di * MI_TO_M)
-        / joules_per_unit
-    )
-    # Accessories are billed per unit time, so a slow link costs more of them.
-    seconds = np.divide(
-        di * MI_TO_M, velocity, out=np.zeros_like(velocity), where=velocity > 0
-    )
-    accessory = accessory_w * seconds / joules_per_unit
+    env = _envelope(sp, gm, di, mass_kg, joules_per_unit, is_combustion, assumptions)
+    potential, resistance = env.potential, env.resistance
 
     if has_grade:
         # Lifting the vehicle is work no drivetrain can avoid, so the climb must
@@ -895,7 +960,7 @@ def check_physics(
             # covering that ground anyway. Bounding only the first understates
             # the legitimate saving and would flag correct models.
             recoverable = np.minimum(resistance, np.abs(potential))
-            max_saving = recoverable / eta_drive + eta_regen * (
+            max_saving = recoverable / env.eta_drive + env.eta_regen * (
                 np.abs(potential) - recoverable
             )
             checks.append(
@@ -912,15 +977,18 @@ def check_physics(
 
     tiled = {k: np.tile(v, 3) for k, v in context.items()}
     everything = np.concatenate([flat, climb, descent])
-    signed_potential = np.concatenate([np.zeros_like(potential), potential, -potential])
-    tiled_kinetic = np.tile(kinetic, 3)
-    tiled_resistance = np.tile(resistance, 3)
-    tiled_accessory = np.tile(accessory, 3)
-
-    ceiling = (
-        np.maximum(signed_potential, 0.0) + tiled_kinetic + tiled_resistance
-    ) / eta_drive + tiled_accessory
-    floor = -eta_regen * (np.maximum(-signed_potential, 0.0) + tiled_kinetic)
+    # The same envelope over the (flat, climb, descent) triples, so the grade
+    # carries its sign and the bound is the one ``physical_bounds`` applies.
+    signed = _envelope(
+        np.tile(sp, 3),
+        np.concatenate([np.zeros_like(gm), gm, -gm]),
+        np.tile(di, 3),
+        mass_kg,
+        joules_per_unit,
+        is_combustion,
+        assumptions,
+    )
+    ceiling, floor = signed.ceiling, signed.floor
 
     checks.append(
         _build_check(
@@ -956,6 +1024,132 @@ def check_physics(
     return report
 
 
+def physical_bounds(
+    links_df: pd.DataFrame,
+    config: ModelConfig,
+    *,
+    assumptions: Optional[PhysicsAssumptions] = None,
+    mass_lbs: Optional[float] = None,
+) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
+    """The physical energy band of each link, per target, in target units.
+
+    This is the band ``check_physics`` scores as ``absolute_floor`` and
+    ``absolute_ceiling``, evaluated on real links instead of a sweep. It is
+    loose by design (see ``PhysicsAssumptions``), and ``apply_guardrail`` uses
+    its ceiling; see there for why the electric floor is reported but not
+    enforced.
+
+    Args:
+        links_df: the frame handed to the estimator, in the model's own units
+        config: the model configuration describing its inputs and targets
+        assumptions: vehicle constants; the generous defaults when omitted
+        mass_lbs: vehicle mass, used when the model carries none
+
+    Returns: ``{target name: (floor, ceiling)}``, one array pair per target
+        whose units are a recognized energy. Empty when the band cannot be
+        evaluated at all: distance not in miles, no speed feature, or no
+        vehicle mass. Rows with a negative or non-finite speed or distance get
+        ``NaN`` bounds, so a caller can leave them alone.
+    """
+    assumptions = assumptions or PhysicsAssumptions()
+    if normalize_units(config.distance.units) not in DISTANCE_UNITS_MILES:
+        return {}
+    roles = _resolve_roles(config, None, None, [])
+    if roles.speed is None:
+        return {}
+
+    # Mass: one value per link when the model takes it as a feature, else the
+    # metadata's, else the caller's. A mass feature's declared range only ever
+    # stands in for the sweep, never for a real link.
+    mass_kg: "float | np.ndarray | None"
+    if roles.mass is not None and roles.mass.name in links_df.columns:
+        mass_kg = links_df[roles.mass.name].to_numpy(dtype=float) * LB_TO_KG
+    else:
+        mass_kg = _resolve_mass(config, roles, mass_lbs)[1]
+    if mass_kg is None:
+        return {}
+
+    speed_mph = links_df[roles.speed.name].to_numpy(dtype=float) * roles.speed_scale
+    distance_mi = links_df[config.distance.name].to_numpy(dtype=float)
+    if roles.grade is not None:
+        grade_pct = links_df[roles.grade.name].to_numpy(dtype=float) / roles.grade_scale
+    else:
+        grade_pct = np.zeros_like(speed_mph)
+    usable = (
+        np.isfinite(speed_mph)
+        & np.isfinite(distance_mi)
+        & np.isfinite(grade_pct)
+        & (speed_mph >= 0)
+        & (distance_mi >= 0)
+    )
+    if not isinstance(mass_kg, float):
+        usable &= np.isfinite(mass_kg) & (mass_kg > 0)
+    nan = np.full(speed_mph.shape, np.nan)
+
+    out: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
+    for target in config.target.targets:
+        units = normalize_units(target.units)
+        joules_per_unit = ENERGY_CONTENT_J.get(units)
+        if joules_per_unit is None:
+            continue
+        env = _envelope(
+            speed_mph,
+            grade_pct,
+            distance_mi,
+            mass_kg,
+            joules_per_unit,
+            is_combustion_target(units, config.powertrain_type),
+            assumptions,
+        )
+        # ``+ 0.0`` turns a combustion floor of ``-0.0`` into ``0.0``.
+        floor = np.where(usable, env.floor + 0.0, nan)
+        ceiling = np.where(usable, env.ceiling, nan)
+        out[target.name] = (floor, ceiling)
+    return out
+
+
+def apply_guardrail(
+    predictions: pd.DataFrame, links_df: pd.DataFrame, config: ModelConfig
+) -> pd.DataFrame:
+    """Clip each target column of ``predictions`` to its physical ceiling, and
+    to zero for a fuel target.
+
+    The electric floor from ``physical_bounds`` is deliberately not enforced.
+    Its kinetic term is one stop from the link's *average* speed, and a slow
+    link's average hides the far higher speed the vehicle actually braked
+    from: on simulated Bolt links, one in twenty returns more energy than that
+    floor allows, one in four at 5-15 mph. Enforcing it would clip correct
+    predictions. The ceiling has no such problem — a link's average speed
+    cannot hide a demand — and it is what stops a model running away on a
+    link far outside its training range. Burned fuel cannot be negative under
+    any driving, so that floor is exact.
+
+    Only rows with a finite bound are touched; a ``NaN`` prediction stays
+    ``NaN``, and columns that are not targets (a standard deviation, say) pass
+    through. Returns ``predictions``, modified in place.
+    """
+    bounds = physical_bounds(links_df, config)
+    for target in config.target.targets:
+        if target.name not in bounds:
+            continue
+        floor, ceiling = bounds[target.name]
+        if not is_combustion_target(
+            normalize_units(target.units), config.powertrain_type
+        ):
+            floor = np.full(ceiling.shape, -np.inf)
+        name = target.name
+        values = predictions[name].to_numpy(dtype=float)
+        ok = np.isfinite(ceiling) & (floor <= ceiling)
+        clipped = np.where(ok, np.clip(values, floor, ceiling), values)
+        if log.isEnabledFor(logging.DEBUG):
+            n_bound = int(np.count_nonzero(ok & (clipped != values)))
+            log.debug(
+                "guardrail bound %d of %d links of %s", n_bound, values.size, name
+            )
+        predictions[name] = clipped
+    return predictions
+
+
 def _add_diagnostics(
     report: PhysicsReport,
     config: ModelConfig,
@@ -970,7 +1164,7 @@ def _add_diagnostics(
     """Fill in the descriptive half of the report."""
     d = report.diagnostics
     target_units = normalize_units(config.target.targets[0].units)
-    is_combustion = target_units in COMBUSTION_UNITS
+    is_combustion = is_combustion_target(target_units, config.powertrain_type)
 
     # -- flat-ground economy, read against a plausible envelope --------------
     band = ECONOMY_BANDS.get(config.powertrain_type)

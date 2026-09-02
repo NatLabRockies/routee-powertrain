@@ -23,7 +23,9 @@ The contract lives in **two artifacts**, each with a different reader:
 2. **The estimator binary itself** — for ONNX models the _resolved, positional_
    contract is embedded in the graph's `metadata_props`, so a bare `.onnx` file is
    self-describing **without** the sidecar `metadata.json`. This is the copy a
-   consumer that only has the binary (e.g. routee-compass) reads.
+   consumer that only has the binary (e.g. routee-compass) reads. Such a
+   consumer gets the estimator's raw output: neither the real-world adjustment
+   factor nor the [output guardrail](physical_bounds.md) is applied.
 
 The two are not redundant: they serve different consumers. On load, powertrain
 **raises** if the binary's embedded order disagrees with the `contract` in
