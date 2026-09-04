@@ -33,6 +33,7 @@ __all__ = [
     "visualize_features",
     "check_physics",
     "check_model",
+    "physical_bounds",
     "PhysicsReport",
     "PhysicsAssumptions",
     "contour_plot",
@@ -71,6 +72,7 @@ from .validation.feature_visualization import visualize_features, contour_plot
 from .validation.physics import (
     check_model,
     check_physics,
+    physical_bounds,
     PhysicsAssumptions,
     PhysicsReport,
 )

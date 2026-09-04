@@ -195,6 +195,7 @@ trainer:
 | `vehicle.mass_lbs / fuel_type`                              | From `ModelConfig` (optional)                              |
 | `contract.feature_set / target / distance`                  | From `ModelConfig`                                         |
 | `contract.predict_method`                                   | From `ModelConfig`                                         |
+| `contract.output_guardrail`                                 | From `ModelConfig` (default `"envelope"`)                  |
 | `provenance.source`                                         | From `ModelConfig.training_source` (optional)              |
 | `provenance.training.test_size / random_seed / trip_column` | From `ModelConfig`                                         |
 | `provenance.training.trained_date`                          | Stamped by `Trainer.train()`                               |

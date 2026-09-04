@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, field_validator, model_validator
 
@@ -44,7 +44,14 @@ __all__ = [
     "FastSimSource",
     "RealWorldSource",
     "LegacySource",
+    "OutputGuardrail",
 ]
+
+#: How ``Model.predict`` bounds what an estimator returns. ``"envelope"`` clips
+#: each link's energy to the physical ceiling from ``validation.physics`` (and
+#: to zero for a fuel target) when the model carries a vehicle mass and a speed
+#: feature; ``"none"`` never clips, for estimators bounded by construction.
+OutputGuardrail = Literal["envelope", "none"]
 
 
 class ModelConfig(BaseModel):
@@ -87,6 +94,10 @@ class ModelConfig(BaseModel):
     #: powertrain-type factor in ``ADJUSTMENT_FACTORS``; set to ``1.0`` to
     #: apply no adjustment.
     real_world_adjustment_factor: float = 1.0
+
+    #: See ``OutputGuardrail``. Applied to raw estimator output, before the
+    #: real-world adjustment factor.
+    output_guardrail: OutputGuardrail = "envelope"
 
     mass_lbs: Optional[float] = None
 
@@ -271,6 +282,10 @@ class Contract(BaseModel):
     #: from the powertrain type) and stored concretely here.
     real_world_adjustment_factor: float = 1.0
 
+    #: See ``OutputGuardrail``. Absent from metadata written before it existed,
+    #: which loads as ``"envelope"``.
+    output_guardrail: OutputGuardrail = "envelope"
+
     @field_validator("feature_set", mode="before")
     @classmethod
     def _coerce_feature_set(cls, v: object) -> object:
@@ -295,4 +310,5 @@ class Contract(BaseModel):
             target=config.target,
             predict_method=config.predict_method,
             real_world_adjustment_factor=config.real_world_adjustment_factor,
+            output_guardrail=config.output_guardrail,
         )
