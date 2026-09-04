@@ -20,6 +20,7 @@ from routee.powertrain.core.model_config import Contract
 from routee.powertrain.io.to_lookup_table import to_lookup_table
 from routee.powertrain.validation.errors import EstimatorErrors, ModelErrors
 from routee.powertrain.validation.physics import (
+    KM_TO_MI,
     KPH_TO_MPH,
     check_physics,
     physical_bounds,
@@ -169,11 +170,19 @@ class TestEnvelopeClamp(unittest.TestCase):
             model.predict(frame)["kwh"].to_numpy(), raw(model, frame)
         )
 
-    def test_distance_not_in_miles_means_no_clamp(self):
-        config = make_config(mass_lbs=MASS_LBS).model_copy(
+    def test_distance_in_kilometers_gives_the_same_band(self):
+        mph_config = make_config(mass_lbs=MASS_LBS)
+        km_config = mph_config.model_copy(
             update={"distance": pt.DataColumn(name="distance", units="kilometers")}
         )
-        self.assertEqual(physical_bounds(links(), config), {})
+        frame = links()
+        km_frame = frame.copy()
+        km_frame["distance"] = frame["distance"] / KM_TO_MI
+        for side in (0, 1):
+            np.testing.assert_allclose(
+                physical_bounds(km_frame, km_config)["kwh"][side],
+                physical_bounds(frame, mph_config)["kwh"][side],
+            )
 
     def test_per_row_mass_feature_beats_metadata_mass(self):
         config = make_config(

@@ -23,6 +23,7 @@ output guardrail, because the point is to measure the function that was learned.
 from __future__ import annotations
 
 import logging
+import warnings
 from typing import TYPE_CHECKING, Callable, Dict, List, NamedTuple, Optional, Tuple
 
 import numpy as np
@@ -48,6 +49,7 @@ LB_TO_KG = 0.45359237
 MI_TO_M = 1609.344
 MPH_TO_MS = 0.44704
 KPH_TO_MPH = 0.621371
+KM_TO_MI = 0.621371
 AIR_DENSITY = 1.225
 """Sea-level air density, kg/m^3."""
 
@@ -120,7 +122,18 @@ SPEED_UNITS_KPH = {"kph", "km/h", "kmh", "kilometers per hour"}
 GRADE_UNITS_PERCENT = {"percent", "%", "pct"}
 GRADE_UNITS_DECIMAL = {"decimal", "fraction", "ratio", "unitless", "dimensionless"}
 MASS_UNITS = {"pounds", "lbs", "lb", "pound"}
-DISTANCE_UNITS_MILES = {"miles", "mile", "mi"}
+#: Miles per unit of each recognized distance unit (miles, kilometers, meters).
+DISTANCE_UNITS_TO_MILES: Dict[str, float] = {
+    "miles": 1.0,
+    "mile": 1.0,
+    "mi": 1.0,
+    "kilometers": KM_TO_MI,
+    "kilometer": KM_TO_MI,
+    "km": KM_TO_MI,
+    "meters": 1.0 / MI_TO_M,
+    "meter": 1.0 / MI_TO_M,
+    "m": 1.0 / MI_TO_M,
+}
 
 #: Plausible flat-ground economy envelopes by powertrain type. Deliberately wide
 #: — a model outside these is obviously wrong, not marginally wrong. Electric
@@ -349,15 +362,17 @@ class PhysicsReport(BaseModel):
 class _Roles:
     """Which feature plays which physical role in a model's input frame.
 
-    ``speed_scale`` multiplies a model value to give mph; ``grade_scale``
-    multiplies a percent grade to give the model's value. ``_build_frame``
-    applies both in the direction that builds a model frame, and
-    ``physical_bounds`` in the direction that reads one.
+    ``speed_scale`` and ``distance_scale`` multiply a model value to give mph
+    and miles; ``grade_scale`` multiplies a percent grade to give the model's
+    value. ``_build_frame`` applies them all in the direction that builds a
+    model frame, and ``physical_bounds`` in the direction that reads one.
     """
 
     def __init__(self) -> None:
         self.speed: Optional[DataColumn] = None
         self.speed_scale: float = 1.0
+        self.distance: Optional[DataColumn] = None
+        self.distance_scale: float = 1.0
         self.grade: Optional[DataColumn] = None
         self.grade_scale: float = 1.0
         self.mass: Optional[DataColumn] = None
@@ -383,6 +398,9 @@ def _resolve_roles(
     """
     roles = _Roles()
     distance_name = config.distance.name
+    distance_scale = DISTANCE_UNITS_TO_MILES.get(normalize_units(config.distance.units))
+    if distance_scale is not None:
+        roles.distance, roles.distance_scale = config.distance, distance_scale
 
     for column in config.all_features:
         # The distance column is swept directly, so it is never a held feature —
@@ -544,7 +562,7 @@ def _build_frame(
     mass_lbs: Optional[float],
 ) -> pd.DataFrame:
     """Assemble a model-ready input frame from physical quantities."""
-    frame = pd.DataFrame({config.distance.name: distance_mi})
+    frame = pd.DataFrame({config.distance.name: distance_mi / roles.distance_scale})
     if roles.speed is not None:
         frame[roles.speed.name] = speed_mph / roles.speed_scale
     if roles.grade is not None:
@@ -777,6 +795,11 @@ def check_physics(
             f"model has {len(config.target.targets)} targets; "
             f"checks were run against '{target.name}'"
         )
+    if roles.distance is None:
+        notes.append(
+            f"distance units '{config.distance.units}' are not a recognized "
+            "length; lengths were read as miles"
+        )
 
     mass_lb, mass_kg, mass_source = _resolve_mass(config, roles, mass_lbs)
     report = PhysicsReport(
@@ -810,7 +833,12 @@ def check_physics(
 
     speeds = _sweep_range(roles.speed, SPEEDS_MPH, symmetric=False)
     grades = _sweep_range(roles.grade, GRADES_PCT, symmetric=True)
-    distances = _sweep_range(config.distance, DISTANCES_MI, symmetric=False)
+    distances = (
+        _sweep_range(
+            config.distance, DISTANCES_MI / roles.distance_scale, symmetric=False
+        )
+        * roles.distance_scale
+    )
     if not len(speeds) or not len(distances):
         notes.append("declared constraints leave no usable sweep range")
         return report
@@ -1024,6 +1052,46 @@ def check_physics(
     return report
 
 
+def _warn_unrecognized_distance(config: ModelConfig) -> None:
+    """Tell the user that an unrecognized distance unit gets no physical bounds.
+
+    Every term in the envelope is computed over the link's length, so a unit the
+    library cannot convert to miles leaves nothing to bound against.
+    """
+    recognized = ", ".join(sorted(DISTANCE_UNITS_TO_MILES))
+    warnings.warn(
+        f"the distance column of '{config.vehicle_description}' declares units "
+        f"'{config.distance.units}', which is not a recognized length, so its "
+        "physical energy bounds cannot be computed and the output guardrail will "
+        f"not be applied to its predictions. Recognized units are: {recognized}."
+    )
+
+
+def _warn_missing_speed(config: ModelConfig) -> None:
+    """Tell the user that a model with no speed feature gets no physical bounds.
+
+    Aerodynamic drag and kinetic energy both need a speed, so without one there
+    is no envelope to clip to. Every model in the library is expected to carry a
+    speed feature, so this most likely means its units do not read as a speed
+    rather than that the feature is absent.
+    """
+    warnings.warn(
+        f"no speed feature could be resolved for '{config.vehicle_description}' "
+        "from its feature units, so its physical energy bounds cannot be computed "
+        "and the output guardrail will not be applied to its predictions. Check "
+        "that the speed feature declares recognized speed units."
+    )
+
+
+def _warn_missing_mass(config: ModelConfig) -> None:
+    """Tell the user that a model without a mass gets no physical bounds."""
+    warnings.warn(
+        f"'{config.vehicle_description}' has no vehicle mass (mass_lbs), so its "
+        "physical energy bounds cannot be computed and the output guardrail will "
+        "not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. "
+    )
+
+
 def physical_bounds(
     links_df: pd.DataFrame,
     config: ModelConfig,
@@ -1036,8 +1104,7 @@ def physical_bounds(
     This is the band ``check_physics`` scores as ``absolute_floor`` and
     ``absolute_ceiling``, evaluated on real links instead of a sweep. It is
     loose by design (see ``PhysicsAssumptions``), and ``apply_guardrail`` uses
-    its ceiling; see there for why the electric floor is reported but not
-    enforced.
+    its ceiling.
 
     Args:
         links_df: the frame handed to the estimator, in the model's own units
@@ -1047,15 +1114,19 @@ def physical_bounds(
 
     Returns: ``{target name: (floor, ceiling)}``, one array pair per target
         whose units are a recognized energy. Empty when the band cannot be
-        evaluated at all: distance not in miles, no speed feature, or no
-        vehicle mass. Rows with a negative or non-finite speed or distance get
-        ``NaN`` bounds, so a caller can leave them alone.
+        evaluated at all: an unrecognized distance unit, no speed feature, or
+        no vehicle mass. All three warn, since a model is expected to supply
+        all three and the guardrail otherwise silently does nothing. Rows with
+        a negative or non-finite speed or distance get ``NaN`` bounds, so a
+        caller can leave them alone.
     """
     assumptions = assumptions or PhysicsAssumptions()
-    if normalize_units(config.distance.units) not in DISTANCE_UNITS_MILES:
-        return {}
     roles = _resolve_roles(config, None, None, [])
+    if roles.distance is None:
+        _warn_unrecognized_distance(config)
+        return {}
     if roles.speed is None:
+        _warn_missing_speed(config)
         return {}
 
     # Mass: one value per link when the model takes it as a feature, else the
@@ -1067,10 +1138,13 @@ def physical_bounds(
     else:
         mass_kg = _resolve_mass(config, roles, mass_lbs)[1]
     if mass_kg is None:
+        _warn_missing_mass(config)
         return {}
 
     speed_mph = links_df[roles.speed.name].to_numpy(dtype=float) * roles.speed_scale
-    distance_mi = links_df[config.distance.name].to_numpy(dtype=float)
+    distance_mi = (
+        links_df[config.distance.name].to_numpy(dtype=float) * roles.distance_scale
+    )
     if roles.grade is not None:
         grade_pct = links_df[roles.grade.name].to_numpy(dtype=float) / roles.grade_scale
     else:
@@ -1114,19 +1188,11 @@ def apply_guardrail(
     """Clip each target column of ``predictions`` to its physical ceiling, and
     to zero for a fuel target.
 
-    The electric floor from ``physical_bounds`` is deliberately not enforced.
-    Its kinetic term is one stop from the link's *average* speed, and a slow
-    link's average hides the far higher speed the vehicle actually braked
-    from: on simulated Bolt links, one in twenty returns more energy than that
-    floor allows, one in four at 5-15 mph. Enforcing it would clip correct
-    predictions. The ceiling has no such problem — a link's average speed
-    cannot hide a demand — and it is what stops a model running away on a
-    link far outside its training range. Burned fuel cannot be negative under
-    any driving, so that floor is exact.
-
     Only rows with a finite bound are touched; a ``NaN`` prediction stays
     ``NaN``, and columns that are not targets (a standard deviation, say) pass
-    through. Returns ``predictions``, modified in place.
+    through. A model with no vehicle mass, no resolvable speed feature, or an
+    unrecognized distance unit has no bounds to clip to, and warns. Returns
+    ``predictions``, modified in place.
     """
     bounds = physical_bounds(links_df, config)
     for target in config.target.targets:

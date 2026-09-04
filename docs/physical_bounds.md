@@ -45,8 +45,11 @@ ceiling `validate-physics` reports as `absolute_ceiling`.
   potential energy, a hill can still be cheaper than flat ground, and a
   BEV model can still return more on a descent than the hill held.
 - It needs a vehicle mass (`vehicle.mass_lbs` in the metadata, or a mass
-  feature), a speed feature, a distance in miles and a target in a recognised
-  energy unit. When any is missing the prediction passes through unchanged.
+  feature), a speed feature, a distance in a recognised length (miles,
+  kilometers or meters) and a target in a recognised energy unit. When any is
+  missing the prediction passes through unchanged, with a warning saying which
+  one — many published models carry no mass, and filling in `mass_lbs` turns
+  the guardrail on.
 - It applies to `Model.predict` and to lookup tables. A consumer that runs the
   estimator binary itself gets raw output.
 
