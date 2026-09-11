@@ -182,7 +182,7 @@ class PhysicsAssumptions(BaseModel):
     #: audit efficiency, and a tight ceiling flags correct models.
     eta_drive: float = 0.50
     #: Fraction of braking energy a vehicle can return to storage.
-    eta_regen: float = 0.75
+    eta_regen: float = 0.85
     #: Tank-to-wheel efficiency, used for combustion targets. A peak-efficiency
     #: figure would be about 0.25, but a link averaging a given speed is
     #: stop-and-go rather than steady cruise, so real part-load efficiency is far
