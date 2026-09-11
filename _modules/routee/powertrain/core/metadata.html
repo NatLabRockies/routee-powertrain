@@ -188,6 +188,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../../../api_docs.html">Python API Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../estimator_input_contract.html">Estimator Input/Output Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../physical_bounds.html">Physical Bounds and Model Caveats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_registry.html">Model Registry</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
@@ -523,6 +524,7 @@ document.write(`
             <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
             <span class="n">predict_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">predict_method</span><span class="p">,</span>
             <span class="n">real_world_adjustment_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">real_world_adjustment_factor</span><span class="p">,</span>
+            <span class="n">output_guardrail</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">output_guardrail</span><span class="p">,</span>
             <span class="n">test_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">provenance</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">test_size</span><span class="p">,</span>
             <span class="n">validation_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">provenance</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">validation_size</span><span class="p">,</span>
             <span class="n">random_seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">provenance</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>

@@ -188,6 +188,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../../../api_docs.html">Python API Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../estimator_input_contract.html">Estimator Input/Output Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../physical_bounds.html">Physical Bounds and Model Caveats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_registry.html">Model Registry</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
@@ -377,6 +378,7 @@ document.write(`
     <span class="n">contour_plot</span><span class="p">,</span>
     <span class="n">visualize_features</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">routee.powertrain.validation.physics</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_guardrail</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="kn">import</span> <span class="n">Series</span>
@@ -624,6 +626,13 @@ document.write(`
 <span class="sd">                grouping column.</span>
 
 <span class="sd">        Returns: a dataframe containing the predicted energy consumption for each link</span>
+
+<span class="sd">        The estimator's raw output is first clipped to each link's physical</span>
+<span class="sd">        energy ceiling (and to zero for a fuel target) when</span>
+<span class="sd">        ``config.output_guardrail`` is ``"envelope"`` — see</span>
+<span class="sd">        ``validation.physics.apply_guardrail`` — then multiplied by the</span>
+<span class="sd">        real-world adjustment factor. ``self.estimator.predict(links_df,</span>
+<span class="sd">        self.metadata.config)`` returns the raw output with neither applied.</span>
 <span class="sd">        """</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">config</span>
 
@@ -646,6 +655,9 @@ document.write(`
                 <span class="p">)</span>
 
         <span class="n">pred_energy_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">links_df</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">output_guardrail</span> <span class="o">==</span> <span class="s2">"envelope"</span><span class="p">:</span>
+            <span class="n">pred_energy_df</span> <span class="o">=</span> <span class="n">apply_guardrail</span><span class="p">(</span><span class="n">pred_energy_df</span><span class="p">,</span> <span class="n">links_df</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">energy</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
             <span class="n">pred_energy_df</span><span class="p">[</span><span class="n">energy</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>

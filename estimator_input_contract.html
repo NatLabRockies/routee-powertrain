@@ -60,7 +60,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'estimator_input_contract';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Model Registry" href="model_registry.html" />
+    <link rel="next" title="Physical Bounds and Model Caveats" href="physical_bounds.html" />
     <link rel="prev" title="Python API Docs" href="api_docs.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="python"/>
@@ -189,6 +189,7 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_docs.html">Python API Docs</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Estimator Input/Output Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="physical_bounds.html">Physical Bounds and Model Caveats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_registry.html">Model Registry</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
@@ -437,7 +438,9 @@ in the same file carries only the estimator <em>mechanics</em> — <code class="
 <li><p><strong>The estimator binary itself</strong> — for ONNX models the <em>resolved, positional</em>
 contract is embedded in the graph's <code class="docutils literal notranslate"><span class="pre">metadata_props</span></code>, so a bare <code class="docutils literal notranslate"><span class="pre">.onnx</span></code> file is
 self-describing <strong>without</strong> the sidecar <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code>. This is the copy a
-consumer that only has the binary (e.g. routee-compass) reads.</p></li>
+consumer that only has the binary (e.g. routee-compass) reads. Such a
+consumer gets the estimator's raw output: neither the real-world adjustment
+factor nor the <a class="reference internal" href="physical_bounds.html"><span class="std std-doc">output guardrail</span></a> is applied.</p></li>
 </ol>
 <p>The two are not redundant: they serve different consumers. On load, powertrain
 <strong>raises</strong> if the binary's embedded order disagrees with the <code class="docutils literal notranslate"><span class="pre">contract</span></code> in
@@ -586,11 +589,11 @@ metadata) with:</p>
       </div>
     </a>
     <a class="right-next"
-       href="model_registry.html"
+       href="physical_bounds.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Model Registry</p>
+        <p class="prev-next-title">Physical Bounds and Model Caveats</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

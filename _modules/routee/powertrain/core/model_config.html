@@ -188,6 +188,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../../../api_docs.html">Python API Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../estimator_input_contract.html">Estimator Input/Output Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../physical_bounds.html">Physical Bounds and Model Caveats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_registry.html">Model Registry</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
@@ -354,7 +355,7 @@ document.write(`
   <h1>Source code for routee.powertrain.core.model_config</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">model_validator</span>
 
@@ -398,7 +399,14 @@ document.write(`
     <span class="s2">"FastSimSource"</span><span class="p">,</span>
     <span class="s2">"RealWorldSource"</span><span class="p">,</span>
     <span class="s2">"LegacySource"</span><span class="p">,</span>
+    <span class="s2">"OutputGuardrail"</span><span class="p">,</span>
 <span class="p">]</span>
+
+<span class="c1">#: How ``Model.predict`` bounds what an estimator returns. ``"envelope"`` clips</span>
+<span class="c1">#: each link's energy to the physical ceiling from ``validation.physics`` (and</span>
+<span class="c1">#: to zero for a fuel target) when the model carries a vehicle mass and a speed</span>
+<span class="c1">#: feature; ``"none"`` never clips, for estimators bounded by construction.</span>
+<span class="n">OutputGuardrail</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"envelope"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="ModelConfig">
@@ -443,6 +451,10 @@ document.write(`
     <span class="c1">#: powertrain-type factor in ``ADJUSTMENT_FACTORS``; set to ``1.0`` to</span>
     <span class="c1">#: apply no adjustment.</span>
     <span class="n">real_world_adjustment_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="c1">#: See ``OutputGuardrail``. Applied to raw estimator output, before the</span>
+    <span class="c1">#: real-world adjustment factor.</span>
+    <span class="n">output_guardrail</span><span class="p">:</span> <span class="n">OutputGuardrail</span> <span class="o">=</span> <span class="s2">"envelope"</span>
 
     <span class="n">mass_lbs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -633,6 +645,10 @@ document.write(`
     <span class="c1">#: from the powertrain type) and stored concretely here.</span>
     <span class="n">real_world_adjustment_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
 
+    <span class="c1">#: See ``OutputGuardrail``. Absent from metadata written before it existed,</span>
+    <span class="c1">#: which loads as ``"envelope"``.</span>
+    <span class="n">output_guardrail</span><span class="p">:</span> <span class="n">OutputGuardrail</span> <span class="o">=</span> <span class="s2">"envelope"</span>
+
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"feature_set"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_coerce_feature_set</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
@@ -657,6 +673,7 @@ document.write(`
             <span class="n">target</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
             <span class="n">predict_method</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">predict_method</span><span class="p">,</span>
             <span class="n">real_world_adjustment_factor</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">real_world_adjustment_factor</span><span class="p">,</span>
+            <span class="n">output_guardrail</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">output_guardrail</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 </pre></div>

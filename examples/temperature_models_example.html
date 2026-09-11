@@ -189,6 +189,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../api_docs.html">Python API Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../estimator_input_contract.html">Estimator Input/Output Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../physical_bounds.html">Physical Bounds and Model Caveats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../model_registry.html">Model Registry</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
@@ -512,6 +513,16 @@ For example, when a vehicle starts a trip in cold weather and has been sitting o
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2022_Tesla_Model_3_RWD_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2022_Tesla_Model_3_RWD_0F_110F_transient trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2022_Tesla_Model_3_RWD_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+</pre></div>
+</div>
+</div>
 </div>
 <p>Now, we can compare the energy consumption results.</p>
 <div class="cell docutils container">
@@ -541,10 +552,10 @@ For example, when a vehicle starts a trip in cold weather and has been sitting o
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.legend.Legend at 0x7f44d7c3f3a0&gt;
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.legend.Legend at 0x7f82080dc040&gt;
 </pre></div>
 </div>
-<img alt="../_images/6607e231b5fd4c298530a7b1f157e4794a3ce2b5329ced5bc20f17ec997262ef.png" src="../_images/6607e231b5fd4c298530a7b1f157e4794a3ce2b5329ced5bc20f17ec997262ef.png" />
+<img alt="../_images/ce6a8511b4386331020970956d2033403136eae0e316a9dead87194ab1ef4cac.png" src="../_images/ce6a8511b4386331020970956d2033403136eae0e316a9dead87194ab1ef4cac.png" />
 </div>
 </div>
 <p>Notice how the energy consumption for the 32°F route is higher than the other two scenarios, reflecting the increased energy demand in colder temperatures.</p>
@@ -619,6 +630,50 @@ We'll use steady-state models for this comparison.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2022_Tesla_Model_3_RWD_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2016_Nissan_Leaf_30_kWh_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2020_Chevrolet_Bolt_EV_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2022_Tesla_Model_3_RWD_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2016_Nissan_Leaf_30_kWh_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2020_Chevrolet_Bolt_EV_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2022_Tesla_Model_3_RWD_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2016_Nissan_Leaf_30_kWh_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2020_Chevrolet_Bolt_EV_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2022_Tesla_Model_3_RWD_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2016_Nissan_Leaf_30_kWh_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2020_Chevrolet_Bolt_EV_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2022_Tesla_Model_3_RWD_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2016_Nissan_Leaf_30_kWh_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2020_Chevrolet_Bolt_EV_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2022_Tesla_Model_3_RWD_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2016_Nissan_Leaf_30_kWh_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2020_Chevrolet_Bolt_EV_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2022_Tesla_Model_3_RWD_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2016_Nissan_Leaf_30_kWh_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/routee/powertrain/validation/physics.py:1088: UserWarning: '2020_Chevrolet_Bolt_EV_0F_110F_steady trained July 2025' has no vehicle mass (mass_lbs), so its physical energy bounds cannot be computed and the output guardrail will not be applied to its predictions. Set mass_lbs on the model config to enable the guardrail. 
+  warnings.warn(
+</pre></div>
+</div>
 <img alt="../_images/de7fc06bc080fcd3a926f5553dec38e187caf128bb9c9f795b440b9c493312b5.png" src="../_images/de7fc06bc080fcd3a926f5553dec38e187caf128bb9c9f795b440b9c493312b5.png" />
 </div>
 </div>
