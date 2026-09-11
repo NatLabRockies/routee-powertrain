@@ -164,6 +164,7 @@ class Metadata(BaseModel):
             target=self.contract.target,
             predict_method=self.contract.predict_method,
             real_world_adjustment_factor=self.contract.real_world_adjustment_factor,
+            output_guardrail=self.contract.output_guardrail,
             test_size=self.provenance.training.test_size,
             validation_size=self.provenance.training.validation_size,
             random_seed=self.provenance.training.random_seed,

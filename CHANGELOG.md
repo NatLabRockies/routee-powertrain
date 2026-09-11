@@ -2,6 +2,38 @@
 
 All notable changes to this project are documented here.
 
+## [2.1.0]
+
+### Changed
+
+- `Model.predict` now clips each link's energy to the physical ceiling from
+  `validation.physics` (the `absolute_ceiling` check), and to zero for a fuel target, before
+  applying the real-world adjustment factor; `to_lookup_table` clips the table the same way. The
+  ceiling is loose by design and does not bind on a model that passes that check on the
+  validation sweep; it stops divergence on links far outside the training range. The electric
+  `absolute_floor` is reported but not enforced, because a link's average speed hides the speed a
+  slow link really braked from and the floor would clip correct regeneration. The clamp needs a
+  vehicle mass, a speed feature and a distance in miles; otherwise the prediction passes through
+  unchanged. Raw output remains available as `model.estimator.predict(df, model.metadata.config)`.
+  See [Physical Bounds](docs/physical_bounds.md). No published model needs to be republished.
+
+### Added
+
+- `contract.output_guardrail` in `metadata.json`: `"envelope"` (the default, and what metadata
+  without the field loads as) or `"none"` for estimators that are bounded by construction. Outside
+  the model digest.
+- `physical_bounds(links_df, config)`: the per-link `(floor, ceiling)` band, per target, in target
+  units.
+
+### Fixed
+
+- A model declaring its speed feature in kilometres per hour was swept and bounded at the wrong
+  speeds (the unit scale was inverted).
+- A BEV whose target is in gasoline-gallon equivalents was judged as a fuel target, so
+  `validate-physics` demanded non-negative energy on its descents. Whether regeneration is real
+  is now decided by the powertrain type (`is_combustion_target`), and the guardrail uses the same
+  rule.
+
 ## [2.0.1]
 
 Adds a **provenance** section to model metadata and removes training information from the model
